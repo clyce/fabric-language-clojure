@@ -1,0 +1,73 @@
+{
+  // ============================================================================
+  // Arclojure 项目 VSCode 配置
+  // ============================================================================
+
+  // Java 配置
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.gradle.enabled": true,
+  "java.project.referencedLibraries": [
+    "lib/**/*.jar",
+    ".gradle/**/*.jar"
+  ],
+  "java.compile.nullAnalysis.mode": "automatic",
+
+  // Gradle 配置
+  "java.import.gradle.wrapper.enabled": true,
+  "java.import.gradle.offline.enabled": false,
+  "java.import.gradle.user.home": null,
+
+  // Clojure/Calva 配置
+  "calva.replConnectSequences": [
+    {
+      "name": "Arclojure nREPL",
+      "projectType": "generic",
+      "nReplPortFile": [
+        ".nrepl-port"
+      ],
+      "host": "localhost",
+      "port": 7888
+    }
+  ],
+
+  // Calva 格式化设置
+  "calva.fmt.formatAsYouType": true,
+  "calva.fmt.newIndentEngine": true,
+
+  // 文件关联
+  "files.associations": {
+    "*.clj": "clojure",
+    "*.cljc": "clojure",
+    "*.cljs": "clojure",
+    "*.edn": "clojure"
+  },
+
+  // 排除文件（避免索引过多文件）
+  "files.exclude": {
+    "**/.gradle": true,
+    "**/build": true,
+    "**/.idea": true,
+    "**/*.class": true
+  },
+
+  "search.exclude": {
+    "**/build": true,
+    "**/.gradle": true,
+    "**/node_modules": true
+  },
+
+  // 编辑器设置
+  "editor.formatOnSave": false,
+  "[clojure]": {
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.wordWrap": "on"
+  },
+  "[java]": {
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4
+  },
+
+  // Gradle 任务配置
+  "java.gradle.home": null
+}

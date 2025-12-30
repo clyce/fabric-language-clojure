@@ -1,0 +1,15 @@
+pluginManagement {
+    repositories {
+        maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://maven.architectury.dev/' }
+        maven { url = 'https://files.minecraftforge.net/maven/' }
+        maven { url = 'https://clojars.org/repo' }  // Clojure 仓库
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'arclojure'
+
+include 'common'
+include 'fabric'
+// include 'forge'  // 临时禁用以调试
