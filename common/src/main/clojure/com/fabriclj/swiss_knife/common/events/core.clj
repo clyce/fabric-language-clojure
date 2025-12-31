@@ -4,6 +4,7 @@
    封装 Architectury API 的事件系统，提供简洁的事件监听和处理接口。支持超过 80+ 游戏事件钩子。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
   (:import (dev.architectury.event EventResult)
+           (com.fabriclj EventBridge)
            (dev.architectury.event.events.common
             BlockEvent ChatEvent EntityEvent ExplosionEvent
             LifecycleEvent
@@ -133,10 +134,10 @@
          (println \"One second passed\"))))
    ```"
   [handler]
-  (.register (TickEvent/SERVER_PRE)
-             (reify java.util.function.Consumer
-               (accept [_ server]
-                 (handler server)))))
+  (EventBridge/registerServerTickWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ server]
+       (handler server)))))
 
 (defn on-level-tick
   "每个维度 tick 触发
@@ -144,10 +145,10 @@
    参数:
    - handler: 函数 (fn [^Level level] ...)"
   [handler]
-  (.register (TickEvent/SERVER_LEVEL_PRE)
-             (reify java.util.function.Consumer
-               (accept [_ level]
-                 (handler level)))))
+  (EventBridge/registerLevelTickWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ level]
+       (handler level)))))
 
 (defn on-player-tick
   "每个玩家 tick 触发
@@ -155,10 +156,10 @@
    参数:
    - handler: 函数 (fn [^Player player] ...)"
   [handler]
-  (.register (TickEvent/PLAYER_PRE)
-             (reify java.util.function.Consumer
-               (accept [_ player]
-                 (handler player)))))
+  (EventBridge/registerPlayerTickWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ player]
+       (handler player)))))
 
 ;; ============================================================================
 ;; 玩家事件
@@ -177,10 +178,10 @@
        (println (.getName player) \"joined the game!\")))
    ```"
   [handler]
-  (.register (PlayerEvent/PLAYER_JOIN)
-             (reify java.util.function.Consumer
-               (accept [_ player]
-                 (handler player)))))
+  (EventBridge/registerPlayerJoinWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ player]
+       (handler player)))))
 
 (defn on-player-quit
   "玩家离开服务器时触发
@@ -188,10 +189,10 @@
    参数:
    - handler: 函数 (fn [^Player player] ...)"
   [handler]
-  (.register (PlayerEvent/PLAYER_QUIT)
-             (reify java.util.function.Consumer
-               (accept [_ player]
-                 (handler player)))))
+  (EventBridge/registerPlayerQuitWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ player]
+       (handler player)))))
 
 (defn on-player-respawn
   "玩家重生时触发

@@ -6,10 +6,16 @@ import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.event.events.client.ClientPlayerEvent;
 import dev.architectury.event.events.client.ClientRawInputEvent;
+import dev.architectury.event.events.common.TickEvent;
+import dev.architectury.event.events.common.LifecycleEvent;
+import dev.architectury.event.events.common.PlayerEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,6 +230,148 @@ public final class EventBridge {
                 handler.accept(new Object[]{screen, graphics, mouseX, mouseY, delta});
             } catch (Exception e) {
                 LOGGER.error("[EventBridge] Error in screen render post consumer", e);
+            }
+        });
+    }
+
+    // ========================================================================
+    // 服务端事件 - 解决类加载器问题
+    // ========================================================================
+
+    /**
+     * 使用 Java Consumer 注册服务端 tick 事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerServerTickWithConsumer(Consumer<MinecraftServer> handler) {
+        TickEvent.SERVER_PRE.register(new TickEvent.Server() {
+            @Override
+            public void tick(MinecraftServer server) {
+                try {
+                    handler.accept(server);
+                } catch (Exception e) {
+                    LOGGER.error("[EventBridge] Error in server tick consumer", e);
+                }
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册世界 tick 事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerLevelTickWithConsumer(Consumer<Level> handler) {
+        TickEvent.SERVER_LEVEL_PRE.register(level -> {
+            try {
+                handler.accept(level);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in level tick consumer", e);
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册玩家 tick 事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerPlayerTickWithConsumer(Consumer<Player> handler) {
+        TickEvent.PLAYER_PRE.register(player -> {
+            try {
+                handler.accept(player);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in player tick consumer", e);
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册玩家加入事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerPlayerJoinWithConsumer(Consumer<Player> handler) {
+        PlayerEvent.PLAYER_JOIN.register(player -> {
+            try {
+                handler.accept(player);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in player join consumer", e);
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册玩家离开事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerPlayerQuitWithConsumer(Consumer<Player> handler) {
+        PlayerEvent.PLAYER_QUIT.register(player -> {
+            try {
+                handler.accept(player);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in player quit consumer", e);
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册服务器启动事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerServerStartingWithConsumer(Consumer<MinecraftServer> handler) {
+        LifecycleEvent.SERVER_STARTING.register(server -> {
+            try {
+                handler.accept(server);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in server starting consumer", e);
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册服务器启动完成事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerServerStartedWithConsumer(Consumer<MinecraftServer> handler) {
+        LifecycleEvent.SERVER_STARTED.register(server -> {
+            try {
+                handler.accept(server);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in server started consumer", e);
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册服务器停止事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerServerStoppingWithConsumer(Consumer<MinecraftServer> handler) {
+        LifecycleEvent.SERVER_STOPPING.register(server -> {
+            try {
+                handler.accept(server);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in server stopping consumer", e);
+            }
+        });
+    }
+
+    /**
+     * 使用 Java Consumer 注册服务器停止完成事件
+     *
+     * @param handler Java Consumer 处理器
+     */
+    public static void registerServerStoppedWithConsumer(Consumer<MinecraftServer> handler) {
+        LifecycleEvent.SERVER_STOPPED.register(server -> {
+            try {
+                handler.accept(server);
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in server stopped consumer", e);
             }
         });
     }
