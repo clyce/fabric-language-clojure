@@ -25,6 +25,7 @@ configurations {
 
 repositories {
     maven { url = 'https://clojars.org/repo' }
+    maven { url = 'https://maven.parchmentmc.org' }  // Parchment Maven
 }
 
 dependencies {
@@ -53,6 +54,8 @@ dependencies {
 
     // nREPL 的传递依赖
     include "nrepl:bencode:1.1.0"
+
+    // 注意: JSON 功能使用 Minecraft 自带的 Gson 库，无需额外依赖
 
     // 开发环境需要 Clojure 在运行时类路径
     modImplementation "org.clojure:clojure:$rootProject.clojure_version"

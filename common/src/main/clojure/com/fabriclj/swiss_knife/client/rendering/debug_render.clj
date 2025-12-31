@@ -61,7 +61,8 @@
          :navigation-renders {}
          :ai-debug-renders {}
          :bbox-renders {}
-         :area-renders {}}))
+         :area-renders {}
+         :line-renders {}}))
 
 (defn clear-all-debug-renders!
   "清除所有调试渲染"
@@ -71,7 +72,8 @@
            :navigation-renders {}
            :ai-debug-renders {}
            :bbox-renders {}
-           :area-renders {}}))
+           :area-renders {}
+           :line-renders {}}))
 
 ;; ============================================================================
 ;; 颜色工具( 辅助函数)
@@ -138,7 +140,7 @@
                               (double (nth to 2)))
                        to)
         {:keys [r g b a]} (color-rgba color)
-        buffer (.getBuffer buffer-source RenderType/lines)
+        buffer (.getBuffer buffer-source (RenderType/lines))
         matrix (.last pose-stack)
         pos-matrix (.pose matrix)
         normal-matrix (.normal matrix)]
@@ -532,6 +534,59 @@
     (render-line pose-stack buffer-source [min-x min-y max-z] [min-x max-y max-z] color)))
 
 ;; ============================================================================
+;; 线条可视化
+;; ============================================================================
+
+(defn show-line!
+  "显示一条线
+
+   参数:
+   - from: 起点 Vec3 或 [x y z]
+   - to: 终点 Vec3 或 [x y z]
+   - opts: 可选参数
+     - :color - 颜色( 默认 :white)
+     - :width - 线宽( 默认 2.0)
+     - :duration - 显示持续时间( tick，默认 100，0 表示永久)
+
+   返回: 线条 ID( 用于后续删除)
+
+   示例:
+   ```clojure
+   (show-line! (Vec3. 0 64 0) (Vec3. 100 64 100)
+     :color :green
+     :duration 200)
+   ```"
+  [from to & {:keys [color width duration]
+              :or {color :white
+                   width 2.0
+                   duration 100}}]
+  (let [line-id (keyword (str "line_" (System/currentTimeMillis) "_" (hash [from to])))
+        render-data {:id line-id
+                     :from from
+                     :to to
+                     :color color
+                     :width width
+                     :expire-tick (if (zero? duration)
+                                   Long/MAX_VALUE
+                                   (+ (System/currentTimeMillis) (* duration 50)))}]
+    (swap! debug-render-state assoc-in [:line-renders line-id] render-data)
+    line-id))
+
+(defn hide-line!
+  "隐藏线条
+
+   参数:
+   - line-id: 线条 ID( show-line! 返回的值)"
+  [line-id]
+  (swap! debug-render-state update :line-renders dissoc line-id))
+
+(defn- render-line-data
+  "内部: 渲染线条数据"
+  [^PoseStack pose-stack ^MultiBufferSource buffer-source render-data]
+  (let [{:keys [from to color width]} render-data]
+    (render-line pose-stack buffer-source from to color :width width)))
+
+;; ============================================================================
 ;; 主渲染函数
 ;; ============================================================================
 
@@ -588,6 +643,13 @@
         (render-area pose-stack buffer-source render-data))
       (when (>= current-time (:expire-tick render-data))
         (swap! debug-render-state update :area-renders dissoc area-id)))
+
+    ;; 渲染线条
+    (doseq [[line-id render-data] (:line-renders @debug-render-state)]
+      (when (< current-time (:expire-tick render-data))
+        (render-line-data pose-stack buffer-source render-data))
+      (when (>= current-time (:expire-tick render-data))
+        (swap! debug-render-state update :line-renders dissoc line-id)))
 
     (.popPose pose-stack)))
 

@@ -12,12 +12,15 @@
    - 物品修饰器( Item Modifiers) "
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.common.gameplay.recipes :as recipes]
-            [clojure.data.json :as json]
+            [com.fabriclj.swiss-knife.common.utils.json :as json]
             [clojure.java.io :as io])
   (:import (java.nio.file Paths Files)
            (java.nio.file.attribute FileAttribute)))
 
 (set! *warn-on-reflection* true)
+
+;; 前向声明
+(declare loot-condition)
 
 ;; ============================================================================
 ;; 数据包结构管理
@@ -99,7 +102,7 @@
   [base-path namespace tag-type tag-name tag-data]
   (let [type-folder (name tag-type)
         file-path (str base-path "/data/" namespace "/tags/" type-folder "/" tag-name ".json")
-        json-str (json/write-str tag-data :indent true)]
+        json-str (json/generate-string tag-data {:pretty true})]
     (.mkdirs (.getParentFile (io/file file-path)))
     (spit file-path json-str)
     (core/log-info (str "Saved tag: " namespace ":" tag-name))))
@@ -154,7 +157,7 @@
   [base-path namespace advancement-name advancement-data]
   (let [file-path (str base-path "/data/" namespace "/advancements/" advancement-name ".json")
         json-data (advancement-to-json advancement-data)
-        json-str (json/write-str json-data :indent true)]
+        json-str (json/generate-string json-data {:pretty true})]
     (.mkdirs (.getParentFile (io/file file-path)))
     (spit file-path json-str)
     (core/log-info (str "Saved advancement: " namespace ":" advancement-name))))
@@ -310,7 +313,7 @@
   [base-path namespace loot-type loot-name loot-data]
   (let [type-folder (name loot-type)
         file-path (str base-path "/data/" namespace "/loot_tables/" type-folder "/" loot-name ".json")
-        json-str (json/write-str loot-data :indent true)]
+        json-str (json/generate-string loot-data {:pretty true})]
     (.mkdirs (.getParentFile (io/file file-path)))
     (spit file-path json-str)
     (core/log-info (str "Saved loot table: " namespace ":" loot-name))))
@@ -413,7 +416,7 @@
    ```"
   [base-path namespace predicate-name predicate-data]
   (let [file-path (str base-path "/data/" namespace "/predicates/" predicate-name ".json")
-        json-str (json/write-str predicate-data :indent true)]
+        json-str (json/generate-string predicate-data {:pretty true})]
     (.mkdirs (.getParentFile (io/file file-path)))
     (spit file-path json-str)
     (core/log-info (str "Saved predicate: " namespace ":" predicate-name))))
@@ -458,7 +461,7 @@
    ```"
   [base-path namespace modifier-name modifier-data]
   (let [file-path (str base-path "/data/" namespace "/item_modifiers/" modifier-name ".json")
-        json-str (json/write-str modifier-data :indent true)]
+        json-str (json/generate-string modifier-data {:pretty true})]
     (.mkdirs (.getParentFile (io/file file-path)))
     (spit file-path json-str)
     (core/log-info (str "Saved item modifier: " namespace ":" modifier-name))))
@@ -496,7 +499,7 @@
   (let [pack-meta {:pack {:pack_format pack-format
                           :description description}}
         meta-path (str base-path "/pack.mcmeta")
-        json-str (json/write-str pack-meta :indent true)]
+        json-str (json/generate-string pack-meta {:pretty true})]
     (spit meta-path json-str))
 
   (core/log-info (str "Created datapack: " namespace " at " base-path))

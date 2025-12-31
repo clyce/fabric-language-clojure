@@ -35,6 +35,8 @@ dependencies {
 
     // nREPL 用于开发调试
     modImplementation "nrepl:nrepl:$rootProject.nrepl_version"
+    
+    // 注意: JSON 功能使用 Minecraft 自带的 Gson 库，无需额外依赖
 }
 
 // 【关键】确保 Clojure 源文件被复制到输出目录
@@ -53,4 +55,181 @@ tasks.named('checkClojure') {
 
 tasks.named('compileClojure') {
     enabled = false
+}
+
+// ============================================================================
+// API 提取任务 - 自动提取 Minecraft API 方法签名
+// ============================================================================
+
+task extractApi(type: JavaExec) {
+    group = 'documentation'
+    description = 'Extract Minecraft API method signatures to api_ref directory'
+    
+    // 依赖编译任务，确保 ApiExtractor 类已编译
+    dependsOn compileJava
+    
+    // 设置类路径
+    classpath = sourceSets.main.runtimeClasspath
+    
+    // 主类
+    mainClass = 'com.fabriclj.ApiExtractor'
+    
+    // 默认要提取的类（可以通过命令行参数覆盖）
+    // 使用 -PapiClasses="class1,class2" 来指定
+    def classesToExtract = project.hasProperty('apiClasses') 
+        ? project.apiClasses.split(',') 
+        : [
+            'net.minecraft.world.item.enchantment.EnchantmentHelper',
+            'net.minecraft.world.item.ItemStack',
+            'net.minecraft.core.component.DataComponents',
+            'net.minecraft.core.Holder',
+            'net.minecraft.core.registries.Registries'
+        ]
+    
+    args classesToExtract
+    
+    // 设置工作目录为项目根目录
+    workingDir = project.rootDir
+    
+    doFirst {
+        println "Extracting API for classes: ${classesToExtract.join(', ')}"
+        println "Output directory: ${project.rootDir}/api_ref"
+    }
+}
+
+// 快捷任务：只提取 EnchantmentHelper
+task extractEnchantmentApi(type: JavaExec) {
+    group = 'documentation'
+    description = 'Extract EnchantmentHelper API only'
+    
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.fabriclj.ApiExtractor'
+    args 'net.minecraft.world.item.enchantment.EnchantmentHelper'
+    workingDir = project.rootDir
+    
+    doFirst {
+        println "Extracting EnchantmentHelper API..."
+    }
+}
+
+// 提取所有常用 API（推荐用于 Clojure 开发）
+task extractAllCommonApis(type: JavaExec) {
+    group = 'documentation'
+    description = 'Extract all common Minecraft APIs for Clojure development'
+    
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.fabriclj.ApiExtractor'
+    workingDir = project.rootDir
+    
+    // 常用的 Minecraft API 类列表
+    def commonApis = [
+        // === 核心注册表 ===
+        'net.minecraft.core.Holder',
+        'net.minecraft.core.HolderSet',
+        'net.minecraft.core.Registry',
+        'net.minecraft.core.RegistryAccess',
+        // 'net.minecraft.core.registries.Registries',  // 需要引导，跳过
+        // 'net.minecraft.core.registries.BuiltInRegistries',  // 需要引导，跳过
+        
+        // === 资源定位 ===
+        'net.minecraft.resources.ResourceLocation',
+        'net.minecraft.resources.ResourceKey',
+        
+        // === 物品和方块 ===
+        'net.minecraft.world.item.ItemStack',
+        'net.minecraft.world.item.Item',
+        // 'net.minecraft.world.item.Items',  // 需要引导，跳过
+        'net.minecraft.world.level.block.Block',
+        // 'net.minecraft.world.level.block.Blocks',  // 需要引导，跳过
+        'net.minecraft.world.level.block.state.BlockState',
+        'net.minecraft.world.level.block.state.properties.BlockStateProperties',
+        
+        // === 实体 ===
+        'net.minecraft.world.entity.Entity',
+        'net.minecraft.world.entity.LivingEntity',
+        'net.minecraft.world.entity.player.Player',
+        'net.minecraft.world.entity.EntityType',
+        'net.minecraft.world.entity.EquipmentSlot',
+        
+        // === 附魔系统 ===
+        'net.minecraft.world.item.enchantment.EnchantmentHelper',
+        'net.minecraft.world.item.enchantment.Enchantment',
+        'net.minecraft.world.item.enchantment.ItemEnchantments',
+        
+        // === 数据组件 (MC 1.21 新系统) ===
+        // 'net.minecraft.core.component.DataComponents',  // 需要引导，跳过
+        'net.minecraft.core.component.DataComponentType',
+        
+        // === 世界和维度 ===
+        'net.minecraft.world.level.Level',
+        'net.minecraft.server.level.ServerLevel',
+        'net.minecraft.world.level.LevelAccessor',
+        'net.minecraft.world.level.BlockGetter',
+        
+        // === 伤害系统 ===
+        'net.minecraft.world.damagesource.DamageSource',
+        'net.minecraft.world.damagesource.DamageType',
+        // 'net.minecraft.world.damagesource.DamageTypes',  // 需要引导，跳过
+        
+        // === 文本和翻译 ===
+        'net.minecraft.network.chat.Component',
+        'net.minecraft.network.chat.MutableComponent',
+        'net.minecraft.network.chat.Style',
+        
+        // === NBT 数据 ===
+        'net.minecraft.nbt.CompoundTag',
+        'net.minecraft.nbt.ListTag',
+        'net.minecraft.nbt.Tag',
+        'net.minecraft.nbt.NbtOps',
+        
+        // === 服务器 ===
+        'net.minecraft.server.MinecraftServer',
+        'net.minecraft.server.level.ServerPlayer',
+        
+        // === 配方和合成 ===
+        'net.minecraft.world.item.crafting.Recipe',
+        'net.minecraft.world.item.crafting.RecipeManager',
+        'net.minecraft.world.item.crafting.RecipeType',
+        
+        // === 容器和界面 ===
+        'net.minecraft.world.Container',
+        'net.minecraft.world.inventory.AbstractContainerMenu',
+        'net.minecraft.world.inventory.MenuType',
+        
+        // === 粒子和音效 ===
+        'net.minecraft.core.particles.ParticleOptions',
+        'net.minecraft.sounds.SoundEvent',
+        'net.minecraft.sounds.SoundSource',
+        
+        // === 工具类 ===
+        'net.minecraft.util.RandomSource',
+        'net.minecraft.Util',
+        'net.minecraft.world.phys.Vec3',
+        'net.minecraft.core.BlockPos',
+        'net.minecraft.core.Direction'
+    ]
+    
+    args commonApis
+    
+    doFirst {
+        println "========================================="
+        println "Extracting ${commonApis.size()} common Minecraft APIs..."
+        println "========================================="
+        println ""
+        commonApis.eachWithIndex { api, index ->
+            println "${index + 1}. ${api}"
+        }
+        println ""
+    }
+    
+    doLast {
+        println ""
+        println "========================================="
+        println "API extraction completed!"
+        println "Generated ${commonApis.size() * 2} files (MD + JSON)"
+        println "Location: ${project.rootDir}/api_ref"
+        println "========================================="
+    }
 }

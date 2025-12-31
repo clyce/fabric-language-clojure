@@ -45,10 +45,11 @@
    **提示**: 如果配置是编译时常量，使用 `dsl` 宏更简洁。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
   (:import (net.minecraft.world.item Item Item$Properties ItemStack)
-           (net.minecraft.world.level.block Block Block$Properties)
+           (net.minecraft.world.level.block Block)
            (net.minecraft.world.level.block.state BlockBehaviour BlockBehaviour$Properties)
            (net.minecraft.world.food FoodProperties FoodProperties$Builder)
-           (net.minecraft.world.item Rarity CreativeModeTab CreativeModeTab$Builder)
+           (net.minecraft.world.item Rarity CreativeModeTab)
+           (net.fabricmc.fabric.api.itemgroup.v1 FabricItemGroup)
            (net.minecraft.world.entity.ai.attributes AttributeModifier AttributeModifier$Operation)
            (net.minecraft.network.chat Component)
            (net.minecraft.resources ResourceLocation)))
@@ -218,9 +219,22 @@
     (.sound props sound-type)))
 
 (defn with-light-level
-  "设置光照等级 (0-15)"
+  "设置光照等级 (0-15)
+
+   参数:
+   - props: BlockBehaviour$Properties
+   - level: 光照等级 (0-15) 或 ToIntFunction<BlockState>
+
+   示例:
+   ```clojure
+   (with-light-level props 7)  ; 固定光照等级
+   (with-light-level props (fn [state] 15))  ; 动态光照等级
+   ```"
   ^BlockBehaviour$Properties [^BlockBehaviour$Properties props level]
-  (.lightLevel props (constantly level)))
+  (if (instance? java.util.function.ToIntFunction level)
+    (.lightLevel props level)
+    (.lightLevel props (reify java.util.function.ToIntFunction
+                          (applyAsInt [_ state] (int level))))))
 
 (defn requires-tool
   "设置需要工具挖掘"
@@ -285,9 +299,9 @@
 ;; ============================================================================
 
 (defn creative-tab
-  "创建创造模式标签页构建器
+  "创建创造模式标签页构建器（使用 Fabric API）
 
-   返回: CreativeModeTab$Builder
+   返回: FabricItemGroup$Builder
 
    示例:
    ```clojure
@@ -297,21 +311,21 @@
        (with-items [item1 item2 item3])
        (build-tab))
    ```"
-  ^CreativeModeTab$Builder []
-  (CreativeModeTab/builder))
+  []
+  (FabricItemGroup/builder))
 
 (defn with-title
   "设置标签页标题"
-  ^CreativeModeTab$Builder [^CreativeModeTab$Builder builder title]
-  (.title builder (Component/literal title)))
+  [builder title]
+  (.displayName builder (Component/literal title)))
 
 (defn with-icon
   "设置标签页图标
 
    参数:
-   - builder: CreativeModeTab$Builder
+   - builder: FabricItemGroup$Builder
    - icon: ItemStack 或 Item"
-  ^CreativeModeTab$Builder [^CreativeModeTab$Builder builder icon]
+  [builder icon]
   (.icon builder
          (reify java.util.function.Supplier
            (get [_]
@@ -321,21 +335,21 @@
 
 (defn with-items
   "设置标签页物品列表"
-  ^CreativeModeTab$Builder [^CreativeModeTab$Builder builder items]
-  (.displayItems builder
-                 (reify net.minecraft.world.item.CreativeModeTab$DisplayItemsGenerator
-                   (accept [_ params output]
-                     (doseq [item items]
-                       (.accept output
-                                (if (instance? ItemStack item)
-                                  item
-                                  (ItemStack. item))))))))
+  [builder items]
+  (.entries builder
+            (reify java.util.function.BiConsumer
+              (accept [_ context output]
+                (doseq [item items]
+                  (.add output
+                        (if (instance? ItemStack item)
+                          item
+                          (ItemStack. item))))))))
 
 (defn build-tab
   "构建创造模式标签页
 
    返回: CreativeModeTab"
-  ^CreativeModeTab [^CreativeModeTab$Builder builder]
+  ^CreativeModeTab [builder]
   (.build builder))
 
 ;; ============================================================================

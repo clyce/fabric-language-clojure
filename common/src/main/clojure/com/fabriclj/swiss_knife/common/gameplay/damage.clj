@@ -46,7 +46,7 @@
    ```clojure
    (register-custom-damage-type! :my-magic
      (ResourceKey/create Registries/DAMAGE_TYPE
-       (ResourceLocation. \"mymod\" \"magic\")))
+       (ResourceLocation/fromNamespaceAndPath \"mymod\" \"magic\")))
    ```"
   [key resource-key]
   (swap! custom-damage-types assoc key resource-key)
@@ -179,6 +179,7 @@
   [damage-type calculator]
   (swap! damage-calculators assoc damage-type calculator))
 
+(declare calculate-armor-damage)
 (defn calculate-damage-with-type
   "根据伤害类型计算最终伤害
 

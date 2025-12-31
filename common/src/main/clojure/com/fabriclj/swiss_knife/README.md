@@ -56,7 +56,7 @@
 
 | **伤害系统** | `common.damage` | 伤害计算、伤害类型、护甲计"|"
 
-| **附魔系统** | `common.enchantments` | 附魔查询、添加、效果计"|"
+| **附魔系统** | `common.enchantments` | 附魔查询、添加、效果计算（Minecraft 1.21 数据驱动） |
 
 | **容器系统** | `common.containers` | 方块 GUI、菜单类型、槽位布局 |
 | **背包系统** | `common.inventories` | 自定义背包、物品操作、NBT 存储 |
@@ -338,6 +338,40 @@
   (-> 10.0
       (damage/calculate-armor-damage 15 2)
       (damage/calculate-resistance-damage 2)))
+```
+
+### 附魔系统（Minecraft 1.21）
+
+```clojure
+(require '[com.fabriclj.swiss-knife.common.gameplay.enchantments :as ench])
+
+;; 注意: Minecraft 1.21 附魔系统使用 Holder<Enchantment> 和数据驱动
+
+;; 查询附魔（需要 Registry Holder）
+(def registry-access (.registryAccess server))
+(def enchantments-registry (.registryOrThrow registry-access Registries/ENCHANTMENT))
+(def sharpness-holder (.getHolder enchantments-registry sharpness-key))
+(def level (ench/get-enchantment-level sharpness-holder sword))
+
+;; 添加附魔
+(ench/enchant! sword sharpness-holder 5)
+
+;; 批量添加附魔（使用 Builder 模式）
+(ench/apply-enchantments! sword
+  (fn [builder]
+    (.add builder sharpness-holder 5)
+    (.add builder fire-aspect-holder 2)))
+
+;; 修改伤害（需要完整战斗上下文）
+(def modified-damage
+  (ench/modify-damage-dealt server-level sword zombie damage-source 10.0))
+
+;; 触发反伤效果
+(ench/on-target-damaged server-level zombie damage-source)
+
+;; 列出所有附魔
+(doseq [{:keys [holder level]} (ench/list-all-enchantments sword)]
+  (println "Enchantment:" (.value holder) "Level:" level))
 ```
 
 ### 配置文件系统 "

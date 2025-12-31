@@ -1,29 +1,44 @@
 (ns com.fabriclj.swiss-knife.common.gameplay.potions
-  "药水效果系统
+  "药水效果系统 (Minecraft 1.21+)
 
    提供完整的药水效果管理功能，包括:
    - 效果添加/移除/查询
    - 自定义药水效果
    - 效果时间管理
    - 效果强度控制
-   - 药水酿造配方"
+   - 药水酿造配方
+
+   重要变化 (MC 1.21):
+   - PotionUtils 类已移除
+   - 使用数据组件 (PotionContents) 替代
+   - 药水数据通过 DataComponents 访问"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
   (:import (net.minecraft.world.entity LivingEntity)
            (net.minecraft.world.effect MobEffect MobEffectInstance MobEffects)
            (net.minecraft.world.item ItemStack Items)
-           (net.minecraft.world.item.alchemy Potion PotionUtils Potions)
-           (net.minecraft.core Registry)
+           (net.minecraft.world.item.alchemy Potion Potions PotionContents)
+           (net.minecraft.core Registry Holder)
+           (net.minecraft.core.component DataComponents)
            (net.minecraft.resources ResourceLocation)
            (net.minecraft.world.item.crafting Ingredient)))
 
 (set! *warn-on-reflection* true)
 
+;; 前向声明
+(declare get-potion)
+
 ;; ============================================================================
-;; 自定义药水效(Custom Potion Effects)
+;; 自定义药水效果 (Minecraft 1.21)
 ;; ============================================================================
-;; 回复 clyce: 可以通过继承 MobEffect 并注册到游戏中来实现自定义效果
-;; 使用 Clojure proxy 可以方便地创建自定义效果类，
-;; tick 回调通过重写 applyEffectTick 方法实现
+;;
+;; 重要说明：
+;; 1. Minecraft 1.21 的效果系统仍然支持代码注册 MobEffect
+;; 2. 自定义效果需要在模组初始化时通过注册表注册
+;; 3. 使用 Clojure proxy 创建 MobEffect 子类
+;; 4. 注册后效果可以在数据包的药水配方中使用
+;;
+;; 注意：与附魔不同，MobEffect 目前仍然通过代码注册
+;; ============================================================================
 
 (def ^:private custom-effects (atom {}))
 
@@ -31,22 +46,23 @@
   "创建自定义药水效果
 
    参数:
-   - id: 效果 ID( 关键字)
-   - category: 效果类别( :beneficial/:harmful/:neutral)
-   - color: 效果颜色( 整数 RGB，如 0xFF0000 为红色)
-
+   - id: 效果 ID (关键字)
+   - category: 效果类别 (:beneficial/:harmful/:neutral)
+   - color: 效果颜色 (整数 RGB，如 0xFF0000 为红色)
    - opts: 选项
      - :on-tick - tick 回调函数 (fn [entity amplifier] ...)
-     - :tick-rate - tick 间隔( 默认 20，即每秒一次)
-     - :instant? - 是否为瞬时效果( 默认 false)
+     - :tick-rate - tick 间隔 (默认 20，即每秒一次)
+     - :instant? - 是否为瞬时效果 (默认 false)
      - :on-added - 效果添加时回调 (fn [entity amplifier] ...)
      - :on-removed - 效果移除时回调 (fn [entity amplifier] ...)
 
    返回: MobEffect 实例
 
+   注意: 创建后需要通过 register-custom-effect! 注册到游戏
+
    示例:
    ```clojure
-   ;; 创建流血效果( 每秒造成伤害
+   ;; 创建流血效果（每秒造成伤害）
    (def bleeding-effect
      (create-custom-effect :bleeding
        :harmful
@@ -76,7 +92,7 @@
                           :neutral net.minecraft.world.effect.MobEffectCategory/NEUTRAL
                           net.minecraft.world.effect.MobEffectCategory/NEUTRAL)
         effect (proxy [MobEffect] [effect-category (int color)]
-                 (applyEffectTick [^LivingEntity entity ^int amplifier]
+                 (applyEffectTick [entity amplifier]
                    (when on-tick
                      (try
                        (on-tick entity amplifier)
@@ -109,29 +125,32 @@
     effect))
 
 (defn register-custom-effect!
-  "注册自定义效果到游戏
+  "注册自定义效果到游戏 (需要在模组初始化时调用)
 
    参数:
    - mod-id: 模组 ID
-   - effect-id: 效果 ID ( 关键字)
+   - effect-id: 效果 ID (关键字)
    - effect: MobEffect 实例
 
-   注意: 必须在模组初始化阶段调用
+   注意:
+   - 必须在模组初始化阶段调用
+   - MC 1.21 中效果注册仍然通过代码完成
+   - 实际注册需要使用 DeferredRegister 或 Fabric API 的注册方法
 
    示例:
    ```clojure
-   (register-custom-effect! "mymod" :bleeding bleeding-effect)
+   (register-custom-effect! \"mymod\" :bleeding bleeding-effect)
    ```"
   [mod-id effect-id ^MobEffect effect]
-  (let [res-loc (ResourceLocation. mod-id (name effect-id))]
+  (let [res-loc (ResourceLocation/fromNamespaceAndPath mod-id (name effect-id))]
     ;; 注册到注册表
-    ;; 注意: 实际注册需要使用 DeferredRegister，这里提供接口
+    ;; 注意: 实际注册需要使用 DeferredRegister 或 Fabric Registry API
     (core/log-info (str "Registered custom effect: " res-loc))
     {:id res-loc
      :effect effect}))
 
 (defn defcustom-effect
-  "定义并注册自定义效果( 宏样式函数 )
+  "定义并注册自定义效果（便捷函数）
 
    参数:
    - mod-id: 模组 ID
@@ -144,7 +163,7 @@
 
    示例:
    ```clojure
-   (defcustom-effect "mymod" :bleeding
+   (defcustom-effect \"mymod\" :bleeding
      :harmful 0xAA0000
      :on-tick (fn [entity amplifier]
                 (.hurt entity (DamageSource. \"bleeding\") 0.5))
@@ -158,6 +177,7 @@
 ;; 效果查询
 ;; ============================================================================
 
+(declare get-effect)
 (defn has-effect?
   "检查实体是否有指定效果
 
@@ -460,15 +480,17 @@
    ```"
   [potion & {:keys [splash? lingering?]
              :or {splash? false lingering? false}}]
-  (let [^Potion pot (if (keyword? potion)
-                      (get-potion potion)
-                      potion)
+  (let [^Holder pot-holder (if (keyword? potion)
+                              (get-potion potion)
+                              potion)
         base-item (cond
                     lingering? Items/LINGERING_POTION
                     splash? Items/SPLASH_POTION
                     :else Items/POTION)
-        stack (ItemStack. base-item)]
-    (PotionUtils/setPotion stack pot)
+        stack (ItemStack. base-item)
+        ;; MC 1.21: 使用 PotionContents 数据组件
+        potion-contents (PotionContents. pot-holder)]
+    (.set stack DataComponents/POTION_CONTENTS potion-contents)
     stack))
 
 (defn get-potion
@@ -540,14 +562,18 @@
     (throw (IllegalArgumentException. (str "Unknown potion: " keyword)))))
 
 (defn get-potion-effects
-  "获取药水的所有效果
+  "获取药水的所有效果 (Minecraft 1.21 使用 PotionContents 组件)
 
    参数:
    - potion-stack: 药水物品栈
 
-   返回: 效果实例列表"
+   返回: 效果实例列表
+
+   注意: MC 1.21 从数据组件中读取"
   [^ItemStack potion-stack]
-  (vec (PotionUtils/getMobEffects potion-stack)))
+  (if-let [^PotionContents contents (.get potion-stack DataComponents/POTION_CONTENTS)]
+    (vec (.getAllEffects contents))
+    []))
 
 ;; ============================================================================
 ;; 效果组合

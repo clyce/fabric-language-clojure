@@ -2,7 +2,8 @@
   "瑞士军刀 - 资源重载监听器模块
 
    封装资源和数据包重载监听，用于响应 /reload 命令。"
-  (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
+  (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
+            [com.fabriclj.swiss-knife.common.utils.json :as json])
   (:import (dev.architectury.event.events.common LifecycleEvent)
            (net.minecraft.server.packs.resources ResourceManager PreparableReloadListener)
            (net.minecraft.util.profiling ProfilerFiller)
@@ -38,25 +39,25 @@
    ```"
   [prepare-fn apply-fn]
   (reify PreparableReloadListener
-    (reload [_ preparation-barrier resource-manager background-executor main-executor]
-      (CompletableFuture/supplyAsync
-       (reify java.util.function.Supplier
-         (get [_]
-           (try
-             (prepare-fn resource-manager)
-             (catch Exception e
-               (core/log-error "Failed to prepare reload:" (.getMessage e))
-               nil))))
-       background-executor)
-      (.thenCompose preparation-barrier)
-      (.thenAcceptAsync
-       (reify java.util.function.Consumer
-         (accept [_ prepared-data]
-           (try
-             (apply-fn prepared-data resource-manager)
-             (catch Exception e
-               (core/log-error "Failed to apply reload:" (.getMessage e))))))
-       main-executor))))
+    (reload [_ preparation-barrier resource-manager preparations-profiler reload-profiler background-executor main-executor]
+      (let [prepared-future (CompletableFuture/supplyAsync
+                             (reify java.util.function.Supplier
+                               (get [_]
+                                 (try
+                                   (prepare-fn resource-manager)
+                                   (catch Exception e
+                                     (core/log-error "Failed to prepare reload:" (.getMessage e))
+                                     nil))))
+                             background-executor)]
+        (-> (.wait preparation-barrier prepared-future)
+            (.thenAcceptAsync
+             (reify java.util.function.Consumer
+               (accept [_ prepared-data]
+                 (try
+                   (apply-fn prepared-data resource-manager)
+                   (catch Exception e
+                     (core/log-error "Failed to apply reload:" (.getMessage e))))))
+             main-executor))))))
 
 (defn create-simple-reload-listener
   "创建简单的重载监听器( 仅在主线程执行)
@@ -108,8 +109,7 @@
    (.register (LifecycleEvent/SERVER_BEFORE_START)
               (reify java.util.function.Consumer
                 (accept [_ server]
-                  (.addPackFinder (.getResourceManager server) listener))))
-   id))
+                  (.addPackFinder (.getResourceManager server) listener))))))
 
 (defn on-reload!
   "注册简单的重载回调( 语法糖)
@@ -194,7 +194,7 @@
   [^ResourceManager manager ^net.minecraft.resources.ResourceLocation location]
   (when-let [content (read-resource manager location)]
     (try
-      (cheshire.core/parse-string content true)
+      (json/parse-string content true)
       (catch Exception e
         (core/log-warn "Failed to parse JSON" location ":" (.getMessage e))
         nil))))

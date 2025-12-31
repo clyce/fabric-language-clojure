@@ -8,6 +8,7 @@
   (:import (net.minecraft.world.item Item Item$Properties)
            (net.minecraft.world.level.block Block)
            (net.minecraft.world.level.block.state BlockBehaviour$Properties)
+           (net.minecraft.world.entity EntityType)
            (net.minecraft.network.chat Component)))
 
 ;; 启用反射警告
@@ -180,6 +181,35 @@
                      (if (instance? Block obj#)
                        obj#
                        (Block. obj#))))))))
+
+(defmacro defentity
+  "定义并注册实体类型
+
+   参数:
+   - registry: 实体注册表
+   - name: 实体名称( 符号)
+   - entity-type-or-fn: EntityType 实例或返回 EntityType 的表达式
+
+   示例:
+   ```clojure
+   (defentity entities my-mob
+     (-> (EntityType$Builder/of factory MobCategory/MONSTER)
+         (.sized 0.6 1.95)
+         (.build \"my_mob\")))
+
+   ;; 或使用函数
+   (defn create-mob-type [] ...)
+   (defentity entities my-mob (create-mob-type))
+   ```"
+  [registry name entity-type-or-fn]
+  (let [name-str (clojure.core/name name)]
+    `(def ~name
+       (register ~registry ~name-str
+                 (fn []
+                   (let [obj# ~entity-type-or-fn]
+                     (if (instance? EntityType obj#)
+                       obj#
+                       obj#)))))))
 
 (defmacro defblock-item
   "同时注册方块和对应的方块物品

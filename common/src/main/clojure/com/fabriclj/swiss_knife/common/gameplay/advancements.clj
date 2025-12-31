@@ -7,15 +7,10 @@
    - 进度奖励
    - 进度树管理"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import (net.minecraft.advancements Advancement AdvancementRewards AdvancementProgress
-            AdvancementType DisplayInfo FrameType)
-           (net.minecraft.advancements.critereon InventoryChangeTrigger$TriggerInstance
-            LocationTrigger$TriggerInstance
-            EntityHurtPlayerTrigger$TriggerInstance)
+  (:import (net.minecraft.advancements Advancement AdvancementRewards AdvancementProgress)
            (net.minecraft.server.level ServerPlayer)
            (net.minecraft.world.item ItemStack Items)
            (net.minecraft.resources ResourceLocation)
-           (net.minecraft.network.chat Component)
            (net.minecraft.server PlayerAdvancements)))
 
 (set! *warn-on-reflection* true)
@@ -36,12 +31,12 @@
    示例:
    ```clojure
    (grant-advancement! player \"mymod:first_item\")
-   (grant-advancement! player (ResourceLocation. \"mymod\" \"boss_kill\"))
+   (grant-advancement! player (ResourceLocation/fromNamespaceAndPath \"mymod\" \"boss_kill\"))
    ```"
   [^ServerPlayer player advancement-id]
   (let [^ResourceLocation res-loc (if (instance? ResourceLocation advancement-id)
                                     advancement-id
-                                    (ResourceLocation. advancement-id))
+                                    (ResourceLocation/parse (str advancement-id)))
         advancements (.getAdvancements player)
         server (.getServer player)
         advancement (.getAdvancement (.getAdvancements server) res-loc)]
@@ -65,7 +60,7 @@
   [^ServerPlayer player advancement-id]
   (let [^ResourceLocation res-loc (if (instance? ResourceLocation advancement-id)
                                     advancement-id
-                                    (ResourceLocation. advancement-id))
+                                    (ResourceLocation/parse (str advancement-id)))
         advancements (.getAdvancements player)
         server (.getServer player)
         advancement (.getAdvancement (.getAdvancements server) res-loc)]
@@ -89,7 +84,7 @@
   [^ServerPlayer player advancement-id]
   (let [^ResourceLocation res-loc (if (instance? ResourceLocation advancement-id)
                                     advancement-id
-                                    (ResourceLocation. advancement-id))
+                                    (ResourceLocation/parse (str advancement-id)))
         advancements (.getAdvancements player)
         server (.getServer player)
         advancement (.getAdvancement (.getAdvancements server) res-loc)]
@@ -112,7 +107,7 @@
   [^ServerPlayer player advancement-id]
   (let [^ResourceLocation res-loc (if (instance? ResourceLocation advancement-id)
                                     advancement-id
-                                    (ResourceLocation. advancement-id))
+                                    (ResourceLocation/parse (str advancement-id)))
         advancements (.getAdvancements player)
         server (.getServer player)
         advancement (.getAdvancement (.getAdvancements server) res-loc)]
@@ -239,11 +234,10 @@
    ```"
   [items & {:keys [min-count max-count]}]
   {:trigger "minecraft:inventory_changed"
-   :conditions (cond-> {:items (vec (for [item items]
-                                      (cond-> {:items [item]}
-                                        min-count (assoc :count {:min min-count})
-                                        max-count (assoc :count {:max max-count}))))}
-                 false nil)})
+   :conditions {:items (vec (for [item items]
+                              (cond-> {:items [item]}
+                                min-count (assoc-in [:count :min] min-count)
+                                max-count (assoc-in [:count :max] max-count))))}})
 
 (defn location-criterion
   "位置条件( 进入特定位置)

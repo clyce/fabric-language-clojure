@@ -110,7 +110,7 @@
     (.fill graphics x y (+ x 200) (+ y 80) 0x80000000)
 
     ;; 渲染文本
-    (.drawString graphics font \"Network Stats\" (+ x 5) (+ y 5) 0xFFFFFF)
+    (.drawString graphics font "Network Stats" (+ x 5) (+ y 5) 0xFFFFFF)
     (.drawString graphics font
                  (format "Sent: %.2f KB" (/ (:sent stats) 1024.0))
                  (+ x 5) (+ y 20) 0x00FF00)
@@ -319,7 +319,7 @@
 
       ;; 渲染标题
       (let [font (.font (Minecraft/getInstance))]
-        (.drawString graphics font \"TPS History\" (+ x 5) (+ y 5) 0xFFFFFF))
+        (.drawString graphics font "TPS History" (+ x 5) (+ y 5) 0xFFFFFF))
 
       ;; 渲染图表
       (let [tps-values (map :tps history)

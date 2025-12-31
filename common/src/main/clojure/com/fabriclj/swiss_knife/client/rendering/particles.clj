@@ -29,81 +29,112 @@
 ;; 内置粒子类型
 ;; ============================================================================
 
+(defn- safe-get-particle-type
+  "安全获取粒子类型，如果不存在则返回 nil"
+  [field-name]
+  (try
+    (let [field (.getField ParticleTypes field-name)]
+      (.get field nil))
+    (catch Exception _
+      nil)))
+
 (def particle-types
-  "内置粒子类型映射"
-  {:explosion ParticleTypes/EXPLOSION
-   :explosion-emitter ParticleTypes/EXPLOSION_EMITTER
-   :firework ParticleTypes/FIREWORK
-   :bubble ParticleTypes/BUBBLE
-   :splash ParticleTypes/SPLASH
-   :fishing ParticleTypes/FISHING
-   :underwater ParticleTypes/UNDERWATER
-   :crit ParticleTypes/CRIT
-   :enchanted-hit ParticleTypes/ENCHANTED_HIT
-   :smoke ParticleTypes/SMOKE
-   :large-smoke ParticleTypes/LARGE_SMOKE
-   :effect ParticleTypes/EFFECT
-   :instant-effect ParticleTypes/INSTANT_EFFECT
-   :entity-effect ParticleTypes/ENTITY_EFFECT
-   :witch ParticleTypes/WITCH
-   :dripping-water ParticleTypes/DRIPPING_WATER
-   :dripping-lava ParticleTypes/DRIPPING_LAVA
-   :angry-villager ParticleTypes/ANGRY_VILLAGER
-   :happy-villager ParticleTypes/HAPPY_VILLAGER
-   :heart ParticleTypes/HEART
-   :barrier ParticleTypes/BARRIER
-   :item-snowball ParticleTypes/ITEM_SNOWBALL
-   :item-slime ParticleTypes/ITEM_SLIME
-   :portal ParticleTypes/PORTAL
-   :enchant ParticleTypes/ENCHANT
-   :flame ParticleTypes/FLAME
-   :soul ParticleTypes/SOUL
-   :soul-fire-flame ParticleTypes/SOUL_FIRE_FLAME
-   :lava ParticleTypes/LAVA
-   :mycelium ParticleTypes/MYCELIUM
-   :note ParticleTypes/NOTE
-   :poof ParticleTypes/POOF
-   :cloud ParticleTypes/CLOUD
-   :dust ParticleTypes/DUST
-   :snowflake ParticleTypes/SNOWFLAKE
-   :dripping-honey ParticleTypes/DRIPPING_HONEY
-   :falling-honey ParticleTypes/FALLING_HONEY
-   :landing-honey ParticleTypes/LANDING_HONEY
-   :falling-nectar ParticleTypes/FALLING_NECTAR
-   :ash ParticleTypes/ASH
-   :crimson-spore ParticleTypes/CRIMSON_SPORE
-   :warped-spore ParticleTypes/WARPED_SPORE
-   :dripping-obsidian-tear ParticleTypes/DRIPPING_OBSIDIAN_TEAR
-   :falling-obsidian-tear ParticleTypes/FALLING_OBSIDIAN_TEAR
-   :landing-obsidian-tear ParticleTypes/LANDING_OBSIDIAN_TEAR
-   :reverse-portal ParticleTypes/REVERSE_PORTAL
-   :white-ash ParticleTypes/WHITE_ASH
-   :small-flame ParticleTypes/SMALL_FLAME
-   :glow ParticleTypes/GLOW
-   :glow-squid-ink ParticleTypes/GLOW_SQUID_INK
-   :scrape ParticleTypes/SCRAPE
-   :electric-spark ParticleTypes/ELECTRIC_SPARK
-   :sonic-boom ParticleTypes/SONIC_BOOM
-   :sculk-soul ParticleTypes/SCULK_SOUL
-   :sculk-charge ParticleTypes/SCULK_CHARGE
-   :sculk-charge-pop ParticleTypes/SCULK_CHARGE_POP
-   :shriek ParticleTypes/SHRIEK
-   :cherry-leaves ParticleTypes/CHERRY_LEAVES
-   :egg-crack ParticleTypes/EGG_CRACK
-   :dust-plume ParticleTypes/DUST_PLUME
-   :gust ParticleTypes/GUST
-   :small-gust ParticleTypes/SMALL_GUST
-   :gust-emitter-large ParticleTypes/GUST_EMITTER_LARGE
-   :gust-emitter-small ParticleTypes/GUST_EMITTER_SMALL
-   :trial-spawner-detection ParticleTypes/TRIAL_SPAWNER_DETECTION
-   :vault-connection ParticleTypes/VAULT_CONNECTION
-   :infested ParticleTypes/INFESTED
-   :item-cobweb ParticleTypes/ITEM_COBWEB
-   :white-smoke ParticleTypes/WHITE_SMOKE
-   :dust-pillar ParticleTypes/DUST_PILLAR
-   :ominous-spawning ParticleTypes/OMINOUS_SPAWNING
-   :raid-omen ParticleTypes/RAID_OMEN
-   :trial-omen ParticleTypes/TRIAL_OMEN})
+  "内置粒子类型映射
+
+   注意: 某些粒子类型可能在特定 Minecraft 版本中不存在，
+   使用 safe-get-particle-type 安全加载，避免版本兼容问题。"
+  (let [;; 核心粒子( 所有版本都有)
+        base-particles {:explosion ParticleTypes/EXPLOSION
+                        :explosion-emitter ParticleTypes/EXPLOSION_EMITTER
+                        :firework ParticleTypes/FIREWORK
+                        :bubble ParticleTypes/BUBBLE
+                        :splash ParticleTypes/SPLASH
+                        :fishing ParticleTypes/FISHING
+                        :underwater ParticleTypes/UNDERWATER
+                        :crit ParticleTypes/CRIT
+                        :enchanted-hit ParticleTypes/ENCHANTED_HIT
+                        :smoke ParticleTypes/SMOKE
+                        :large-smoke ParticleTypes/LARGE_SMOKE
+                        :effect ParticleTypes/EFFECT
+                        :instant-effect ParticleTypes/INSTANT_EFFECT
+                        :entity-effect ParticleTypes/ENTITY_EFFECT
+                        :witch ParticleTypes/WITCH
+                        :dripping-water ParticleTypes/DRIPPING_WATER
+                        :dripping-lava ParticleTypes/DRIPPING_LAVA
+                        :angry-villager ParticleTypes/ANGRY_VILLAGER
+                        :happy-villager ParticleTypes/HAPPY_VILLAGER
+                        :heart ParticleTypes/HEART
+                        :item-snowball ParticleTypes/ITEM_SNOWBALL
+                        :item-slime ParticleTypes/ITEM_SLIME
+                        :portal ParticleTypes/PORTAL
+                        :enchant ParticleTypes/ENCHANT
+                        :flame ParticleTypes/FLAME
+                        :soul ParticleTypes/SOUL
+                        :soul-fire-flame ParticleTypes/SOUL_FIRE_FLAME
+                        :lava ParticleTypes/LAVA
+                        :mycelium ParticleTypes/MYCELIUM
+                        :note ParticleTypes/NOTE
+                        :poof ParticleTypes/POOF
+                        :cloud ParticleTypes/CLOUD
+                        :dust ParticleTypes/DUST
+                        :snowflake ParticleTypes/SNOWFLAKE
+                        :dripping-honey ParticleTypes/DRIPPING_HONEY
+                        :falling-honey ParticleTypes/FALLING_HONEY
+                        :landing-honey ParticleTypes/LANDING_HONEY
+                        :falling-nectar ParticleTypes/FALLING_NECTAR
+                        :ash ParticleTypes/ASH
+                        :crimson-spore ParticleTypes/CRIMSON_SPORE
+                        :warped-spore ParticleTypes/WARPED_SPORE
+                        :dripping-obsidian-tear ParticleTypes/DRIPPING_OBSIDIAN_TEAR
+                        :falling-obsidian-tear ParticleTypes/FALLING_OBSIDIAN_TEAR
+                        :landing-obsidian-tear ParticleTypes/LANDING_OBSIDIAN_TEAR
+                        :reverse-portal ParticleTypes/REVERSE_PORTAL
+                        :white-ash ParticleTypes/WHITE_ASH
+                        :small-flame ParticleTypes/SMALL_FLAME
+                        :glow ParticleTypes/GLOW
+                        :glow-squid-ink ParticleTypes/GLOW_SQUID_INK
+                        :scrape ParticleTypes/SCRAPE
+                        :electric-spark ParticleTypes/ELECTRIC_SPARK
+                        :sonic-boom ParticleTypes/SONIC_BOOM
+                        :sculk-soul ParticleTypes/SCULK_SOUL
+                        :sculk-charge ParticleTypes/SCULK_CHARGE
+                        :sculk-charge-pop ParticleTypes/SCULK_CHARGE_POP
+                        :shriek ParticleTypes/SHRIEK
+                        :cherry-leaves ParticleTypes/CHERRY_LEAVES
+                        :egg-crack ParticleTypes/EGG_CRACK
+                        :dust-plume ParticleTypes/DUST_PLUME}
+        ;; 1.21+ 粒子( 可能不存在)
+        gust (safe-get-particle-type "GUST")
+        small-gust (safe-get-particle-type "SMALL_GUST")
+        gust-emitter-large (safe-get-particle-type "GUST_EMITTER_LARGE")
+        gust-emitter-small (safe-get-particle-type "GUST_EMITTER_SMALL")
+        ;; 1.21.2+ 粒子( 可能不存在)
+        trial-spawner-detection (safe-get-particle-type "TRIAL_SPAWNER_DETECTION")
+        vault-connection (safe-get-particle-type "VAULT_CONNECTION")
+        infested (safe-get-particle-type "INFESTED")
+        item-cobweb (safe-get-particle-type "ITEM_COBWEB")
+        white-smoke (safe-get-particle-type "WHITE_SMOKE")
+        dust-pillar (safe-get-particle-type "DUST_PILLAR")
+        ominous-spawning (safe-get-particle-type "OMINOUS_SPAWNING")
+        raid-omen (safe-get-particle-type "RAID_OMEN")
+        trial-omen (safe-get-particle-type "TRIAL_OMEN")
+        ;; BARRIER( 可能不存在)
+        barrier (safe-get-particle-type "BARRIER")]
+    (cond-> base-particles
+      gust (assoc :gust gust)
+      small-gust (assoc :small-gust small-gust)
+      gust-emitter-large (assoc :gust-emitter-large gust-emitter-large)
+      gust-emitter-small (assoc :gust-emitter-small gust-emitter-small)
+      trial-spawner-detection (assoc :trial-spawner-detection trial-spawner-detection)
+      vault-connection (assoc :vault-connection vault-connection)
+      infested (assoc :infested infested)
+      item-cobweb (assoc :item-cobweb item-cobweb)
+      white-smoke (assoc :white-smoke white-smoke)
+      dust-pillar (assoc :dust-pillar dust-pillar)
+      ominous-spawning (assoc :ominous-spawning ominous-spawning)
+      raid-omen (assoc :raid-omen raid-omen)
+      trial-omen (assoc :trial-omen trial-omen)
+      barrier (assoc :barrier barrier))))
 
 (defn get-particle-type
   "获取粒子类型

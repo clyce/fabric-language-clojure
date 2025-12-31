@@ -8,7 +8,8 @@
    - 文本组合"
   (:import (net.minecraft.network.chat
               Component TextColor Style
-              ClickEvent HoverEvent MutableComponent)))
+              ClickEvent HoverEvent MutableComponent
+              ClickEvent$Action HoverEvent$Action)))
 
 (set! *warn-on-reflection* true)
 

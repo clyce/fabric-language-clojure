@@ -4,7 +4,8 @@
    封装创造模式物品栏标签页的创建和管理。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.registry :as reg])
-  (:import (net.minecraft.world.item CreativeModeTab CreativeModeTab$Builder Item ItemStack)
+  (:import (net.minecraft.world.item CreativeModeTab Item ItemStack)
+           (net.fabricmc.fabric.api.itemgroup.v1 FabricItemGroup)
            (net.minecraft.network.chat Component)
            (net.minecraft.resources ResourceLocation)
            (net.minecraft.core.registries Registries)))
@@ -12,18 +13,21 @@
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
 
+;; 前向声明
+(declare tab-display-items!)
+
 ;; ============================================================================
 ;; 标签页创建
 ;; ============================================================================
 
 (defn creative-tab-builder
-  "创建创造模式标签页构建器
+  "创建创造模式标签页构建器（使用 Fabric API）
 
    参数:
    - title: 标题( 字符串或 Component)
    - icon: 图标物品或物品栈
 
-   返回: CreativeModeTab$Builder
+   返回: FabricItemGroup$Builder
 
    示例:
    ```clojure
@@ -31,8 +35,8 @@
        (tab-display-items! [item1 item2 item3])
        (build-tab))
    ```"
-  ^CreativeModeTab$Builder [title icon]
-  (let [builder (CreativeModeTab/builder)
+  [title icon]
+  (let [builder (FabricItemGroup/builder)
         title-component (if (string? title)
                           (Component/literal title)
                           title)
@@ -40,7 +44,7 @@
                      icon
                      (ItemStack. ^Item icon))]
     (-> builder
-        (.title title-component)
+        (.displayName title-component)
         (.icon (reify java.util.function.Supplier
                  (get [_] icon-stack))))))
 
@@ -48,24 +52,24 @@
   "设置标签页显示的物品
 
    参数:
-   - builder: CreativeModeTab$Builder
+   - builder: FabricItemGroup$Builder
    - items: 物品列表( Item 或 ItemStack)
 
    返回: builder( 用于链式调用) "
-  ^CreativeModeTab$Builder [^CreativeModeTab$Builder builder items]
-  (.displayItems builder
-                 (reify net.minecraft.world.item.CreativeModeTab$DisplayItemsGenerator
-                   (accept [_ params output]
-                     (doseq [item items]
-                       (if (instance? ItemStack item)
-                         (.accept output item)
-                         (.accept output (ItemStack. ^Item item))))))))
+  [builder items]
+  (.entries builder
+            (reify java.util.function.BiConsumer
+              (accept [_ context output]
+                (doseq [item items]
+                  (if (instance? ItemStack item)
+                    (.add output item)
+                    (.add output (ItemStack. ^Item item))))))))
 
 (defn build-tab
   "构建创造模式标签页
 
    返回: CreativeModeTab"
-  ^CreativeModeTab [^CreativeModeTab$Builder builder]
+  ^CreativeModeTab [builder]
   (.build builder))
 
 ;; ============================================================================

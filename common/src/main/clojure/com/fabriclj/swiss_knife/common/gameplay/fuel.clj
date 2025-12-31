@@ -3,7 +3,7 @@
 
    封装物品燃料值注册，用于熔炉等方块。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import (dev.architectury.registry FuelRegistry)
+  (:import (dev.architectury.registry.fuel FuelRegistry)
            (net.minecraft.world.item Item ItemStack)
            (net.minecraft.world.level.block Block)))
 

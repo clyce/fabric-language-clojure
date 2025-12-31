@@ -8,7 +8,7 @@
    - 数据生成和导出
    - DSL 宏简化配方定义"
   (:require [clojure.string :as str]
-            [clojure.data.json :as json])
+            [com.fabriclj.swiss-knife.common.utils.json :as json])
   (:import (net.minecraft.world.item Item Items ItemStack)
            (net.minecraft.world.item.crafting Ingredient RecipeSerializer
             ShapedRecipe ShapelessRecipe
@@ -29,6 +29,9 @@
 
 (set! *warn-on-reflection* true)
 
+;; 前向声明
+(declare set-count)
+
 ;; ============================================================================
 ;; 辅助函数
 ;; ============================================================================
@@ -39,9 +42,9 @@
   (cond
     (instance? ResourceLocation id) id
     (string? id) (if (str/includes? id ":")
-                   (ResourceLocation. id)
-                   (ResourceLocation. "minecraft" id))
-    (keyword? id) (ResourceLocation. (name id))
+                   (ResourceLocation/parse id)
+                   (ResourceLocation/fromNamespaceAndPath "minecraft" id))
+    (keyword? id) (ResourceLocation/parse (name id))
     :else (throw (IllegalArgumentException. (str "Invalid resource location: " id)))))
 
 (defn- ->ingredient
@@ -580,8 +583,8 @@
 
    返回: JSON 字符串"
   [recipe & {:keys [pretty?] :or {pretty? true}}]
-  (json/write-str (recipe->json recipe)
-                  :indent (when pretty? 2)))
+  (json/generate-string (recipe->json recipe)
+                        {:pretty pretty?}))
 
 (defn save-recipe-json!
   "保存配方 JSON 到文件

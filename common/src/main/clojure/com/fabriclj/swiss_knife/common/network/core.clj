@@ -12,6 +12,9 @@
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
 
+;; 前向声明
+(declare send-to-server! send-generic!)
+
 ;; ============================================================================
 ;; 数据包编解码
 ;; ============================================================================
@@ -141,6 +144,10 @@
 
    返回: 数据包类型标识符
 
+   注意:
+   - 如果相同 id 的数据包类型已经注册过，会记录警告并返回已存在的 ResourceLocation
+   - 这确保了函数的幂等性，防止重复注册导致的错误
+
    示例:
    ```clojure
    (def my-packet
@@ -154,8 +161,13 @@
    ```"
   [id encoder decoder]
   (let [^ResourceLocation loc (core/->resource-location id)]
-    (swap! registered-packets assoc loc {:encoder encoder :decoder decoder})
-    loc))
+    (if (contains? @registered-packets loc)
+      (do
+        (core/log-warn "Packet type" loc "already registered, skipping duplicate registration")
+        loc)
+      (do
+        (swap! registered-packets assoc loc {:encoder encoder :decoder decoder})
+        loc))))
 
 (defn create-edn-packet-type
   "创建基于 EDN 的数据包类型( 简化版)
@@ -385,7 +397,9 @@
    (init-generic-packet-system! \"mymod\" :channel-name \"custom_packets\")
    ```"
   [mod-id & [opts]]
-  (let [channel-name (or (:channel-name opts) "swiss_knife_generic")
+  ;; 检查是否已经初始化过，如果已初始化则跳过
+  (when-not (contains? @generic-packet-systems mod-id)
+    (let [channel-name (or (:channel-name opts) "swiss_knife_generic")
         packet-id (core/resource-location mod-id channel-name)
         handlers (atom {})]
 
@@ -406,7 +420,7 @@
         (when-let [handler (get @handlers (:id data))]
           (handler (:payload data) player))))
 
-    (core/log-info "Generic packet system initialized for" mod-id "on channel" channel-name)))
+    (core/log-info "Generic packet system initialized for" mod-id "on channel" channel-name))))
 
 (defn register-generic-handler!
   "注册通用数据包处理器

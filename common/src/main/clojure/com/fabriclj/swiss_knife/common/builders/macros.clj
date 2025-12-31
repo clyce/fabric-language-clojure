@@ -33,7 +33,7 @@
             [com.fabriclj.swiss-knife.common.registry.core :as registry]
             [com.fabriclj.swiss-knife.common.events.core :as events])
   (:import (net.minecraft.world.item Item Item$Properties BlockItem)
-           (net.minecraft.world.level.block Block Block$Properties)
+           (net.minecraft.world.level.block Block)
            (net.minecraft.world.level.block.state BlockBehaviour BlockBehaviour$Properties)
            (net.minecraft.world.food FoodProperties)
            (net.minecraft.world.item.context UseOnContext)

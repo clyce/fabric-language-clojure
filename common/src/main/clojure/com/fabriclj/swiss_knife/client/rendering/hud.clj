@@ -198,31 +198,42 @@
 (defmacro defhud
   "定义 HUD 渲染器( 语法糖)
 
+   参数:
+   - hud-name: HUD 名称( 符号)
+   - priority-or-binding: 优先级( 数字) 或绑定向量
+   - binding-or-body: 绑定向量或函数体
+   - & body: 函数体( 当提供了优先级时)
+
    示例:
    ```clojure
+   ;; 简单形式( 默认优先级 0)
    (defhud my-hud
      [graphics delta]
      (let [pos (get-top-left 10)]
        (draw-text-hud graphics \"My HUD\" pos)))
+
+   ;; 带优先级
+   (defhud my-hud 10
+     [graphics delta]
+     (draw-text-hud graphics \"My HUD\" (get-top-left 10)))
    ```"
-  ([hud-name binding & body]
-   `(def ~hud-name
-      (register-hud-renderer!
-       (fn ~binding ~@body)
-       0
-       ~(keyword hud-name))))
-  ([hud-name priority binding & body]
-   (if (keyword? priority)
-     `(def ~hud-name
-        (register-hud-renderer!
-         (fn ~binding ~@body)
-         0
-         ~(keyword hud-name)))
-     `(def ~hud-name
-        (register-hud-renderer!
-         (fn ~priority ~@(cons binding body))
-         0
-         ~(keyword hud-name))))))
+  [hud-name & args]
+  (if (and (>= (count args) 2)
+           (number? (first args)))
+    ;; 带优先级的形式: (defhud name priority [binding] body...)
+    (let [[priority binding & body] args]
+      `(def ~hud-name
+         (register-hud-renderer!
+          (fn ~binding ~@body)
+          ~priority
+          ~(keyword hud-name))))
+    ;; 简单形式: (defhud name [binding] body...)
+    (let [[binding & body] args]
+      `(def ~hud-name
+         (register-hud-renderer!
+          (fn ~binding ~@body)
+          0
+          ~(keyword hud-name))))))
 
 (comment
   ;; 使用示例

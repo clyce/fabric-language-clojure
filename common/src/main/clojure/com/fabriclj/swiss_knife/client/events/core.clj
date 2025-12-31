@@ -2,14 +2,16 @@
   "瑞士军刀 - 客户端事件
    封装客户端专用事件( 渲染、输入等)
    注意: 此命名空间仅在客户端环境可用！"
-  (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
+  (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
+            [com.fabriclj.swiss-knife.common.events.core :as common-events])
   (:import (dev.architectury.event EventResult)
            (dev.architectury.event.events.client ClientGuiEvent
                                                  ClientLifecycleEvent
                                                  ClientPlayerEvent
                                                  ClientRawInputEvent
-                                                 ClientScreenInputEvent)
-           (dev.architectury.event.events.client ClientTickEvent)
+                                                 ClientScreenInputEvent
+                                                 ClientTickEvent)
+           (com.fabriclj EventBridge)
            (net.minecraft.client Minecraft)
            (net.minecraft.client.player LocalPlayer)
            (net.minecraft.client.multiplayer ClientLevel)
@@ -19,7 +21,7 @@
 (set! *warn-on-reflection* true)
 
 ;; ============================================================================
-;; 客户端生命周期期
+;; 客户端生命周期
 ;; ============================================================================
 
 (defn on-client-setup
@@ -50,7 +52,7 @@
                  (handler minecraft)))))
 
 ;; ============================================================================
-;; 客户端Tick
+;; 客户端Tick - 使用 EventBridge 解决类加载器问题
 ;; ============================================================================
 
 (defn on-client-tick
@@ -60,26 +62,34 @@
 
    注意: 此函数每秒调用 20 次，避免执行耗时操作"
   [handler]
-  (.register (ClientTickEvent/CLIENT_PRE)
-             (reify java.util.function.Consumer
-               (accept [_ minecraft]
-                 (handler minecraft)))))
+  (EventBridge/registerClientTickWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ minecraft]
+       (handler minecraft)))))
 
 (defn on-client-level-tick
   "每个客户端世界tick 触发"
   [handler]
-  (.register (ClientTickEvent/CLIENT_LEVEL_PRE)
-             (reify java.util.function.Consumer
-               (accept [_ level]
-                 (handler level)))))
+  (EventBridge/registerClientLevelTickWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ level]
+       (handler level)))))
 
 (defn on-client-player-tick
-  "每个客户端玩家tick 触发"
+  "每个客户端玩家tick 触发
+
+   参数:
+   - handler: 函数 (fn [^LocalPlayer player] ...)
+
+   注意:
+   - 此函数每秒调用 20 次，避免执行耗时操作
+   - 当玩家不存在时( 未加入世界) 不会触发"
   [handler]
-  (.register (ClientPlayerEvent/CLIENT_PLAYER_QUIT)
-             (reify java.util.function.Consumer
-               (accept [_ player]
-                 (handler player)))))
+  (EventBridge/registerClientTickWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ minecraft]
+       (when-let [player (.player ^Minecraft minecraft)]
+         (handler player))))))
 
 ;; ============================================================================
 ;; 玩家事件
@@ -104,12 +114,16 @@
                  (handler player)))))
 
 (defn on-client-player-respawn
-  "客户端玩家重生时触发"
+  "客户端玩家重生时触发
+
+   参数:
+   - handler: 函数 (fn [^LocalPlayer new-player ^LocalPlayer old-player] ...)"
   [handler]
   (.register (ClientPlayerEvent/CLIENT_PLAYER_RESPAWN)
              (reify java.util.function.Consumer
-               (accept [_ new-player old-player]
-                 (handler new-player old-player)))))
+               (accept [_ respawn-context]
+                 (handler (.newPlayer respawn-context)
+                          (.oldPlayer respawn-context))))))
 
 ;; ============================================================================
 ;; 原始输入事件
@@ -161,9 +175,9 @@
 
    参数说明:
    - key: GLFW 键码
-   - scancode: 扫描
+   - scancode: 扫描码
    - action: 0=释放, 1=按下, 2=重复
-   - mods: 修饰"
+   - mods: 修饰键"
   [handler]
   (.register (ClientRawInputEvent/KEY_PRESSED)
              (reify java.util.function.Consumer
@@ -175,7 +189,7 @@
                           (.mods key-context))))))
 
 ;; ============================================================================
-;; GUI 事件
+;; GUI 事件 - 使用 EventBridge 解决类加载器问题
 ;; ============================================================================
 
 (defn on-screen-init-pre
@@ -210,38 +224,33 @@
 (defn on-screen-render-post
   "屏幕渲染后触发"
   [handler]
-  (.register (ClientGuiEvent/RENDER_POST)
-             (reify java.util.function.Consumer
-               (accept [_ render-context]
-                 (handler (.screen render-context)
-                          (.graphics render-context)
-                          (.mouseX render-context)
-                          (.mouseY render-context)
-                          (.delta render-context))))))
+  (EventBridge/registerScreenRenderPostWithConsumer
+   (reify java.util.function.Consumer
+     (accept [_ args]
+       (let [^"[Ljava.lang.Object;" arr args
+             screen (aget arr 0)
+             graphics (aget arr 1)
+             mouse-x (aget arr 2)
+             mouse-y (aget arr 3)
+             delta (aget arr 4)]
+         (handler screen graphics mouse-x mouse-y delta))))))
 
 ;; ============================================================================
 ;; 辅助函数
 ;; ============================================================================
+;; 注意: event-pass 和 event-interrupt 从 common.events.core 中引用
+;; 避免重复定义导致的冲突
 
-(defn event-pass
-  "事件继续传"
-  []
-  (EventResult/pass))
+(def event-pass
+  "事件继续传递( 从 common.events.core 引用)"
+  common-events/event-pass)
 
-(defn event-interrupt
-  "中断事件
-
-   注意: EventResult/interrupt 只接受一个 boolean 参数。
-   如果需要返回值，请直接返回 InteractionResult 或使用其他事件 API。"
-  ([]
-   (EventResult/interrupt false))
-  ([value]
-   ;; EventResult/interrupt 只接受 boolean，不支持返回值
-   ;; 如果需要返回值，应该在事件处理中直接处理
-   (EventResult/interrupt true)))
+(def event-interrupt
+  "中断事件( 从 common.events.core 引用)"
+  common-events/event-interrupt)
 
 ;; ============================================================================
-;; 便捷
+;; 便捷宏
 ;; ============================================================================
 
 (defmacro on-key
@@ -263,10 +272,15 @@
 (comment
   ;; 使用示例
 
-  ;; 客户端生命周期期
+  ;; 客户端生命周期
   (on-client-started
    (fn [minecraft]
      (println "Client started!")))
+
+  ;; 客户端 tick (使用 EventBridge)
+  (on-client-tick
+   (fn [minecraft]
+     (println "Client tick")))
 
   ;; 玩家加入
   (on-client-player-join
@@ -292,8 +306,8 @@
           (fn []
             (println "H key pressed!")))
 
-  ;; GUI 渲染
+  ;; GUI 渲染 (使用 EventBridge)
   (on-screen-render-post
    (fn [screen graphics mouse-x mouse-y delta]
-     ;; 绘制自定UI
+     ;; 绘制自定义 UI
      (event-pass))))

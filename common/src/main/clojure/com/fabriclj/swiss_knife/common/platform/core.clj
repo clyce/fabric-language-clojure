@@ -9,7 +9,8 @@
            (net.minecraft.server MinecraftServer)
            (net.minecraft.world.level Level)
            (net.minecraft.world.level.block Block)
-           (net.minecraft.world.entity EntityType)))
+           (net.minecraft.world.entity EntityType)
+           (net.fabricmc.api EnvType)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -67,12 +68,12 @@
 (defn client-side?
   "是否在物理客户端运行( 包括单人游戏) "
   []
-  (-> (Platform/getEnv) (.isClient)))
+  (= (Platform/getEnv) EnvType/CLIENT))
 
 (defn server-side?
   "是否在物理服务端运行( 包括单人游戏的集成服务器) "
   []
-  (-> (Platform/getEnv) (.isServer)))
+  (= (Platform/getEnv) EnvType/SERVER))
 
 (defn development?
   "是否在开发环境运行"
@@ -99,9 +100,9 @@
    (resource-location \"minecraft:stone\")
    ```"
   (^ResourceLocation [^String namespace ^String path]
-   (ResourceLocation. namespace path))
+   (ResourceLocation/fromNamespaceAndPath namespace path))
   (^ResourceLocation [^String full-path]
-   (ResourceLocation. full-path)))
+   (ResourceLocation/parse full-path)))
 
 (defn ->resource-location
   "将对象转换为 ResourceLocation
@@ -119,8 +120,8 @@
   ^ResourceLocation [obj]
   (cond
     (instance? ResourceLocation obj) obj
-    (string? obj) (ResourceLocation. obj)
-    (keyword? obj) (ResourceLocation. (name obj))
+    (string? obj) (ResourceLocation/parse obj)
+    (keyword? obj) (ResourceLocation/parse (name obj))
     :else (throw (IllegalArgumentException.
                   (str "Cannot convert to ResourceLocation: " obj)))))
 

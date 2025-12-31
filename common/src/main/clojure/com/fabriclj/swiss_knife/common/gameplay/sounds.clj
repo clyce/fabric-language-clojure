@@ -9,10 +9,14 @@
            (net.minecraft.world.entity.player Player)
            (net.minecraft.world.level Level)
            (net.minecraft.resources ResourceLocation)
-           (net.minecraft.core BlockPos)))
+           (net.minecraft.core BlockPos)
+           (net.minecraft.core.registries BuiltInRegistries)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
+
+;; 前向声明
+(declare with-sound with-volume with-pitch with-source play-at!)
 
 ;; ============================================================================
 ;; 音效源类型
@@ -135,8 +139,8 @@
                                             (.getZ ^BlockPos pos)]
                   :else pos)
         ^SoundEvent sound-event (if (keyword? sound)
-                                  (net.minecraft.core.registries.BuiltInRegistries/SOUND_EVENT
-                                   (.get (core/->resource-location sound)))
+                                  (.get BuiltInRegistries/SOUND_EVENT
+                                        (core/->resource-location sound))
                                   sound)
         ^SoundSource source-type (get-sound-source source)]
     (.playSound level nil x y z sound-event source-type volume pitch seed)))
@@ -167,8 +171,8 @@
                                             (.getY ^BlockPos pos)
                                             (.getZ ^BlockPos pos)])
         ^SoundEvent sound-event (if (keyword? sound)
-                                  (net.minecraft.core.registries.BuiltInRegistries/SOUND_EVENT
-                                   (.get (core/->resource-location sound)))
+                                  (.get BuiltInRegistries/SOUND_EVENT
+                                        (core/->resource-location sound))
                                   sound)
         ^SoundSource source-type (get-sound-source source)]
     (.playSound player nil x y z sound-event source-type volume pitch)))

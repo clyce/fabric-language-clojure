@@ -24,11 +24,12 @@ configurations {
 
 repositories {
     maven { url = 'https://clojars.org/repo' }
+    maven { url = 'https://maven.parchmentmc.org' }  // Parchment Maven
 }
 
 dependencies {
     minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
-    mappings loom.officialMojangMappings()
+    // mappings 配置从父项目 (build.gradle) 继承，不需要在这里重复定义
 
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
     modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
@@ -51,6 +52,7 @@ dependencies {
     // 注意: 这些依赖仅在开发环境中需要，发布的 mod 会使用 fabric-language-clojure 自带的 Clojure
     modImplementation "org.clojure:clojure:$rootProject.clojure_version"
     modImplementation "nrepl:nrepl:$rootProject.nrepl_version"
+    modImplementation "org.clojure:data.json:2.5.1"
 }
 
 // 配置 Clojure 源码目录

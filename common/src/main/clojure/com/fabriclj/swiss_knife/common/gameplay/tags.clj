@@ -6,10 +6,10 @@
   (:import (net.minecraft.tags TagKey ItemTags BlockTags EntityTypeTags FluidTags)
            (net.minecraft.core.registries Registries)
            (net.minecraft.world.item ItemStack Item)
-           (net.minecraft.world.level.block Block BlockState)
+           (net.minecraft.world.level.block Block)
+           (net.minecraft.world.level.block.state BlockState)
            (net.minecraft.world.entity EntityType)
-           (net.minecraft.resources ResourceLocation)
-           (net.minecraft.core.registries Registries)))
+           (net.minecraft.resources ResourceLocation)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)

@@ -11,7 +11,8 @@
            (net.minecraft.core.component DataComponents)
            (net.minecraft.nbt CompoundTag)
            (net.minecraft.world.level Level)
-           (net.minecraft.world.entity.item ItemEntity)))
+           (net.minecraft.world.entity.item ItemEntity)
+           (net.minecraft.network.chat Component)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -224,8 +225,7 @@
    - name: 名称字符串或 Component"
   [^ItemStack stack name]
   (if (string? name)
-    (.set stack DataComponents/CUSTOM_NAME
-          (net.minecraft.network.chat.Component/literal name))
+    (.set stack DataComponents/CUSTOM_NAME (Component/literal name))
     (.set stack DataComponents/CUSTOM_NAME name))
   stack)
 
@@ -250,7 +250,7 @@
    ```"
   [^ItemStack stack lines]
   (let [components (map #(if (string? %)
-                           (net.minecraft.network.chat.Component/literal %)
+                           (Component/literal %)
                            %)
                         lines)
         lore (net.minecraft.world.item.component.ItemLore. components)]
@@ -454,9 +454,9 @@
   (let [^net.minecraft.world.food.FoodProperties$Builder builder
         (net.minecraft.world.food.FoodProperties$Builder.)]
     (.nutrition builder (int nutrition))
-    (.saturationMod builder (float saturation))
+    (.saturationModifier builder (float saturation))
     (when always-eat?
-      (.alwaysEat builder))
+      (.alwaysEdible builder))
     (when fast-food?
       (.fast builder))
     (when meat?

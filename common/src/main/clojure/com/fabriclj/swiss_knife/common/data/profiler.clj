@@ -26,6 +26,35 @@
 (def ^ConcurrentHashMap timing-results (ConcurrentHashMap.))
 
 ;; ============================================================================
+;; 内部辅助函数
+;; ============================================================================
+
+(defn record-timing!
+  "记录时间测量结果
+
+   参数:
+   - name: 标识
+   - duration-ns: 持续时间( 纳秒)
+
+   内部使用"
+  [name duration-ns]
+  (let [name-key (if (keyword? name) name (keyword (str name)))
+        current (.get timing-results (str name-key))
+        new-data (if current
+                   {:count (inc (:count current))
+                    :total-ns (+ (:total-ns current) duration-ns)
+                    :min-ns (min (:min-ns current) duration-ns)
+                    :max-ns (max (:max-ns current) duration-ns)
+                    :avg-ns (/ (+ (:total-ns current) duration-ns)
+                               (inc (:count current)))}
+                   {:count 1
+                    :total-ns duration-ns
+                    :min-ns duration-ns
+                    :max-ns duration-ns
+                    :avg-ns duration-ns})]
+    (.put timing-results (str name-key) new-data)))
+
+;; ============================================================================
 ;; 时间测量
 ;; ============================================================================
 
@@ -97,30 +126,6 @@
     (record-timing! namespaced-name duration)
     result))
 
-(defn record-timing!
-  "记录时间测量结果
-
-   参数:
-   - name: 标识
-   - duration-ns: 持续时间( 纳秒)
-
-   内部使用"
-  [name duration-ns]
-  (let [name-key (if (keyword? name) name (keyword (str name)))
-        current (.get timing-results (str name-key))
-        new-data (if current
-                   {:count (inc (:count current))
-                    :total-ns (+ (:total-ns current) duration-ns)
-                    :min-ns (min (:min-ns current) duration-ns)
-                    :max-ns (max (:max-ns current) duration-ns)
-                    :avg-ns (/ (+ (:total-ns current) duration-ns)
-                               (inc (:count current)))}
-                   {:count 1
-                    :total-ns duration-ns
-                    :min-ns duration-ns
-                    :max-ns duration-ns
-                    :avg-ns duration-ns})]
-    (.put timing-results (str name-key) new-data)))
 
 (defn get-timing-stats
   "获取时间统计数据

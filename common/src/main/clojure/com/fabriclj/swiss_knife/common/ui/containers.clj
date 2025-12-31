@@ -23,7 +23,8 @@
            (net.minecraft.world.item ItemStack)
            (net.minecraft.world Container SimpleContainer)
            (net.minecraft.core BlockPos)
-           (net.minecraft.network FriendlyByteBuf)))
+           (net.minecraft.network FriendlyByteBuf)
+           (net.minecraft.world.flag FeatureFlags)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -95,7 +96,8 @@
   (MenuType.
    (reify net.minecraft.world.inventory.MenuType$MenuSupplier
      (create [_ sync-id player-inventory]
-       (factory sync-id player-inventory)))))
+       (factory sync-id player-inventory)))
+   FeatureFlags/DEFAULT_FLAGS))
 
 (defn register-menu-type!
   "注册菜单类型

@@ -25,6 +25,10 @@
    (players/give-item! player Items/DIAMOND 5)
    (players/has-item? player Items/DIAMOND)
    (players/remove-item! player Items/DIAMOND 1)
+
+   ;; 消息发送
+   (players/send-message! player \"Hello!\")
+   (players/broadcast-message! server \"服务器公告\")
    ```"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
   (:import (net.minecraft.world.entity.player Player)
@@ -32,6 +36,7 @@
            (net.minecraft.world.phys Vec3)
            (net.minecraft.server MinecraftServer)
            (net.minecraft.server.level ServerPlayer ServerLevel)
+           (net.minecraft.network.chat Component)
            (java.util UUID)))
 
 (set! *warn-on-reflection* true)
@@ -449,6 +454,47 @@
   [^Player player]
   (.flying (.getAbilities player)))
 
+;; ============================================================================
+;; 玩家消息
+;; ============================================================================
+
+(defn send-message!
+  "向玩家发送消息
+
+   参数:
+   - player: ServerPlayer
+   - message: Component 或字符串
+
+   示例:
+   ```clojure
+   (send-message! player \"Hello!\")
+   (send-message! player (text/colored-text \"Hello!\" :gold))
+   ```"
+  [^ServerPlayer player message]
+  (let [component (if (instance? Component message)
+                    message
+                    (net.minecraft.network.chat.Component/literal (str message)))]
+    (.sendSystemMessage player component)))
+
+(defn broadcast-message!
+  "向所有在线玩家广播消息
+
+   参数:
+   - server: MinecraftServer
+   - message: Component 或字符串
+
+   示例:
+   ```clojure
+   (broadcast-message! server \"服务器重启中...\")
+   (broadcast-message! server (text/literal \"欢迎所有玩家！\" :color :green))
+   ```"
+  [^MinecraftServer server message]
+  (let [component (if (instance? Component message)
+                    message
+                    (net.minecraft.network.chat.Component/literal (str message)))]
+    (doseq [^ServerPlayer player (get-all-players server)]
+      (.sendSystemMessage player component))))
+
 (comment
   ;; 使用示例
 
@@ -472,4 +518,10 @@
   (get-experience-level player)
   (get-health player)
   (is-creative? player)
-  (is-flying? player))
+  (is-flying? player)
+
+  ;; 5. 消息发送
+  (send-message! player "Hello!")
+  (send-message! player (text/literal "Hello!" :color :gold))
+  (broadcast-message! server "服务器公告：欢迎所有玩家！")
+  (broadcast-message! server (text/literal "重要通知" :color :red)))

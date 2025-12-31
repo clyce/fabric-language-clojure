@@ -126,6 +126,7 @@
   "注册自定义村民职业
 
    参数:
+   - mod-id: 模组 ID( 字符串)
    - id: 职业 ID( 关键字)
    - profession-name: 职业名称( 字符串)
    - work-station: 工作站点方块( Block，可选)
@@ -134,12 +135,12 @@
 
    示例:
    ```clojure
-   (register-custom-profession! :alchemist
+   (register-custom-profession! \"mymod\" :alchemist
      \"Alchemist\"
      Blocks/BREWING_STAND)
    ```"
-  [id profession-name & [work-station]]
-  (let [res-loc (ResourceLocation. (core/mod-id) (name id))]
+  [mod-id id profession-name & [work-station]]
+  (let [res-loc (ResourceLocation/fromNamespaceAndPath mod-id (name id))]
     (core/log-info (str "Registering custom profession: " profession-name))
     ;; 存储自定义职业信息
     (swap! custom-professions assoc id
@@ -154,6 +155,7 @@
   "注册自定义村民类型( 外观)
 
    参数:
+   - mod-id: 模组 ID( 字符串)
    - id: 类型 ID( 关键字)
    - type-name: 类型名称( 字符串)
 
@@ -161,10 +163,10 @@
 
    示例:
    ```clojure
-   (register-custom-villager-type! :volcanic \"Volcanic\")
+   (register-custom-villager-type! \"mymod\" :volcanic \"Volcanic\")
    ```"
-  [id type-name]
-  (let [res-loc (ResourceLocation. (core/mod-id) (name id))]
+  [mod-id id type-name]
+  (let [res-loc (ResourceLocation/fromNamespaceAndPath mod-id (name id))]
     (core/log-info (str "Registering custom villager type: " type-name))
     (swap! custom-villager-types assoc id
            {:name type-name
@@ -596,17 +598,17 @@
   ;; ========== 自定义职业 ==========
 
   ;; 11. 注册自定义职业
-  (register-custom-profession! :alchemist
+  (register-custom-profession! "mymod" :alchemist
     "Alchemist"
     Blocks/BREWING_STAND)
 
-  (register-custom-profession! :enchanter
+  (register-custom-profession! "mymod" :enchanter
     "Enchanter"
     Blocks/ENCHANTING_TABLE)
 
   ;; 12. 注册自定义村民类型
-  (register-custom-villager-type! :volcanic "Volcanic")
-  (register-custom-villager-type! :crystal "Crystal")
+  (register-custom-villager-type! "mymod" :volcanic "Volcanic")
+  (register-custom-villager-type! "mymod" :crystal "Crystal")
 
   ;; 13. 创建自定义职业的村民( 注册后即可使用)
   ;; 注意: 需要先注册职业，并在游戏注册阶段完成

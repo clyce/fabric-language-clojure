@@ -156,6 +156,20 @@
     {:width (.getWidth window)
      :height (.getHeight window)}))
 
+(defn window-width
+  "获取窗口宽度
+
+   返回: 窗口宽度( 像素) "
+  []
+  (.getWidth (get-window)))
+
+(defn window-height
+  "获取窗口高度
+
+   返回: 窗口高度( 像素) "
+  []
+  (.getHeight (get-window)))
+
 (defn get-gui-scale
   "获取 GUI 缩放比例"
   []
@@ -178,12 +192,12 @@
 (defn get-partial-tick
   "获取部分 tick 时间( 用于平滑动画)
    返回: 0.0 ~ 1.0 之间的浮点数"
-  ^float []
+  []
   (.getFrameTime (get-minecraft)))
 
 (defn get-delta-time
   "获取帧间隔时间( 秒) "
-  ^float []
+  []
   (.getDeltaFrameTime (get-minecraft)))
 
 ;; ============================================================================

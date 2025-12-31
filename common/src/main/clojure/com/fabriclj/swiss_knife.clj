@@ -5,143 +5,143 @@
    这是一个用于快速封装 Architectury API 和 Fabric API 常见功能的工具库，
    为其他 API 提供简洁的 Clojure 接口。"
   (:require ;; 平台和核心系统
-  [com.fabriclj.swiss-knife.common.platform.core :as core]
-  [com.fabriclj.swiss-knife.common.registry.core :as registry]
-  [com.fabriclj.swiss-knife.common.lifecycle :as lifecycle]
+   [com.fabriclj.swiss-knife.common.platform.core :as core]
+   [com.fabriclj.swiss-knife.common.registry.core :as registry]
+   [com.fabriclj.swiss-knife.common.lifecycle :as lifecycle]
 
-  ;; 事件系统
-  [com.fabriclj.swiss-knife.common.events.core :as events]
-  [com.fabriclj.swiss-knife.common.events.chain :as event-chain]
-  [com.fabriclj.swiss-knife.common.events.priority :as event-priority]
+   ;; 事件系统
+   [com.fabriclj.swiss-knife.common.events.core :as events]
+   [com.fabriclj.swiss-knife.common.events.chain :as event-chain]
+   [com.fabriclj.swiss-knife.common.events.priority :as event-priority]
 
-  ;; 游戏对象
-  [com.fabriclj.swiss-knife.common.game-objects.items :as items]
-  [com.fabriclj.swiss-knife.common.game-objects.blocks :as blocks]
-  [com.fabriclj.swiss-knife.common.game-objects.entities :as entities]
-  [com.fabriclj.swiss-knife.common.game-objects.players :as players]
+   ;; 游戏对象
+   [com.fabriclj.swiss-knife.common.game-objects.items :as items]
+   [com.fabriclj.swiss-knife.common.game-objects.blocks :as blocks]
+   [com.fabriclj.swiss-knife.common.game-objects.entities :as entities]
+   [com.fabriclj.swiss-knife.common.game-objects.players :as players]
 
-  ;; 构建器系统
-  [com.fabriclj.swiss-knife.common.builders.macros :as dsl]
-  [com.fabriclj.swiss-knife.common.builders.runtime :as builders]
+   ;; 构建器系统
+   [com.fabriclj.swiss-knife.common.builders.macros :as dsl]
+   [com.fabriclj.swiss-knife.common.builders.runtime :as builders]
 
-  ;; 网络和配置
-  [com.fabriclj.swiss-knife.common.network.core :as network]
-  [com.fabriclj.swiss-knife.common.config.core :as config-file]
-  [com.fabriclj.swiss-knife.common.config.sync :as config-sync]
-  [com.fabriclj.swiss-knife.common.config.validators :as config-validators]
+   ;; 网络和配置
+   [com.fabriclj.swiss-knife.common.network.core :as network]
+   [com.fabriclj.swiss-knife.common.config.core :as config-file]
+   [com.fabriclj.swiss-knife.common.config.sync :as config-sync]
+   [com.fabriclj.swiss-knife.common.config.validators :as config-validators]
 
-  ;; 数据系统
-  [com.fabriclj.swiss-knife.common.data.datapack :as datapack]
-  [com.fabriclj.swiss-knife.common.data.persistence :as data]
-  [com.fabriclj.swiss-knife.common.data.profiler :as profiler]
-  [com.fabriclj.swiss-knife.common.data.reload_listeners :as reload]
+   ;; 数据系统
+   [com.fabriclj.swiss-knife.common.data.datapack :as datapack]
+   [com.fabriclj.swiss-knife.common.data.persistence :as data]
+   [com.fabriclj.swiss-knife.common.data.profiler :as profiler]
+   [com.fabriclj.swiss-knife.common.data.reload-listeners :as reload]
 
-  ;; DataGen 系统
-  [com.fabriclj.swiss-knife.common.datagen.models :as datagen-models]
-  [com.fabriclj.swiss-knife.common.datagen.blockstates :as datagen-blockstates]
-  [com.fabriclj.swiss-knife.common.datagen.lang :as datagen-lang]
+   ;; DataGen 系统
+   [com.fabriclj.swiss-knife.common.datagen.models :as datagen-models]
+   [com.fabriclj.swiss-knife.common.datagen.blockstates :as datagen-blockstates]
+   [com.fabriclj.swiss-knife.common.datagen.lang :as datagen-lang]
 
-  ;; 游戏玩法系统
-  [com.fabriclj.swiss-knife.common.gameplay.commands :as commands]
-  [com.fabriclj.swiss-knife.common.gameplay.recipes :as recipes]
-  [com.fabriclj.swiss-knife.common.gameplay.conditional-recipes :as conditional-recipes]
-  [com.fabriclj.swiss-knife.common.gameplay.advancements :as advancements]
-  [com.fabriclj.swiss-knife.common.gameplay.damage :as damage]
-  [com.fabriclj.swiss-knife.common.gameplay.enchantments :as enchantments]
-  [com.fabriclj.swiss-knife.common.gameplay.potions :as potions]
-  [com.fabriclj.swiss-knife.common.gameplay.villagers :as villagers]
-  [com.fabriclj.swiss-knife.common.gameplay.sounds :as sounds]
-  [com.fabriclj.swiss-knife.common.gameplay.tags :as tags]
-  [com.fabriclj.swiss-knife.common.gameplay.fuel :as fuel]
-  [com.fabriclj.swiss-knife.common.gameplay.ai :as ai]
+   ;; 游戏玩法系统
+   [com.fabriclj.swiss-knife.common.gameplay.commands :as commands]
+   [com.fabriclj.swiss-knife.common.gameplay.recipes :as recipes]
+   [com.fabriclj.swiss-knife.common.gameplay.conditional-recipes :as conditional-recipes]
+   [com.fabriclj.swiss-knife.common.gameplay.advancements :as advancements]
+   [com.fabriclj.swiss-knife.common.gameplay.damage :as damage]
+   [com.fabriclj.swiss-knife.common.gameplay.enchantments :as enchantments]
+   [com.fabriclj.swiss-knife.common.gameplay.potions :as potions]
+   [com.fabriclj.swiss-knife.common.gameplay.villagers :as villagers]
+   [com.fabriclj.swiss-knife.common.gameplay.sounds :as sounds]
+   [com.fabriclj.swiss-knife.common.gameplay.tags :as tags]
+   [com.fabriclj.swiss-knife.common.gameplay.fuel :as fuel]
+   [com.fabriclj.swiss-knife.common.gameplay.ai :as ai]
 
-  ;; 物理和世界
-  [com.fabriclj.swiss-knife.common.physics.core :as physics]
-  [com.fabriclj.swiss-knife.common.world.regions :as regions]
-  [com.fabriclj.swiss-knife.common.world.worldgen :as worldgen]
+   ;; 物理和世界
+   [com.fabriclj.swiss-knife.common.physics.core :as physics]
+   [com.fabriclj.swiss-knife.common.world.regions :as regions]
+   [com.fabriclj.swiss-knife.common.world.worldgen :as worldgen]
 
-  ;; UI 系统
-  [com.fabriclj.swiss-knife.common.ui.containers :as containers]
-  [com.fabriclj.swiss-knife.common.ui.inventories :as inventories]
-  [com.fabriclj.swiss-knife.common.ui.creative_tabs :as creative-tabs]
+   ;; UI 系统
+   [com.fabriclj.swiss-knife.common.ui.containers :as containers]
+   [com.fabriclj.swiss-knife.common.ui.inventories :as inventories]
+   [com.fabriclj.swiss-knife.common.ui.creative-tabs :as creative-tabs]
 
-  ;; 工具函数
-  [com.fabriclj.swiss-knife.common.utils.core :as utils]
+   ;; 工具函数
+   [com.fabriclj.swiss-knife.common.utils.core :as utils]
 
-  ;; 客户端系统( 延迟加载)
-  [com.fabriclj.swiss-knife.client.ui.config_screen :as config-screen]
-  [com.fabriclj.swiss-knife.client.debug.visualizer :as debug-viz]))
+   ;; 客户端系统( 延迟加载)
+   [com.fabriclj.swiss-knife.client.ui.config-screen :as config-screen]
+   [com.fabriclj.swiss-knife.client.debug.visualizer :as debug-viz]))
 
 ;; ============================================================================
 ;; 命名空间别名( 便于使用)
 ;; ============================================================================
 
 ;; 核心系统
-(def core core)
-(def reg registry)
-(def lifecycle lifecycle)
+(def core (the-ns 'com.fabriclj.swiss-knife.common.platform.core))
+(def reg (the-ns 'com.fabriclj.swiss-knife.common.registry.core))
+(def lifecycle (the-ns 'com.fabriclj.swiss-knife.common.lifecycle))
 
 ;; 事件系统
-(def events events)
-(def chain event-chain)
+(def events (the-ns 'com.fabriclj.swiss-knife.common.events.core))
+(def chain (the-ns 'com.fabriclj.swiss-knife.common.events.chain))
 
 ;; 游戏对象
-(def items items)
-(def blocks blocks)
-(def entities entities)
-(def players players)
+(def items (the-ns 'com.fabriclj.swiss-knife.common.game-objects.items))
+(def blocks (the-ns 'com.fabriclj.swiss-knife.common.game-objects.blocks))
+(def entities (the-ns 'com.fabriclj.swiss-knife.common.game-objects.entities))
+(def players (the-ns 'com.fabriclj.swiss-knife.common.game-objects.players))
 
 ;; 构建器
-(def dsl dsl)
-(def builders builders)
+(def dsl (the-ns 'com.fabriclj.swiss-knife.common.builders.macros))
+(def builders (the-ns 'com.fabriclj.swiss-knife.common.builders.runtime))
 
 ;; 网络和配置
-(def net network)
-(def config config-file)
-(def sync config-sync)
-(def validators config-validators)
+(def net (the-ns 'com.fabriclj.swiss-knife.common.network.core))
+(def config (the-ns 'com.fabriclj.swiss-knife.common.config.core))
+(def sync (the-ns 'com.fabriclj.swiss-knife.common.config.sync))
+(def validators (the-ns 'com.fabriclj.swiss-knife.common.config.validators))
 
 ;; 数据系统
-(def data data)
-(def dp datapack)
-(def prof profiler)
-(def reload reload)
+(def data (the-ns 'com.fabriclj.swiss-knife.common.data.persistence))
+(def dp (the-ns 'com.fabriclj.swiss-knife.common.data.datapack))
+(def prof (the-ns 'com.fabriclj.swiss-knife.common.data.profiler))
+(def reload (the-ns 'com.fabriclj.swiss-knife.common.data.reload-listeners))
 
 ;; DataGen 系统
-(def datagen-models datagen-models)
-(def datagen-bs datagen-blockstates)
-(def datagen-lang datagen-lang)
+(def datagen-models (the-ns 'com.fabriclj.swiss-knife.common.datagen.models))
+(def datagen-bs (the-ns 'com.fabriclj.swiss-knife.common.datagen.blockstates))
+(def datagen-lang (the-ns 'com.fabriclj.swiss-knife.common.datagen.lang))
 
 ;; 游戏玩法
-(def commands commands)
-(def recipes recipes)
-(def conditional-recipes conditional-recipes)
-(def advancements advancements)
-(def damage damage)
-(def enchantments enchantments)
-(def potions potions)
-(def villagers villagers)
-(def sounds sounds)
-(def tags tags)
-(def fuel fuel)
-(def ai ai)
+(def commands (the-ns 'com.fabriclj.swiss-knife.common.gameplay.commands))
+(def recipes (the-ns 'com.fabriclj.swiss-knife.common.gameplay.recipes))
+(def conditional-recipes (the-ns 'com.fabriclj.swiss-knife.common.gameplay.conditional-recipes))
+(def advancements (the-ns 'com.fabriclj.swiss-knife.common.gameplay.advancements))
+(def damage (the-ns 'com.fabriclj.swiss-knife.common.gameplay.damage))
+(def enchantments (the-ns 'com.fabriclj.swiss-knife.common.gameplay.enchantments))
+(def potions (the-ns 'com.fabriclj.swiss-knife.common.gameplay.potions))
+(def villagers (the-ns 'com.fabriclj.swiss-knife.common.gameplay.villagers))
+(def sounds (the-ns 'com.fabriclj.swiss-knife.common.gameplay.sounds))
+(def tags (the-ns 'com.fabriclj.swiss-knife.common.gameplay.tags))
+(def fuel (the-ns 'com.fabriclj.swiss-knife.common.gameplay.fuel))
+(def ai (the-ns 'com.fabriclj.swiss-knife.common.gameplay.ai))
 
 ;; 物理和世界
-(def physics physics)
-(def regions regions)
-(def worldgen worldgen)
+(def physics (the-ns 'com.fabriclj.swiss-knife.common.physics.core))
+(def regions (the-ns 'com.fabriclj.swiss-knife.common.world.regions))
+(def worldgen (the-ns 'com.fabriclj.swiss-knife.common.world.worldgen))
 
 ;; UI 系统
-(def containers containers)
-(def inv inventories)
-(def tabs creative-tabs)
+(def containers (the-ns 'com.fabriclj.swiss-knife.common.ui.containers))
+(def inv (the-ns 'com.fabriclj.swiss-knife.common.ui.inventories))
+(def tabs (the-ns 'com.fabriclj.swiss-knife.common.ui.creative-tabs))
 
 ;; 工具函数
-(def utils utils)
+(def utils (the-ns 'com.fabriclj.swiss-knife.common.utils.core))
 
 ;; 客户端系统
-(def cfg-screen config-screen)
-(def debug-vis debug-viz)
+(def cfg-screen (the-ns 'com.fabriclj.swiss-knife.client.ui.config-screen))
+(def debug-vis (the-ns 'com.fabriclj.swiss-knife.client.debug.visualizer))
 
 
 ;; ============================================================================

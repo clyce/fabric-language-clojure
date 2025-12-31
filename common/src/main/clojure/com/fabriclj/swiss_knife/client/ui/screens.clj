@@ -143,17 +143,19 @@
   [x y width height text initial-value on-change]
   (let [text-component (if (string? text)
                          (Component/literal text)
-                         text)]
-    (net.minecraft.client.gui.components.Checkbox/builder
-     text-component
-     (net.minecraft.client.Minecraft/getInstance)
-     (.font))
-    (.pos x y)
-    (.selected initial-value)
-    (.onValueChange (reify java.util.function.Consumer
-                      (accept [_ value]
-                        (on-change nil value))))
-    (.build)))
+                         text)
+        minecraft (net.minecraft.client.Minecraft/getInstance)
+        font (.font minecraft)
+        builder (net.minecraft.client.gui.components.Checkbox/builder
+                 text-component
+                 font)]
+    (-> builder
+        (.pos x y)
+        (.selected initial-value)
+        (.onValueChange (reify java.util.function.Consumer
+                          (accept [_ value]
+                            (on-change nil value))))
+        (.build))))
 
 (defn create-slider
   "创建滑块组件

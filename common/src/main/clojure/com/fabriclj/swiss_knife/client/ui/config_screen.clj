@@ -124,18 +124,19 @@
 
    返回: Button"
   [x y width entry value on-change]
-  (let [label (str (:label entry) ": " (if value "ON" "OFF"))]
-    (Button/builder
-      (Component/literal label)
-      (reify Consumer
-        (accept [_ btn]
-          (let [new-value (not value)]
-            (on-change new-value)
-            (.setMessage btn (Component/literal
-                              (str (:label entry) ": "
-                                   (if new-value "ON" "OFF")))))))
-      (.bounds x y width 20)
-      (.build))))
+  (let [label (str (:label entry) ": " (if value "ON" "OFF"))
+        builder (Button/builder
+                 (Component/literal label)
+                 (reify Consumer
+                   (accept [_ btn]
+                     (let [new-value (not value)]
+                       (on-change new-value)
+                       (.setMessage btn (Component/literal
+                                         (str (:label entry) ": "
+                                              (if new-value "ON" "OFF"))))))))]
+    (-> builder
+        (.bounds x y width 20)
+        (.build))))
 
 (defn create-int-widget
   "创建整数输入组件
@@ -181,30 +182,33 @@
         max-val (or (:max entry) 100)
         range (- max-val min-val)
         normalized (/ (- value min-val) range)
-        label (str (:label entry) ": " value)]
+        label (str (:label entry) ": " value)
+        minus-builder (Button/builder
+                       (Component/literal "-")
+                       (reify Consumer
+                         (accept [_ _]
+                           (let [new-value (max min-val (dec value))]
+                             (on-change new-value)))))
+        label-builder (Button/builder
+                       (Component/literal label)
+                       (reify Consumer
+                         (accept [_ _])))
+        plus-builder (Button/builder
+                      (Component/literal "+")
+                      (reify Consumer
+                        (accept [_ _]
+                          (let [new-value (min max-val (inc value))]
+                            (on-change new-value)))))]
     ;; 简化版: 使用两个按钮 - 和 +
-    [(Button/builder
-       (Component/literal "-")
-       (reify Consumer
-         (accept [_ _]
-           (let [new-value (max min-val (dec value))]
-             (on-change new-value))))
-       (.bounds x y 20 20)
-       (.build))
-     (Button/builder
-       (Component/literal label)
-       (reify Consumer
-         (accept [_ _]))
-       (.bounds (+ x 25) y (- width 50) 20)
-       (.build))
-     (Button/builder
-       (Component/literal "+")
-       (reify Consumer
-         (accept [_ _]
-           (let [new-value (min max-val (inc value))]
-             (on-change new-value))))
-       (.bounds (+ x width -20) y 20 20)
-       (.build))]))
+    [(-> minus-builder
+         (.bounds x y 20 20)
+         (.build))
+     (-> label-builder
+         (.bounds (+ x 25) y (- width 50) 20)
+         (.build))
+     (-> plus-builder
+         (.bounds (+ x width -20) y 20 20)
+         (.build))]))
 
 (defn create-enum-widget
   "创建枚举选择组件( 循环按钮)
@@ -220,19 +224,20 @@
   [x y width entry value on-change]
   (let [options (:options entry)
         current-idx (.indexOf (vec options) value)
-        label (str (:label entry) ": " (name value))]
-    (Button/builder
-      (Component/literal label)
-      (reify Consumer
-        (accept [_ btn]
-          (let [next-idx (mod (inc current-idx) (count options))
-                next-value (nth (vec options) next-idx)]
-            (on-change next-value)
-            (.setMessage btn (Component/literal
-                              (str (:label entry) ": "
-                                   (name next-value)))))))
-      (.bounds x y width 20)
-      (.build))))
+        label (str (:label entry) ": " (name value))
+        builder (Button/builder
+                 (Component/literal label)
+                 (reify Consumer
+                   (accept [_ btn]
+                     (let [next-idx (mod (inc current-idx) (count options))
+                           next-value (nth (vec options) next-idx)]
+                       (on-change next-value)
+                       (.setMessage btn (Component/literal
+                                         (str (:label entry) ": "
+                                              (name next-value))))))))]
+    (-> builder
+        (.bounds x y width 20)
+        (.build))))
 
 ;; ============================================================================
 ;; 配置屏幕实现
@@ -291,37 +296,39 @@
 
             ;; 保存按钮
             (.addRenderableWidget this
-              (Button/builder
-                (Component/literal "Save")
-                (reify Consumer
-                  (accept [_ _]
-                    ;; 保存配置
-                    (config/save-config! (:config-path screen-def) @current-values)
-                    ;; 调用保存回调
-                    (when-let [on-save (:on-save screen-def)]
-                      (on-save @current-values))
-                    ;; 关闭屏幕
-                    (when parent
-                      (.minecraft this)
-                      (.setScreen (.minecraft this) parent))))
-                (.bounds (- center-x 110) (- (.height this) 30) 100 20)
-                (.build)))
+              (let [builder (Button/builder
+                             (Component/literal "Save")
+                             (reify Consumer
+                               (accept [_ _]
+                                 ;; 保存配置
+                                 (config/save-config! (:config-path screen-def) @current-values)
+                                 ;; 调用保存回调
+                                 (when-let [on-save (:on-save screen-def)]
+                                   (on-save @current-values))
+                                 ;; 关闭屏幕
+                                 (when parent
+                                   (let [mc (.minecraft this)]
+                                     (.setScreen mc parent))))))]
+                (-> builder
+                    (.bounds (- center-x 110) (- (.height this) 30) 100 20)
+                    (.build))))
 
             ;; 取消按钮
             (.addRenderableWidget this
-              (Button/builder
-                (Component/literal "Cancel")
-                (reify Consumer
-                  (accept [_ _]
-                    ;; 调用取消回调
-                    (when-let [on-cancel (:on-cancel screen-def)]
-                      (on-cancel))
-                    ;; 关闭屏幕
-                    (when parent
-                      (.minecraft this)
-                      (.setScreen (.minecraft this) parent))))
-                (.bounds (+ center-x 10) (- (.height this) 30) 100 20)
-                (.build)))))
+              (let [builder (Button/builder
+                             (Component/literal "Cancel")
+                             (reify Consumer
+                               (accept [_ _]
+                                 ;; 调用取消回调
+                                 (when-let [on-cancel (:on-cancel screen-def)]
+                                   (on-cancel))
+                                 ;; 关闭屏幕
+                                 (when parent
+                                   (let [mc (.minecraft this)]
+                                     (.setScreen mc parent))))))]
+                (-> builder
+                    (.bounds (+ center-x 10) (- (.height this) 30) 100 20)
+                    (.build))))))
 
         (render [^GuiGraphics graphics mouse-x mouse-y partial-tick]
           (let [this ^Screen this]
@@ -394,7 +401,7 @@
        (open-config-screen! :my-mod-config)))
    ```"
   [screen-id]
-  (when-let [minecraft (core/get-minecraft)]
+  (when-let [minecraft (client/get-minecraft)]
     (let [current-screen (.screen minecraft)
           config-screen (create-config-screen screen-id current-screen)]
       (.setScreen minecraft config-screen))))

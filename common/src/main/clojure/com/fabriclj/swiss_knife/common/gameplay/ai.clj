@@ -13,7 +13,7 @@
    - 群体行为"
   (:require [clojure.string :as str])
   (:import (net.minecraft.world.entity Mob LivingEntity Entity PathfinderMob)
-           (net.minecraft.world.entity.ai.goal Goal GoalSelector
+           (net.minecraft.world.entity.ai.goal Goal Goal$Flag GoalSelector
             WrappedGoal
             FloatGoal
             LookAtPlayerGoal
@@ -79,14 +79,15 @@
                     tick! (fn [_])
                     stop! (fn [_])}}]
   (let [goal-flags (if flags
-                     (let [flag-set (EnumSet/noneOf Goal$Flag)]
+                     (let [flag-class Goal$Flag
+                           flag-set (EnumSet/noneOf flag-class)]
                        (doseq [flag flags]
                          (.add flag-set
                                (case flag
-                                 :move Goal$Flag/MOVE
-                                 :look Goal$Flag/LOOK
-                                 :jump Goal$Flag/JUMP
-                                 :target Goal$Flag/TARGET)))
+                                 :move (Enum/valueOf flag-class "MOVE")
+                                 :look (Enum/valueOf flag-class "LOOK")
+                                 :jump (Enum/valueOf flag-class "JUMP")
+                                 :target (Enum/valueOf flag-class "TARGET"))))
                        flag-set)
                      (EnumSet/noneOf Goal$Flag))]
     (proxy [Goal] []

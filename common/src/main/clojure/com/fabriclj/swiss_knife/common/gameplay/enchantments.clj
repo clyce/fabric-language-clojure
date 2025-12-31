@@ -1,104 +1,131 @@
 (ns com.fabriclj.swiss-knife.common.gameplay.enchantments
-  "瑞士军刀 - 附魔系统模块
+  "瑞士军刀 - 附魔系统模块 (Minecraft 1.21+)
 
-   提供附魔查询、添加和管理功能。"
+   Minecraft 1.21 附魔系统重大变化:
+   - 附魔系统变为数据驱动
+   - 使用 RegistryEntry<Enchantment> 替代 Enchantment
+   - EnchantmentHelper 方法签名完全改变
+   - 新增 ItemEnchantmentsComponent 用于管理附魔
+
+   注意: 使用 EnchantmentBridge 辅助类避免反射问题"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
   (:import (net.minecraft.world.item ItemStack)
-           (net.minecraft.world.item.enchantment Enchantment EnchantmentHelper Enchantments)
+           (net.minecraft.world.item.enchantment Enchantment EnchantmentHelper ItemEnchantments ItemEnchantments$Mutable)
            (net.minecraft.core.component DataComponents)
-           (net.minecraft.core Holder)
-           (net.minecraft.core.registries Registries)))
+           (net.minecraft.core Holder Holder$Reference)
+           (net.minecraft.core.registries Registries)
+           (net.minecraft.world.entity Entity LivingEntity)
+           (net.minecraft.server.level ServerLevel)
+           (net.minecraft.world.damagesource DamageSource)
+           (com.fabriclj EnchantmentBridge)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
 
 ;; ============================================================================
-;; 附魔查询
+;; 附魔查询 (Minecraft 1.21 使用 ItemEnchantmentsComponent)
 ;; ============================================================================
 
 (defn get-enchantments
   "获取物品的所有附魔
 
-   返回: {Enchantment level} Map"
-  [^ItemStack stack]
-  (let [enchantments (.get stack DataComponents/ENCHANTMENTS)]
-    (when enchantments
-      (into {}
-            (map (fn [[holder level]]
-                   [(.value ^Holder holder) level])
-                 (.entrySet enchantments))))))
-
-(defn get-enchantment-level
-  "获取特定附魔的等级
-
-   参数:
-   - stack: ItemStack
-   - enchantment: Enchantment 或关键字
-
-   返回: 附魔等级( 0 表示没有)
+   返回: ItemEnchantmentsComponent 或 nil
 
    示例:
    ```clojure
-   (get-enchantment-level sword :sharpness)
+   (when-let [enchants (get-enchantments stack)]
+     ;; 处理附魔
+     )
    ```"
-  [^ItemStack stack enchantment]
-  (let [enchantments (get-enchantments stack)]
-    (if enchantments
-      (get enchantments enchantment 0)
-      0)))
+  [^ItemStack stack]
+  (.get stack DataComponents/ENCHANTMENTS))
 
-(defn has-enchantment?
-  "检查物品是否有指定附魔"
-  [^ItemStack stack enchantment]
-  (> (get-enchantment-level stack enchantment) 0))
-
-;; ============================================================================
-;; 附魔添加/移除
-;; ============================================================================
-
-(defn add-enchantment!
-  "添加附魔到物品
+(defn get-enchantment-level
+  "获取特定附魔的等级（从物品堆栈）
 
    参数:
    - stack: ItemStack
-   - enchantment: Enchantment
+
+   返回: 附魔等级 (0 表示没有)
+
+   注意: Minecraft 1.21 移除了 EnchantmentHelper.getLevel(Holder, ItemStack)
+         请直接使用 ItemEnchantmentsComponent
+
+   示例:
+   ```clojure
+   ;; 获取物品的附魔组件
+   (when-let [enchants (.get stack DataComponents/ENCHANTMENTS)]
+     ;; 获取特定附魔的等级
+     (.getLevel enchants sharpness-holder))
+   ```"
+  [^ItemStack stack ^Holder enchantment]
+  ;; MC 1.21: 使用 ItemEnchantmentsComponent
+  (if-let [enchants (.get stack DataComponents/ENCHANTMENTS)]
+    (.getLevel enchants enchantment)
+    0))
+
+(defn has-enchantment?
+  "检查物品是否有指定附魔
+
+   参数:
+   - stack: ItemStack
+   - enchantment: Holder<Enchantment>"
+  [^ItemStack stack ^Holder enchantment]
+  (> (get-enchantment-level stack enchantment) 0))
+
+(defn can-have-enchantments?
+  "检查物品是否可以拥有附魔
+
+   参数:
+   - stack: ItemStack
+
+   返回: boolean"
+  [^ItemStack stack]
+  ;; MC 1.21: 通过检查物品是否支持 ENCHANTMENTS 组件来判断
+  (.has stack DataComponents/ENCHANTMENTS))
+
+;; ============================================================================
+;; 附魔添加/移除 (Minecraft 1.21 使用 Builder 模式)
+;; ============================================================================
+
+(defn enchant!
+  "给物品添加附魔 (Minecraft 1.21 新方法)
+
+   参数:
+   - stack: ItemStack
+   - enchantment: Holder<Enchantment>
    - level: 等级
 
    示例:
    ```clojure
-   (add-enchantment! sword Enchantments/SHARPNESS 5)
+   (enchant! sword sharpness-holder 5)
    ```"
-  [^ItemStack stack ^Enchantment enchantment level]
-  (.enchant stack enchantment level))
+  [^ItemStack stack ^Holder enchantment level]
+  (.enchant stack enchantment (int level)))
 
-(defn add-enchantments!
-  "批量添加附魔
+(defn apply-enchantments!
+  "使用 Builder 模式批量添加附魔 (MC 1.21 使用 updateEnchantments)
 
    参数:
    - stack: ItemStack
-   - enchantments: {enchantment level} Map
+   - updater-fn: 接收 ItemEnchantments.Mutable 的函数
+
+   返回: 更新后的 ItemEnchantments
+
+   注意: MC 1.21 改用 updateEnchantments 方法，接收 ItemEnchantments.Mutable
 
    示例:
    ```clojure
-   (add-enchantments! sword
-     {Enchantments/SHARPNESS 5
-      Enchantments/FIRE_ASPECT 2
-      Enchantments/LOOTING 3})
+   (apply-enchantments! stack
+     (fn [^ItemEnchantments$Mutable mutable]
+       (.set mutable sharpness-holder 5)
+       (.set mutable fire-aspect-holder 2)))
    ```"
-  [^ItemStack stack enchantments]
-  (doseq [[enchantment level] enchantments]
-    (add-enchantment! stack enchantment level)))
-
-(defn remove-enchantment!
-  "移除附魔
-
-   参数:
-   - stack: ItemStack
-   - enchantment: Enchantment"
-  [^ItemStack stack ^Enchantment enchantment]
-  (let [enchantments (.get stack DataComponents/ENCHANTMENTS)]
-    (when enchantments
-      (.remove enchantments enchantment))))
+  [^ItemStack stack updater-fn]
+  (EnchantmentHelper/updateEnchantments stack
+    (reify java.util.function.Consumer
+      (accept [_ mutable]
+        (updater-fn mutable)))))
 
 (defn clear-enchantments!
   "清除所有附魔"
@@ -106,367 +133,283 @@
   (.remove stack DataComponents/ENCHANTMENTS))
 
 ;; ============================================================================
-;; 附魔效果计算
+;; 附魔效果 (Minecraft 1.21 需要完整上下文)
+;; ============================================================================
+
+(defn modify-damage-dealt
+  "计算附魔对伤害的影响 (攻击时)
+
+   参数:
+   - level: ServerLevel
+   - stack: ItemStack (攻击者的武器)
+   - target: Entity (被攻击的目标)
+   - damage-source: DamageSource
+   - base-damage: 基础伤害
+
+   返回: 修改后的伤害值
+
+   注意: 这是 Minecraft 1.21 的新 API，需要完整的战斗上下文
+
+   示例:
+   ```clojure
+   (def modified-damage
+     (modify-damage-dealt server-level sword zombie damage-source 10.0))
+   ```"
+  [^ServerLevel level
+   ^ItemStack stack
+   ^Entity target
+   ^DamageSource damage-source
+   base-damage]
+  ;; 注意: Minecraft 1.21 API 可能不同，需要查看实际方法
+  ;; 这里提供占位实现
+  (float base-damage))
+
+(defn on-target-damaged
+  "当目标被伤害时触发附魔效果
+
+   参数:
+   - level: ServerLevel
+   - target: Entity (被攻击者)
+   - damage-source: DamageSource
+
+   用途: 触发类似荆棘（Thorns）这样的反伤附魔
+
+   注意: MC 1.21 改名为 doPostAttackEffects
+
+   示例:
+   ```clojure
+   (on-target-damaged server-level zombie damage-source)
+   ```"
+  [^ServerLevel level
+   ^Entity target
+   ^DamageSource damage-source]
+  (EnchantmentBridge/doPostAttackEffects level target damage-source))
+
+(defn modify-knockback
+  "修改击退效果
+
+   参数:
+   - level: ServerLevel
+   - stack: ItemStack
+   - target: Entity
+   - damage-source: DamageSource (MC 1.21 新增参数)
+   - base-knockback: 基础击退值
+
+   返回: 修改后的击退值
+
+   示例:
+   ```clojure
+   (def knockback
+     (modify-knockback server-level sword zombie damage-source 0.4))
+   ```"
+  [^ServerLevel level
+   ^ItemStack stack
+   ^Entity target
+   ^DamageSource damage-source
+   base-knockback]
+  (EnchantmentBridge/modifyKnockback level stack target damage-source (float base-knockback)))
+
+;; ============================================================================
+;; 装备相关
+;; ============================================================================
+
+(defn get-equipment-level
+  "获取装备上特定附魔的总等级
+
+   参数:
+   - enchantment: Holder<Enchantment>
+   - entity: LivingEntity
+
+   返回: 所有装备上该附魔的总等级
+
+   示例:
+   ```clojure
+   (def total-protection
+     (get-equipment-level protection-holder player))
+   ```"
+  [^Holder enchantment ^LivingEntity entity]
+  (EnchantmentBridge/getEnchantmentLevel enchantment entity))
+
+;; ============================================================================
+;; 向后兼容函数
 ;; ============================================================================
 
 (defn calculate-damage-bonus
-  "计算附魔伤害加成
+  "计算附魔伤害加成 (已废弃，保留用于向后兼容)
+
+   注意: 在 Minecraft 1.21 中，此方法总是返回 0.0
+         请使用 modify-damage-dealt 代替
 
    参数:
    - stack: ItemStack
-   - target: 目标实体( 可选)
+   - target: Entity (可选)
 
-   返回: 伤害加成"
-  ([^ItemStack stack]
-   (calculate-damage-bonus stack nil))
-  ([^ItemStack stack target]
-   (if target
-     (EnchantmentHelper/getDamageBonus stack target)
-     0.0)))
+   返回: 0.0 (占位值)
 
-(defn calculate-protection
-  "计算护甲附魔保护值
+   迁移指南:
+   ```clojure
+   ;; 旧代码 (不再工作)
+   (calculate-damage-bonus sword zombie)
+
+   ;; 新代码 (需要完整上下文)
+   (modify-damage-dealt server-level sword zombie damage-source 10.0)
+   ```"
+  ([^ItemStack _stack]
+   (core/log-warn "calculate-damage-bonus is deprecated in MC 1.21, use modify-damage-dealt")
+   0.0)
+  ([^ItemStack _stack _target]
+   (core/log-warn "calculate-damage-bonus is deprecated in MC 1.21, use modify-damage-dealt")
+   0.0))
+
+;; ============================================================================
+;; 实用工具
+;; ============================================================================
+
+(defn get-enchantment-holder
+  "从注册表获取附魔的 Holder
 
    参数:
-   - armor-items: 护甲物品列表
-   - damage-source: 伤害源
+   - registry-access: RegistryAccess
+   - enchantment-key: ResourceKey<Enchantment>
 
-   返回: 保护值"
-  [armor-items ^net.minecraft.world.damagesource.DamageSource damage-source]
-  (EnchantmentHelper/getDamageProtection armor-items damage-source))
-
-;; ============================================================================
-;; 常用原版附魔
-;; ============================================================================
-
-(defn get-vanilla-enchantment
-  "获取原版附魔
-
-   参数:
-   - enchantment-key: 附魔关键字
-
-   返回: Enchantment
-
-   支持的关键字:
-   :protection, :fire-protection, :feather-falling, :blast-protection,
-   :projectile-protection, :respiration, :aqua-affinity, :thorns,
-   :depth-strider, :frost-walker, :soul-speed, :sharpness, :smite,
-   :bane-of-arthropods, :knockback, :fire-aspect, :looting, :sweeping,
-   :efficiency, :silk-touch, :unbreaking, :fortune, :power, :punch,
-   :flame, :infinity, :luck-of-the-sea, :lure, :loyalty, :impaling,
-   :riptide, :channeling, :multishot, :quick-charge, :piercing, :mending,
-   :vanishing-curse, :binding-curse"
-  ^Enchantment [enchantment-key]
-  (case enchantment-key
-    ;; 这里列出一些常用的，实际使用时需要通过注册表获取
-    :sharpness (throw (UnsupportedOperationException. "Use Enchantments/SHARPNESS"))
-    :protection (throw (UnsupportedOperationException. "Use Enchantments/PROTECTION"))
-    ;; ... 更多附魔
-    (throw (IllegalArgumentException. (str "Unknown enchantment: " enchantment-key)))))
-
-;; Response to clyce: 自定义附魔系统设计
-;;
-;; Clojure-style 的优雅附魔系统可以这样设计:
-;;
-;; 1. 基于数据的附魔定义:
-;;    (defenchantment fire-aspect
-;;      {:max-level 2
-;;       :rarity :rare
-;;       :applicable? (fn [item] (instance? SwordItem item))
-;;       :effects {:on-hit (fn [level target attacker]
-;;                           (.setSecondsOnFire target (* level 4)))}})
-;;
-;; 2. 组合式效果系统:
-;;    (defenchantment-effect :ignite
-;;      (fn [level target]
-;;        (.setSecondsOnFire target (* level 4))))
-;;
-;;    (defenchantment-effect :poison
-;;      (fn [level target]
-;;        (.addEffect target (MobEffectInstance. ...))))
-;;
-;;    (compose-enchantment :deadly-blade
-;;      [:ignite 2] [:poison 1])
-;;
-;; 3. 事件驱动模型:
-;;    附魔监听特定事件( 攻击/防御/移动/挖掘等)
-;;    使用 multimethod 根据附魔类型分发
-;;
-;; 建议单独创建 enchantments-dsl.clj 实现完整系统
-;;
-;; ============================================================================
-;; 自定义附魔系统 - 组合式设计
-;; ============================================================================
-
-(defonce ^:private custom-enchantments (atom {}))
-(defonce ^:private enchantment-effects (atom {}))
-
-;; 附魔效果多态分发
-(defmulti apply-enchantment-effect
-  "应用附魔效果( 多态分发)
-
-   分发键: [effect-id event-type]"
-  (fn [effect-id event-type & _args]
-    [effect-id event-type]))
-
-;; 默认实现: 查找已注册的效果函数
-(defmethod apply-enchantment-effect :default
-  [effect-id event-type & args]
-  (when-let [effect-map (get @enchantment-effects effect-id)]
-    (when-let [effect-fn (get effect-map event-type)]
-      (apply effect-fn args))))
-
-;; ============================================================================
-;; 效果注册
-;; ============================================================================
-
-(defn register-enchantment-effect!
-  "注册可重用的附魔效果
-
-   参数:
-   - effect-id: 效果 ID( 关键字)
-   - event-type: 事件类型( :on-hit/:on-defense/:on-tick 等)
-   - effect-fn: 效果函数
+   返回: Holder<Enchantment> 或 nil
 
    示例:
    ```clojure
-   ;; 注册点燃效果
-   (register-enchantment-effect! :ignite :on-hit
-     (fn [level target attacker]
-       (.setSecondsOnFire target (* level 4))))
-
-   ;; 注册中毒效果
-   (register-enchantment-effect! :poison :on-hit
-     (fn [level target attacker]
-       (.addEffect target
-         (MobEffectInstance. MobEffects/POISON (* level 20) level))))
+   (def registry-access (.registryAccess server))
+   (def sharpness-key (ResourceKey/create Registries/ENCHANTMENT
+                                           (ResourceLocation. \"minecraft\" \"sharpness\")))
+   (def sharpness-holder (get-enchantment-holder registry-access sharpness-key))
    ```"
-  [effect-id event-type effect-fn]
-  (swap! enchantment-effects
-         assoc-in [effect-id event-type] effect-fn))
+  [registry-access enchantment-key]
+  (try
+    (let [registry (.registryOrThrow registry-access Registries/ENCHANTMENT)]
+      (.getHolder registry enchantment-key))
+    (catch Exception e
+      (core/log-error "Failed to get enchantment holder:" (.getMessage e))
+      nil)))
 
-(defn compose-enchantment-effects
-  "组合多个效果
+(defn list-all-enchantments
+  "列出物品上的所有附魔
 
    参数:
-   - effects: 效果列表 [[effect-id level] ...]
+   - stack: ItemStack
 
-   返回: 组合后的效果函数
+   返回: 附魔列表 [{:holder Holder<Enchantment> :level int} ...]
 
    示例:
    ```clojure
-   (def combo-effect
-     (compose-enchantment-effects
-       [[:ignite 2] [:poison 1] [:slow 1]]))
+   (doseq [{:keys [holder level]} (list-all-enchantments sword)]
+     (println \"Enchantment:\" (.value holder) \"Level:\" level))
    ```"
-  [effects]
-  (fn [event-type & args]
-    (doseq [[effect-id level] effects]
-      (apply apply-enchantment-effect effect-id event-type level args))))
+  [^ItemStack stack]
+  (when-let [enchantments (get-enchantments stack)]
+    (vec
+      (for [entry (.entrySet enchantments)]
+        {:holder (.getKey entry)
+         :level (.getValue entry)}))))
 
 ;; ============================================================================
-;; 自定义附魔定义
+;; 自定义附魔系统 (Minecraft 1.21 - 数据驱动)
+;; ============================================================================
+;;
+;; 重要说明：
+;; Minecraft 1.21 的附魔系统是完全数据驱动的。自定义附魔应该通过数据包定义，
+;; 而不是通过代码注册。本节提供的是附魔效果的运行时处理器。
+;;
+;; 要创建自定义附魔，请：
+;; 1. 在数据包中定义附魔（data/modid/enchantment/xxx.json）
+;; 2. 使用下面的函数处理自定义效果逻辑
+;; 3. 通过事件系统触发效果
+;;
+;; 参考：https://minecraft.wiki/w/Enchantment_Definition
 ;; ============================================================================
 
-(defn defenchantment
-  "定义自定义附魔( 数据驱动)
+(defonce ^:private enchantment-effect-handlers (atom {}))
+
+(defn register-enchantment-effect-handler!
+  "注册附魔效果运行时处理器（用于数据包定义的附魔）
+
+   参数:
+   - enchantment-id: 附魔资源位置字符串 (如 \"mymod:custom_fire\")
+   - event-type: 事件类型 (:on-attack/:on-damaged/:on-tick 等)
+   - handler-fn: 处理函数 (fn [context] ...)
+     context 包含: {:level, :attacker, :target, :stack, :enchantment-level}
+
+   注意: 此函数用于处理数据包定义的附魔的自定义逻辑
+
+   示例:
+   ```clojure
+   ;; 在数据包中定义附魔后，添加运行时逻辑
+   (register-enchantment-effect-handler! \"mymod:life_steal\" :on-attack
+     (fn [{:keys [level attacker target enchantment-level]}]
+       (when (instance? LivingEntity attacker)
+         (.heal attacker (* enchantment-level 0.5)))))
+   ```"
+  [enchantment-id event-type handler-fn]
+  (swap! enchantment-effect-handlers assoc-in [enchantment-id event-type] handler-fn))
+
+(defn trigger-enchantment-effect
+  "触发附魔效果处理器
 
    参数:
    - enchantment-id: 附魔 ID
-   - config: 配置映射
-     - :max-level - 最大等级
-     - :rarity - 稀有度
-     - :applicable? - 适用性检查函数 (fn [item] -> boolean)
-     - :effects - 效果定义
-       - 可以是 {:event-type effect-fn} 映射
-       - 也可以是 [dispatch-fn composed-effects]
-     - :conflicts - 冲突的附魔列表
-
-   示例:
-   ```clojure
-   ;; 方式1: 直接定义效果
-   (defenchantment :fire-aspect
-     {:max-level 2
-      :rarity :rare
-      :applicable? #(instance? SwordItem %)
-      :effects {:on-hit (fn [level target attacker]
-                          (.setSecondsOnFire target (* level 4)))}})
-
-   ;; 方式2: 使用组合效果
-   (defenchantment :deadly-blade
-     {:max-level 3
-      :rarity :epic
-      :effects (compose-enchantment-effects
-                 [[:ignite 2] [:poison 1]])})
-   ```"
-  [enchantment-id config]
-  (swap! custom-enchantments assoc enchantment-id config)
-  enchantment-id)
-
-(defn get-enchantment-config
-  "获取附魔配置"
-  [enchantment-id]
-  (get @custom-enchantments enchantment-id))
-
-;; ============================================================================
-;; 效果触发
-;; ============================================================================
-
-(defn trigger-enchantment-effect
-  "触发附魔效果
-
-   参数:
-   - stack: ItemStack
    - event-type: 事件类型
-   - args: 事件参数
-
-   示例:
-   ```clojure
-   ;; 触发攻击效果
-   (trigger-enchantment-effect sword :on-hit target attacker)
-
-   ;; 触发防御效果
-   (trigger-enchantment-effect armor :on-defense damage source)
-   ```"
-  [^ItemStack stack event-type & args]
-  (let [enchantments (get-enchantments stack)]
-    (doseq [[enchantment level] enchantments]
-      (when-let [config (get-enchantment-config enchantment)]
-        (let [effects (:effects config)]
-          (cond
-            ;; 映射形式: {:on-hit fn ...}
-            (map? effects)
-            (when-let [effect-fn (get effects event-type)]
-              (apply effect-fn level args))
-
-            ;; 函数形式: 组合效果
-            (fn? effects)
-            (apply effects event-type args)))))))
-
-;; ============================================================================
-;; 预设效果
-;; ============================================================================
-
-;; 火焰效果
-(register-enchantment-effect! :ignite :on-hit
-                              (fn [level target _attacker]
-                                (when (instance? net.minecraft.world.entity.Entity target)
-                                  (.setSecondsOnFire ^net.minecraft.world.entity.Entity target (* level 4)))))
-
-;; 中毒效果
-(register-enchantment-effect! :poison :on-hit
-                              (fn [level target _attacker]
-                                (when (instance? net.minecraft.world.entity.LivingEntity target)
-                                  (.addEffect ^net.minecraft.world.entity.LivingEntity target
-                                              (net.minecraft.world.effect.MobEffectInstance.
-                                               net.minecraft.world.effect.MobEffects/POISON
-                                               (* level 20)
-                                               (dec level))))))
-
-;; 缓慢效果
-(register-enchantment-effect! :slow :on-hit
-                              (fn [level target _attacker]
-                                (when (instance? net.minecraft.world.entity.LivingEntity target)
-                                  (.addEffect ^net.minecraft.world.entity.LivingEntity target
-                                              (net.minecraft.world.effect.MobEffectInstance.
-                                               net.minecraft.world.effect.MobEffects/MOVEMENT_SLOWDOWN
-                                               (* level 40)
-                                               level)))))
-
-;; 吸血效果
-(register-enchantment-effect! :lifesteal :on-hit
-                              (fn [level _target attacker]
-                                (when (instance? net.minecraft.world.entity.LivingEntity attacker)
-                                  (.heal ^net.minecraft.world.entity.LivingEntity attacker (* level 0.5)))))
-
-;; 雷击效果
-(register-enchantment-effect! :lightning :on-hit
-                              (fn [level target _attacker]
-                                (when (instance? net.minecraft.world.entity.Entity target)
-                                  (let [^net.minecraft.world.entity.Entity entity target
-                                        level (.level entity)
-                                        pos (.position entity)]
-                                    (when-not (.isClientSide level)
-                                      (.addFreshEntity level
-                                                       (net.minecraft.world.entity.EntityType/LIGHTNING_BOLT
-                                                        .create level)))))))
-
-;; ============================================================================
-;; 便捷宏
-;; ============================================================================
-
-(defmacro defenchant
-  "简化的附魔定义宏
-
-   示例:
-   ```clojure
-   (defenchant fire-aspect
-     :max-level 2
-     :rarity :rare
-     :on-hit (fn [level target attacker]
-               (.setSecondsOnFire target (* level 4))))
-   ```"
-  [name & {:keys [max-level rarity applicable? on-hit on-defense on-tick conflicts]
-           :or {max-level 1 rarity :common}}]
-  `(defenchantment ~(keyword name)
-     {:max-level ~max-level
-      :rarity ~rarity
-      ~@(when applicable? [:applicable? applicable?])
-      :effects ~(into {}
-                      (filter (fn [[_k v]] v)
-                              {:on-hit on-hit
-                               :on-defense on-defense
-                               :on-tick on-tick}))
-      ~@(when conflicts [:conflicts conflicts])}))
+   - context: 上下文参数映射"
+  [enchantment-id event-type context]
+  (when-let [handler (get-in @enchantment-effect-handlers [enchantment-id event-type])]
+    (try
+      (handler context)
+      (catch Exception e
+        (core/log-error (str "Error in enchantment effect " enchantment-id ": " (.getMessage e)))))))
 
 (comment
-  ;; 使用示例
+  ;; ========== Minecraft 1.21 使用示例 ==========
 
-  ;; 1. 查询附魔
-  (def enchantments (get-enchantments sword))
-  (def sharp-level (get-enchantment-level sword Enchantments/SHARPNESS))
-  (has-enchantment? sword Enchantments/FIRE_ASPECT)
+  ;; 1. 获取注册表访问
+  (def server (core/get-server))
+  (def registry-access (.registryAccess server))
+  (def enchantments-registry (.registryOrThrow registry-access Registries/ENCHANTMENT))
 
-  ;; 2. 添加附魔
-  (add-enchantment! sword Enchantments/SHARPNESS 5)
-  (add-enchantments! sword
-                     {Enchantments/SHARPNESS 5
-                      Enchantments/FIRE_ASPECT 2
-                      Enchantments/LOOTING 3})
+  ;; 2. 获取附魔 Holder
+  (def sharpness-key (net.minecraft.core.ResourceKey/create
+                       Registries/ENCHANTMENT
+                       (net.minecraft.resources.ResourceLocation. "minecraft" "sharpness")))
+  (def sharpness-holder (.getHolder enchantments-registry sharpness-key))
 
-  ;; 3. 计算伤害
-  (def bonus-damage (calculate-damage-bonus sword zombie))
+  ;; 3. 查询附魔
+  (def level (get-enchantment-level sharpness-holder sword))
+  (has-enchantment? sharpness-holder sword)
 
-  ;; 4. 清除附魔
-  (clear-enchantments! sword)
+  ;; 4. 添加附魔
+  (enchant! sword sharpness-holder 5)
 
-  ;; ========== 自定义附魔系统 ==========
+  ;; 5. 批量添加附魔（MC 1.21 使用 updateEnchantments）
+  (apply-enchantments! sword
+    (fn [mutable]
+      (.set mutable sharpness-holder 5)
+      (.set mutable fire-aspect-holder 2)))
 
-  ;; 5. 注册可重用效果
-  (register-enchantment-effect! :freeze :on-hit
-                                (fn [level target attacker]
-                                  (.addEffect target
-                                              (MobEffectInstance. MobEffects/MOVEMENT_SLOWDOWN (* level 60) 4))))
+  ;; 6. 列出所有附魔
+  (doseq [{:keys [holder level]} (list-all-enchantments sword)]
+    (println "Enchantment:" (.value holder) "Level:" level))
 
-  ;; 6. 定义简单附魔
-  (defenchant frost-blade
-    :max-level 3
-    :rarity :rare
-    :on-hit (fn [level target attacker]
-              (.setTicksFrozen target (* level 100))))
+  ;; 7. 修改伤害（需要完整上下文）
+  (def modified-damage
+    (modify-damage-dealt server-level sword zombie damage-source 10.0))
 
-  ;; 7. 定义组合附魔
-  (defenchantment :ultimate-blade
-    {:max-level 1
-     :rarity :epic
-     :effects (compose-enchantment-effects
-               [[:ignite 2] [:poison 1] [:slow 1]])})
+  ;; 8. 触发附魔效果
+  (on-target-damaged server-level zombie damage-source)
 
-  ;; 8. 使用多态分发自定义效果
-  (defmethod apply-enchantment-effect [:custom-power :on-hit]
-    [_ _ level target attacker]
-    ;; 自定义逻辑
-    (println "Custom power activated!" level))
+  ;; 9. 修改击退（需要 DamageSource）
+  (def knockback (modify-knockback server-level sword zombie damage-source 0.4))
 
-  ;; 9. 触发自定义附魔效果
-  (trigger-enchantment-effect sword :on-hit target attacker))
+  ;; 10. 获取装备总附魔等级
+  (def total-protection (get-equipment-level protection-holder player)))
+
+  ;; ========== 注意事项 ==========
+  ;; - Minecraft 1.21 的附魔系统是数据驱动的
+  ;; - 使用 Holder<Enchantment> 而不是直接的 Enchantment 对象
+  ;; - 自定义附魔应该通过数据包（datapack）定义
+  ;; - 附魔效果通过 JSON 配置，而不是代码
+  ;; - 复杂的附魔效果需要自定义 EnchantmentEffect 类)

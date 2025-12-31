@@ -25,7 +25,7 @@
        (cond-recipes/mod-loaded-condition \"jei\")
        (cond-recipes/mod-loaded-condition \"nei\")))
    ```"
-  (:require [clojure.data.json :as json]
+  (:require [com.fabriclj.swiss-knife.common.utils.json :as json]
             [clojure.java.io :as io]))
 
 ;; 启用反射警告
@@ -256,7 +256,7 @@
         dir-path (subs full-path 0 (.lastIndexOf full-path "/"))]
     (ensure-directory dir-path)
     (with-open [writer (io/writer full-path)]
-      (json/write conditional-recipe-data writer :indent true))
+      (json/write conditional-recipe-data writer {:pretty true}))
     (println "[DataGen] Generated conditional recipe:" full-path)))
 
 ;; ============================================================================

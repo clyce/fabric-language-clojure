@@ -13,7 +13,7 @@
    ;; 旋转方块( 四个方向)
    (bs/save-rotatable-blockstate! \"./src/main/resources\" \"mymod\" \"furnace\")
    ```"
-  (:require [clojure.data.json :as json]
+  (:require [com.fabriclj.swiss-knife.common.utils.json :as json]
             [clojure.java.io :as io]))
 
 ;; 启用反射警告
@@ -128,7 +128,7 @@
         dir-path (subs full-path 0 (.lastIndexOf full-path "/"))]
     (ensure-directory dir-path)
     (with-open [writer (io/writer full-path)]
-      (json/write blockstate-data writer :indent true))
+      (json/write blockstate-data writer {:pretty true}))
     (println "[DataGen] Generated blockstate:" full-path)))
 
 (defn save-simple-blockstate!

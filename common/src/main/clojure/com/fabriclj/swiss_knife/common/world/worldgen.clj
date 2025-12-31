@@ -13,6 +13,7 @@
             ConfiguredFeature
             FeaturePlaceContext)
            (net.minecraft.world.level.levelgen.feature.configurations OreConfiguration
+            OreConfiguration$TargetBlockState
             TreeConfiguration RandomPatchConfiguration)
            (net.minecraft.world.level.levelgen.placement PlacedFeature PlacementModifier PlacementContext)
            (net.minecraft.world.level.levelgen.structure Structure StructurePiece StructureType)
@@ -22,13 +23,16 @@
            (net.minecraft.resources ResourceLocation ResourceKey)
            (net.minecraft.world.level Level)
            (net.minecraft.world.level.biome Biome BiomeGenerationSettings)
-           (net.minecraft.world.level.levelgen HeightmapType)
+           (net.minecraft.world.level.levelgen Heightmap Heightmap$Types)
            (net.minecraft.world.level.levelgen.placement HeightRangePlacement
+            HeightmapPlacement
             CountPlacement
             RarityFilter BiomeFilter InSquarePlacement)
            (net.minecraft.world.level.levelgen.feature.stateproviders BlockStateProvider)
            (net.minecraft.data.worldgen.placement PlacementUtils)
            (net.minecraft.world.level.levelgen.blockpredicates BlockPredicate)
+           (net.minecraft.world.level.levelgen.structure.templatesystem RuleTest
+            BlockMatchTest TagMatchTest)
            (net.minecraft.world.level.levelgen VerticalAnchor)))
 
 (set! *warn-on-reflection* true)
@@ -43,9 +47,9 @@
   (cond
     (instance? ResourceLocation id) id
     (string? id) (if (str/includes? id ":")
-                   (ResourceLocation. id)
-                   (ResourceLocation. "minecraft" id))
-    (keyword? id) (ResourceLocation. (name id))
+                   (ResourceLocation/parse id)
+                   (ResourceLocation/fromNamespaceAndPath "minecraft" id))
+    (keyword? id) (ResourceLocation/parse (name id))
     :else (throw (IllegalArgumentException. (str "Invalid resource location: " id)))))
 
 (defn- ->block-state
@@ -73,11 +77,11 @@
    (ore-target Blocks/DEEPSLATE Blocks/DEEPSLATE_COAL_ORE)
    ```"
   [target ore]
-  (OreConfiguration$TargetBlockState.
-   (if (instance? net.minecraft.tags.TagKey target)
-     (BlockPredicate/matchesTag target)
-     (BlockPredicate/matchesBlocks [target]))
-   (->block-state ore)))
+  (let [rule-test (if (instance? net.minecraft.tags.TagKey target)
+                    (TagMatchTest. target)
+                    (BlockMatchTest. target))
+        ore-state (->block-state ore)]
+    (OreConfiguration/target rule-test ore-state)))
 
 (defn ore-configuration
   "创建矿石配置
@@ -229,14 +233,14 @@
    (heightmap-placement :world_surface)
    ```"
   [type]
-  (PlacementUtils/HEIGHTMAP
+  (HeightmapPlacement/onHeightmap
    (case type
-     :motion_blocking HeightmapType/MOTION_BLOCKING
-     :motion_blocking_no_leaves HeightmapType/MOTION_BLOCKING_NO_LEAVES
-     :ocean_floor HeightmapType/OCEAN_FLOOR
-     :world_surface HeightmapType/WORLD_SURFACE
-     :world_surface_wg HeightmapType/WORLD_SURFACE_WG
-     HeightmapType/WORLD_SURFACE)))
+     :motion_blocking Heightmap$Types/MOTION_BLOCKING
+     :motion_blocking_no_leaves Heightmap$Types/MOTION_BLOCKING_NO_LEAVES
+     :ocean_floor Heightmap$Types/OCEAN_FLOOR
+     :world_surface Heightmap$Types/WORLD_SURFACE
+     :world_surface_wg Heightmap$Types/WORLD_SURFACE_WG
+     Heightmap$Types/WORLD_SURFACE)))
 
 ;; ============================================================================
 ;; 特征创建( 简化接口)

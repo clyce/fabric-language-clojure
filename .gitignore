@@ -158,3 +158,8 @@ loom-cache/
 # Lock files (optionally keep gradle.lockfile)
 *.lock
 !gradle.lockfile
+
+# Sorry, if I push the mapping, I'll be in trouble, fk mojang
+/api_ref
+
+.cursor/

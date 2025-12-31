@@ -16,7 +16,9 @@
            (net.minecraft.world.entity.player Player)
            (net.minecraft.world.level Level)
            (net.minecraft.server MinecraftServer)
-           (net.minecraft.world InteractionHand InteractionResult)))
+           (net.minecraft.world InteractionHand InteractionResult)
+           (net.minecraft.world.entity.projectile Projectile)
+           (net.minecraft.world.phys HitResult HitResult$Type)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
