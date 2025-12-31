@@ -8,8 +8,9 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'arclojure'
+rootProject.name = 'fabric-language-clojure'
 
 include 'common'
 include 'fabric'
-// include 'forge'  // 临时禁用以调试
+include 'example'  // 示例测试模块
+// include 'forge'  // Forge 支持暂时禁用，将来作为辅助模块

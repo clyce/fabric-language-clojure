@@ -4,7 +4,7 @@ plugins {
 
 loom {
     forge {
-        mixinConfig "arclojure.mixins.json"
+        mixinConfig "fabriclj.mixins.json"
     }
 }
 

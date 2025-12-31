@@ -1,13 +1,13 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
 license = "MIT"
-issueTrackerURL = "https://github.com/your-username/arclojure/issues"
+issueTrackerURL = "https://github.com/your-username/fabriclj/issues"
 
 [[mods]]
-modId = "arclojure"
+modId = "fabriclj"
 version = "${version}"
-displayName = "Arclojure"
-authors = "Arclojure Team"
+displayName = "fabriclj"
+authors = "fabriclj Team"
 description = '''
 A Minecraft mod template combining Clojure's functional programming with Architectury's cross-platform capabilities.
 
@@ -17,23 +17,23 @@ Features:
 - Macro-based DSL for content registration
 - Hot code reloading during gameplay
 '''
-#logoFile = "assets/arclojure/icon.png"
+#logoFile = "assets/fabriclj/icon.png"
 
-[[dependencies.arclojure]]
+[[dependencies.fabriclj]]
 modId = "forge"
 mandatory = true
 versionRange = "[47,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.arclojure]]
+[[dependencies.fabriclj]]
 modId = "minecraft"
 mandatory = true
 versionRange = "[1.20.1,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.arclojure]]
+[[dependencies.fabriclj]]
 modId = "architectury"
 mandatory = true
 versionRange = "[9.2.14,)"

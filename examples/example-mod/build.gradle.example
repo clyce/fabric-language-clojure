@@ -1,0 +1,72 @@
+// 示例 build.gradle 配置
+// 这是一个使用 fabric-language-clojure 的 mod 的构建配置示例
+
+plugins {
+    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'dev.clojurephant.clojure' version '0.8.0-beta.7'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    maven { url = 'https://clojars.org/repo' }
+    // 添加 fabric-language-clojure 发布仓库
+    maven { url = 'https://maven.example.com/releases' }
+}
+
+dependencies {
+    // Minecraft 和映射
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+
+    // Fabric Loader
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API（可选但推荐）
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // 【关键】fabric-language-clojure 依赖
+    modImplementation "com.fabriclj:fabric-language-clojure:${project.clojure_lang_version}"
+}
+
+// 配置 Clojure 源码目录
+sourceSets {
+    main {
+        clojure {
+            srcDirs = ['src/main/clojure']
+        }
+    }
+}
+
+// 禁用 Clojure AOT 编译（运行时加载）
+tasks.named('compileClojure') {
+    enabled = false
+}
+
+tasks.named('checkClojure') {
+    enabled = false
+}
+
+// 将 Clojure 源文件复制到 JAR
+processResources {
+    from(sourceSets.main.clojure) {
+        into 'clojure'
+    }
+
+    inputs.property 'version', project.version
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}

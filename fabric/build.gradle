@@ -17,7 +17,6 @@ configurations {
     developmentFabric.extendsFrom common
 
     // Files in this configuration will be bundled into your mod using the Shadow plugin.
-    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
     shadowBundle {
         canBeResolved = true
         canBeConsumed = false
@@ -31,30 +30,46 @@ repositories {
 dependencies {
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
+    // Fabric API - 可选，但大多数 mod 都需要
     modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
 
-    // Architectury API. This is optional, and you can comment it out if you don't need it.
+    // Architectury API - 用于跨平台支持
     modImplementation "dev.architectury:architectury-fabric:$rootProject.architectury_api_version"
 
     common(project(path: ':common', configuration: 'namedElements')) { transitive = true }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
 
-    // Clojure 运行时（将被 Shadow 打包进模组）
-    shadowBundle "org.clojure:clojure:$rootProject.clojure_version"
-    shadowBundle "nrepl:nrepl:$rootProject.nrepl_version"
+    // ========================================================================
+    // 【关键】Clojure 运行时捆绑
+    // 使用 Fabric Loom 的 include 配置来嵌入 Clojure
+    // 这避免了 Shadow 重定位带来的 remap 问题
+    // ========================================================================
+    include "org.clojure:clojure:$rootProject.clojure_version"
+    include "nrepl:nrepl:$rootProject.nrepl_version"
 
-    // 【关键】开发环境需要 Clojure 在运行时类路径
-    // 使用 modImplementation 确保 Clojure 在开发环境可用
+    // Clojure 的传递依赖
+    include "org.clojure:core.specs.alpha:0.2.62"
+    include "org.clojure:spec.alpha:0.3.218"
+
+    // nREPL 的传递依赖
+    include "nrepl:bencode:1.1.0"
+
+    // 开发环境需要 Clojure 在运行时类路径
     modImplementation "org.clojure:clojure:$rootProject.clojure_version"
     modImplementation "nrepl:nrepl:$rootProject.nrepl_version"
 }
 
 processResources {
     inputs.property 'version', project.version
+    inputs.property 'clojure_version', rootProject.clojure_version
+    inputs.property 'nrepl_version', rootProject.nrepl_version
 
     filesMatching('fabric.mod.json') {
-        expand version: inputs.properties.version
+        expand(
+            version: project.version,
+            clojure_version: rootProject.clojure_version,
+            nrepl_version: rootProject.nrepl_version
+        )
     }
 }
 
@@ -62,16 +77,20 @@ shadowJar {
     configurations = [project.configurations.shadowBundle]
     archiveClassifier = 'dev-shadow'
 
-    // 【关键】重定位 Clojure 包名，防止与其他 Clojure 模组冲突
-    relocate 'clojure', 'com.arclojure.shaded.clojure'
-    relocate 'nrepl', 'com.arclojure.shaded.nrepl'
-
     // 排除不需要的文件以减小体积
     exclude 'META-INF/*.SF'
     exclude 'META-INF/*.DSA'
     exclude 'META-INF/*.RSA'
+
+    // 合并 service loader 配置
+    mergeServiceFiles()
 }
 
 remapJar {
     inputFile.set shadowJar.archiveFile
+}
+
+// 设置最终 JAR 的分类器
+jar {
+    archiveClassifier = 'dev'
 }

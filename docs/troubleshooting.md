@@ -1,273 +1,464 @@
-# 故障排查指南
+# fabric-language-clojure 故障排查
 
-## 构建问题
+本文档收集了常见问题及其解决方案。
 
-### 问题 1：Java 版本不匹配
+## 开发环境问题
 
-**错误信息：**
-```
-Dependency requires at least JVM runtime version 21. This build uses a Java 17 JVM.
-```
-
-**解决方案：**
-1. 下载并安装 [Java 21](https://learn.microsoft.com/zh-cn/java/openjdk/download#openjdk-21)
-2. 设置 `JAVA_HOME` 环境变量
-3. 重新打开终端
-4. 验证：`java -version` 应显示 21.x
-
-### 问题 2：ClassNotFoundException: clojure.lang.IFn
-
-**错误信息：**
-```
-Exception in thread "main" java.lang.TypeNotPresentException: Type clojure/lang/IFn not present
-Caused by: java.lang.ClassNotFoundException: clojure.lang.IFn
-```
-
-**原因：** Clojure 运行时未正确添加到类路径
-
-**解决方案：**
-确保 `common/build.gradle` 使用 `modImplementation`：
-```groovy
-dependencies {
-    modImplementation "org.clojure:clojure:$rootProject.clojure_version"
-    modImplementation "nrepl:nrepl:$rootProject.nrepl_version"
-}
-```
-
-### 问题 3：checkClojure 编译错误
-
-**错误信息：**
-```
-Syntax error compiling at (com\arclojure\core.clj:44:3).
-No such var: registry/register-all!
-```
-
-**原因：** Clojurephant 在构建时尝试编译 Clojure 代码，但 Minecraft 类不可用
-
-**解决方案：**
-禁用编译时检查：
-```groovy
-tasks.named('checkClojure') {
-    enabled = false
-}
-tasks.named('compileClojure') {
-    enabled = false
-}
-```
-
-### 问题 4：remapJar 失败
-
-**错误信息：**
-```
-Execution failed for task ':fabric:remapJar'.
-ArrayIndexOutOfBoundsException: Index -1 out of bounds for length 2
-```
-
-**状态：** 已知问题，可能是 Loom 与 Clojure 依赖的兼容性问题
-
-**临时解决方案：**
-使用 `runClient` 直接运行开发环境，跳过打包：
-```bash
-.\gradlew.bat :fabric:runClient
-```
-
-### 问题 5：Loom 缓存损坏
-
-**错误信息：**
-```
-Failed to setup Minecraft, java.lang.RuntimeException: Failed to remap 5 mods
-Previous process has disowned the lock due to abrupt termination.
-```
-
-**原因：** Gradle 进程异常终止导致 Loom 缓存锁文件损坏
-
-**解决方案：**
-```bash
-# 删除 Loom 缓存（Windows PowerShell）
-Remove-Item -Recurse -Force "$env:USERPROFILE\.gradle\caches\fabric-loom"
-
-# 停止所有守护进程
-.\gradlew.bat --stop
-
-# 重新运行
-.\gradlew.bat :fabric:runClient
-```
-
-### 问题 6：clean 任务失败（文件占用）
-
-**错误信息：**
-```
-Unable to delete directory '...\common\build'
-Failed to delete some children.
-```
-
-**原因：** 之前的进程还在占用文件
-
-**解决方案：**
-1. 关闭所有 Java 进程
-2. 或者直接运行而不 clean：
-```bash
-.\gradlew.bat :fabric:runClient
-```
-
-## 运行时问题
-
-### 问题 7：nREPL 无法连接
-
-**症状：** Calva 连接超时
-
-**解决方案：**
-1. 确认游戏已完全启动
-2. 查看控制台是否显示：
-   ```
-   [Arclojure/nREPL] Server started on 127.0.0.1:7888
-   ```
-3. 检查端口是否被占用：
-   ```bash
-   netstat -an | findstr 7888
-   ```
-4. 确认防火墙没有阻止本地连接
-
-### 问题 8：Clojure 代码修改不生效
-
-**症状：** REPL 中求值成功，但游戏行为未改变
-
-**可能原因：**
-1. 函数被缓存（`defonce` 定义的变量）
-2. Java 层缓存了函数引用
-
-**解决方案：**
-1. 对于 `defonce` 变量，需要重启游戏
-2. 对于其他函数，使用：
-   ```clojure
-   (require 'namespace :reload)
-   ```
-3. 检查 `ClojureHooks.java` 是否缓存了函数引用
-
-### 问题 9：反射警告
+### Q: 语言适配器在 Architectury 开发环境中无法加载
 
 **症状：**
 ```
-Reflection warning, NO_SOURCE_PATH:18:1 - reference to field flush can't be resolved.
+Failed to instantiate language adapter: clojure
+ClassNotFoundException: can't load class com.fabriclj.fabric.ClojureLanguageAdapter
+```
+
+**原因：** 这是 Architectury Transformer 与 Fabric 语言适配器系统的兼容性问题。在开发环境中，类加载器配置可能不正确。
+
+**解决方案：**
+
+1. **在构建的 JAR 中测试**：语言适配器在打包后的 JAR 中应该正常工作
+   ```bash
+   ./gradlew build
+   # 将 JAR 放入 mods 文件夹测试
+   ```
+
+2. **开发时使用 Java 入口类**：在开发期间，使用传统的 Java 入口类：
+   ```java
+   public class MyMod implements ModInitializer {
+       @Override
+       public void onInitialize() {
+           ClojureRuntime.ensureInitialized(MyMod.class);
+           ClojureRuntime.requireNamespace("com.mymod.core");
+           ClojureRuntime.invoke("com.mymod.core", "init");
+       }
+   }
+   ```
+
+3. **使用纯 Fabric Loom**：如果不需要 Forge 支持，可以使用纯 Fabric Loom 而不是 Architectury Loom
+
+---
+
+## 构建问题
+
+### Q: Gradle 构建失败，找不到 fabric-language-clojure
+
+**症状：**
+```
+Could not resolve com.fabriclj:fabric-language-clojure:1.0.0
 ```
 
 **解决方案：**
-添加类型提示：
-```clojure
-;; ❌ 有反射
-(.someMethod object)
 
-;; ✅ 无反射
-(.someMethod ^ClassName object)
+1. 确保添加了正确的 Maven 仓库：
+   ```groovy
+   repositories {
+       maven { url = 'https://maven.example.com/releases' }
+   }
+   ```
+
+2. 如果是本地开发，先构建语言库：
+   ```bash
+   cd fabric-language-clojure
+   ./gradlew publishToMavenLocal
+   ```
+   然后使用 `mavenLocal()` 仓库。
+
+### Q: Clojure 编译错误
+
+**症状：**
 ```
-
-## Gradle 守护进程问题
-
-### 问题 10：守护进程不兼容
-
-**错误信息：**
-```
-Starting a Gradle Daemon, 3 incompatible Daemons could not be reused
+Execution failed for task ':compileClojure'.
 ```
 
 **解决方案：**
-停止所有守护进程并重新启动：
+
+禁用 Clojure AOT 编译（运行时加载）：
+
+```groovy
+tasks.named('compileClojure') { enabled = false }
+tasks.named('checkClojure') { enabled = false }
+```
+
+### Q: Java 版本不兼容
+
+**症状：**
+```
+Dependency requires at least JVM runtime version 21
+```
+
+**解决方案：**
+
+确保使用 Java 17 或更高版本：
+
 ```bash
+java -version
+```
+
+如需升级，下载 [Eclipse Temurin](https://adoptium.net/) 或 [Amazon Corretto](https://aws.amazon.com/corretto/)。
+
+### Q: 文件被锁定，无法构建
+
+**症状：**
+```
+java.nio.file.FileSystemException: mappings.jar: 另一个程序正在使用此文件
+```
+
+**原因：** Cursor/VSCode 的 Java Language Server 索引了 Gradle 缓存中的文件。
+
+**解决方案（按推荐顺序）：**
+
+1. **使用独立终端窗口**（推荐）：
+   - 不要在 Cursor 的集成终端运行构建
+   - 使用 Windows PowerShell 或 CMD 独立窗口
+
+2. **暂时禁用 Java 扩展**：
+   - `Ctrl+Shift+X` → 搜索 "Java" → 禁用
+   - 运行构建后重新启用
+
+3. **完全退出 IDE**：
+   - 右键任务栏图标 → 退出（不是关闭窗口）
+   - 运行构建
+   - 重新打开 IDE
+
+### Q: example 模块构建失败，找不到 fabric JAR
+
+**症状：**
+```
+Failed to read metadata from fabric-language-clojure-fabric-1.0.0-dev.jar
+NoSuchFileException
+```
+
+**原因：** `example` 依赖 `fabric` 模块的输出，但 JAR 尚未构建（通常发生在执行 `clean` 后）。
+
+**解决方案：**
+
+```powershell
+# 方案 1：分阶段构建
+.\gradlew.bat :common:build :fabric:build -x checkClojure -x compileClojure
+.\gradlew.bat :example:build -x checkClojure -x compileClojure
+
+# 方案 2：让 Gradle 自动处理依赖顺序（推荐）
+# 如果 settings.gradle 正确配置，直接构建即可
+.\gradlew.bat build -x checkClojure -x compileClojure
+```
+
+**注意**：如果刚修改了 `settings.gradle`，需要先停止 Gradle Daemon：
+```powershell
 .\gradlew.bat --stop
-.\gradlew.bat :fabric:runClient
 ```
 
-### 问题 11：内存不足
+### Q: 修改代码后还需要清理缓存吗？
 
-**症状：** 构建缓慢或失败
+**不需要！** 在 90% 的情况下，直接运行构建即可：
 
-**解决方案：**
-增加 Gradle 内存，编辑 `gradle.properties`：
-```properties
-org.gradle.jvmargs=-Xmx4G
+```powershell
+.\gradlew.bat build -x checkClojure -x compileClojure
 ```
 
-## IDE 问题
+**只在以下情况需要清理**：
+- ✅ 重命名包名或项目名
+- ✅ 修改 `settings.gradle` 或 `enabled_platforms`
+- ✅ Loom 映射损坏（看到 "Failed to setup mappings" 错误）
+- ✅ 切换 Minecraft 版本
 
-### 问题 12：VS Code 无法识别 Clojure 文件
+详见 [开发指南 - 构建和开发工作流](dev-guide.md#构建和开发工作流)。
+
+### Q: Loom 映射损坏
+
+**症状：**
+```
+Failed to setup mappings: loom:mappings:layered+hash.40359
+```
+
+**原因：** Gradle 缓存损坏（通常由构建被异常中断导致）。
 
 **解决方案：**
-1. 安装 [Calva 插件](https://marketplace.visualstudio.com/items?itemName=betterthantomorrow.calva)
-2. 重新加载 VS Code
-3. 打开 `.clj` 文件时选择 Clojure 语言模式
 
-### 问题 13：Java 类找不到
+```powershell
+# 只清理 Loom 缓存
+Remove-Item -Recurse -Force "$env:USERPROFILE\.gradle\caches\fabric-loom"
 
-**症状：** IDE 提示 `Cannot resolve symbol`
+# 重新构建
+.\gradlew.bat build -x checkClojure -x compileClojure
+```
+
+### Q: 大规模重构后构建失败
+
+**场景**：重命名包名、项目名、模组 ID 后出现各种奇怪错误。
+
+**解决方案（完全清理）**：
+
+```powershell
+# 1. 完全退出 IDE
+# 2. 清理所有缓存
+Remove-Item -Recurse -Force .gradle
+Remove-Item -Recurse -Force common\build, fabric\build, example\build
+Remove-Item -Recurse -Force "$env:USERPROFILE\.gradle\caches\fabric-loom"
+
+# 3. 停止所有 Gradle Daemon
+.\gradlew.bat --stop
+
+# 4. 重新构建
+.\gradlew.bat build -x checkClojure -x compileClojure
+```
+
+---
+
+## 运行时问题
+
+### Q: ClassNotFoundException: clojure.java.api.Clojure
+
+**症状：**
+```
+java.lang.ClassNotFoundException: clojure.java.api.Clojure
+```
+
+**原因：** Clojure 未正确打包或类加载器问题。
 
 **解决方案：**
-1. 运行 `.\gradlew.bat genSources` 生成 Minecraft 源码
-2. 刷新 IDE 项目
-3. 确保 Java Extension Pack 已安装
 
-## 调试技巧
+1. 确保 fabric-language-clojure 作为依赖：
+   ```groovy
+   modImplementation "com.fabriclj:fabric-language-clojure:1.0.0"
+   ```
 
-### 启用详细日志
+2. 确保 Clojure 源文件在 JAR 中：
+   ```groovy
+   processResources {
+       from(sourceSets.main.clojure) {
+           into 'clojure'
+       }
+   }
+   ```
+
+### Q: 入口点未找到
+
+**症状：**
+```
+LanguageAdapterException: Failed to create Clojure entrypoint: com.mymod.core/init
+```
+
+**可能原因：**
+
+1. 命名空间路径错误
+2. 函数名拼写错误
+3. Clojure 文件未打包
+
+**检查项：**
 
 ```bash
-.\gradlew.bat :fabric:runClient --info
+# 检查 JAR 内容
+jar tf build/libs/mymod-1.0.0.jar | grep clojure
 ```
 
-### 查看完整堆栈跟踪
-
-```bash
-.\gradlew.bat :fabric:runClient --stacktrace
+应该看到类似：
+```
+clojure/com/mymod/core.clj
 ```
 
-### 查看 Gradle 扫描报告
-
-```bash
-.\gradlew.bat :fabric:runClient --scan
+**确保文件路径正确：**
+```
+src/main/clojure/com/mymod/core.clj  →  命名空间 com.mymod.core
 ```
 
-### 问题 8：Clojure 编译错误 - defonce 参数错误
+### Q: 命名空间加载失败
 
-**错误信息：**
+**症状：**
 ```
-Caused by: clojure.lang.ArityException: Wrong number of args (3) passed to: clojure.core/defonce
-        at knot//clojure.lang.Compiler.macroexpand1(Compiler.java:7016)
-```
-
-**原因：** `defonce` 宏不支持文档字符串，只接受 2 个参数（符号和初始化表达式）
-
-**错误代码示例：**
-```clojure
-(defonce ^:private server-atom
-  "这是文档字符串"  ;; ❌ 会被当作第三个参数
-  (atom nil))
+FileNotFoundException: Could not locate com/mymod/core__init.class or com/mymod/core.clj
 ```
 
 **解决方案：**
 
-1. **移除文档字符串（推荐）**
+1. 检查文件是否存在于正确路径
+2. 检查命名空间声明与文件路径是否匹配：
+   ```clojure
+   ;; 文件: src/main/clojure/com/mymod/core.clj
+   (ns com.mymod.core)  ;; 必须匹配
+   ```
+
+3. 检查 processResources 配置
+
+### Q: Mixin 钩子不生效
+
+**症状：** ClojureBridge.invoke 调用了但 Clojure 函数没执行。
+
+**解决方案：**
+
+1. 检查命名空间和函数名是否正确：
+   ```java
+   ClojureBridge.invoke("com.mymod.hooks", "on-jump", player, ci);
+   ```
+
+2. 确保命名空间已加载：
+   ```clojure
+   ;; 在 REPL 中测试
+   (require 'com.mymod.hooks)
+   (com.mymod.hooks/on-jump nil nil)
+   ```
+
+3. 清除缓存：
+   ```clojure
+   (com.fabriclj.ClojureBridge/clearCache nil)
+   ```
+
+---
+
+## nREPL 问题
+
+### Q: nREPL 连接失败
+
+**症状：** Calva 或其他客户端无法连接。
+
+**检查项：**
+
+1. 游戏是否完全启动？
+2. 控制台是否显示 nREPL 启动消息？
+3. 是否使用了正确的端口？
+
+**解决方案：**
+
 ```clojure
-;; 使用注释代替文档字符串
-(defonce ^:private server-atom (atom nil))
+;; 在游戏控制台检查
+(com.fabriclj.nrepl/server-running?)
+(com.fabriclj.nrepl/get-port)
 ```
 
-2. **或使用 `def` 代替**
-```clojure
-;; def 支持文档字符串，但不保证单次初始化
-(def ^:private server-atom
-  "这是文档字符串"
-  (atom nil))
+### Q: 端口被占用
+
+**症状：**
+```
+[nREPL] Failed to start server: Address already in use
 ```
 
-**技术说明：**
-- `defonce` 保证变量只初始化一次（即使重新加载命名空间）
-- 适用于有状态的原子（atom/agent/ref）
-- 不支持文档字符串，只能用注释
+**解决方案：**
+
+使用不同的端口：
+```clojure
+(nrepl/start-server! 7889)
+```
+
+或找出并结束占用端口的进程：
+```bash
+# Windows
+netstat -ano | findstr :7888
+
+# Linux/macOS
+lsof -i :7888
+```
+
+### Q: 代码修改后不生效
+
+**原因：**
+1. 使用了 `defonce`
+2. ClojureBridge 缓存
+3. 命名空间未重新加载
+
+**解决方案：**
+
+```clojure
+;; 1. 对于 defonce，需要手动重置
+(reset! my-atom new-value)
+
+;; 2. 清除 ClojureBridge 缓存
+(com.fabriclj.ClojureBridge/clearCache "com.mymod.hooks")
+
+;; 3. 重新加载命名空间
+(require 'com.mymod.hooks :reload-all)
+```
+
+---
+
+## 性能问题
+
+### Q: 游戏卡顿
+
+**可能原因：**
+1. 反射调用过多
+2. 在热路径中创建大量临时对象
+3. 同步 I/O 操作
+
+**解决方案：**
+
+1. 添加类型提示：
+   ```clojure
+   (set! *warn-on-reflection* true)
+
+   (defn get-name [^Player player]
+     (.getName player))
+   ```
+
+2. 优化热路径代码：
+   ```clojure
+   ;; 避免在 tick 中创建序列
+   (defn process-entities [entities]
+     (reduce process-entity nil entities))
+   ```
+
+3. 使用异步 I/O：
+   ```clojure
+   (future (save-data-to-disk data))
+   ```
+
+### Q: 启动时间长
+
+**原因：** Clojure 运行时初始化需要时间。
+
+**这是正常现象。** Clojure 首次加载需要初始化运行时，后续加载会更快。
+
+如果启动时间过长，检查是否在启动时加载了过多命名空间。
+
+---
+
+## 兼容性问题
+
+### Q: 与其他 mod 冲突
+
+**症状：** 安装某些 mod 后游戏崩溃。
+
+**可能原因：**
+1. 类加载器冲突
+2. Mixin 冲突
+3. 共享状态问题
+
+**解决方案：**
+
+1. 检查崩溃日志，确定冲突来源
+2. 尝试使用不同的 Mixin 注入点
+3. 报告问题到相关 mod 的 issue tracker
+
+### Q: Forge 兼容性
+
+fabric-language-clojure 主要针对 Fabric 平台。对于 Forge：
+
+1. 需要编写 Java 入口类：
+   ```java
+   @Mod("mymod")
+   public class MyMod {
+       public MyMod() {
+           ModMain.loadClojureMod(MyMod.class, "com.mymod.core", "init");
+       }
+   }
+   ```
+
+2. 参考 [开发者指南](dev-guide.md) 的 Forge 部分。
+
+---
 
 ## 获取帮助
 
-如果以上方案都无法解决问题：
+如果以上方案无法解决问题：
 
-1. 查看 [问题报告](file:///F:/Projects/mc-mods/arclojure/build/reports/problems/problems-report.html)
-2. 检查 [Architectury 文档](https://docs.architectury.dev/)
-3. 查阅 [Clojurephant 文档](https://clojurephant.dev/)
-4. 搜索相关错误信息
+1. **检查日志**：查看 `logs/latest.log` 和 `crash-reports/` 目录
+2. **搜索 Issues**：在 GitHub 仓库搜索类似问题
+3. **提交 Issue**：提供以下信息：
+   - Minecraft 版本
+   - fabric-language-clojure 版本
+   - 完整的错误日志
+   - 最小复现步骤
+
+## 相关文档
+
+- [快速开始](quick-start.md)
+- [开发者指南](dev-guide.md)
+- [调试指南](debug-guide.md)

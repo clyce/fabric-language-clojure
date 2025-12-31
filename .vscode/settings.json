@@ -1,6 +1,6 @@
 {
   // ============================================================================
-  // Arclojure 项目 VSCode 配置
+  // fabriclj 项目 VSCode 配置
   // ============================================================================
 
   // Java 配置
@@ -20,7 +20,7 @@
   // Clojure/Calva 配置
   "calva.replConnectSequences": [
     {
-      "name": "Arclojure nREPL",
+      "name": "fabriclj nREPL",
       "projectType": "generic",
       "nReplPortFile": [
         ".nrepl-port"

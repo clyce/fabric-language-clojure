@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "example-clojure-mod",
+  "version": "${version}",
+  "name": "Example Clojure Mod",
+  "description": "A test mod for fabric-language-clojure",
+  "authors": ["fabric-language-clojure"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.example.ExampleMod"
+    ],
+    "client": [
+      "com.example.client.ExampleModClient"
+    ]
+  },
+  "mixins": [
+    "example.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": ">=1.20",
+    "fabric-language-clojure": "*"
+  }
+}

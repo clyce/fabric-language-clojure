@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+build/
+out/
+bin/
+
+# Minecraft 开发环境
+run/
+logs/
+crash-reports/
+config/
+saves/
+mods/
+
+# Java
+*.class
+
+# Clojure
+.nrepl-port
+.nrepl-history
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+.calva/
+
+# OS
+.DS_Store
+Thumbs.db

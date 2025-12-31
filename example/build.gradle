@@ -1,0 +1,95 @@
+plugins {
+    id 'dev.architectury.loom'
+    id 'dev.clojurephant.clojure'
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+base {
+    archivesName = "example-clojure-mod-fabric"
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+repositories {
+    maven { url = 'https://clojars.org/repo' }
+}
+
+dependencies {
+    minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
+    mappings loom.officialMojangMappings()
+
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+    modImplementation "dev.architectury:architectury-fabric:$rootProject.architectury_api_version"
+
+    // ============================================================================
+    // fabric-language-clojure 依赖配置
+    // ============================================================================
+
+    // 【开发模式】在本仓库中开发时，直接依赖本地项目
+    common(project(path: ':common', configuration: 'namedElements')) { transitive = true }
+    modApi project(path: ':fabric', configuration: 'namedElements')
+
+    // 【独立项目】如果你要创建独立的 Clojure mod 项目，请替换为 Maven 依赖：
+    // modImplementation "com.fabriclj:fabric-language-clojure-fabric:1.0.0"
+
+    // ============================================================================
+    // Clojure 运行时（仅开发环境需要，fabric-language-clojure 已经包含）
+    // ============================================================================
+    // 注意：这些依赖仅在开发环境中需要，发布的 mod 会使用 fabric-language-clojure 自带的 Clojure
+    modImplementation "org.clojure:clojure:$rootProject.clojure_version"
+    modImplementation "nrepl:nrepl:$rootProject.nrepl_version"
+}
+
+// 配置 Clojure 源码目录
+sourceSets {
+    main {
+        clojure {
+            srcDirs = ['src/main/clojure']
+        }
+    }
+}
+
+// 禁用 Clojure AOT 编译（运行时加载）
+tasks.named('compileClojure') {
+    enabled = false
+}
+
+tasks.named('checkClojure') {
+    enabled = false
+}
+
+// 将 Clojure 源文件复制到 JAR
+processResources {
+    from(sourceSets.main.clojure) {
+        into 'clojure'
+    }
+
+    inputs.property 'version', project.version
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}

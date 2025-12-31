@@ -1,4 +1,4 @@
-package com.arclojure.forge;
+package com.fabriclj.forge;
 
 import dev.architectury.platform.forge.EventBuses;
 import net.minecraftforge.fml.common.Mod;
@@ -6,7 +6,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 
-import com.arclojure.ModMain;
+import com.fabriclj.ModMain;
 
 /**
  * Forge 平台模组入口点
