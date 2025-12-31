@@ -3,15 +3,15 @@
 
    提供物品操作、NBT 数据处理、物品栈管理等功能。
 
-   注意：玩家物品操作（give-item!, has-item! 等）已移至 game-objects.players 模块。"
+   注意: 玩家物品操作( give-item!, has-item! 等) 已移至 game-objects.players 模块。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.item ItemStack Item Items Rarity]
-           [net.minecraft.world.entity.player Player]
-           [net.minecraft.world.item.enchantment Enchantment]
-           [net.minecraft.core.component DataComponents DataComponentType]
-           [net.minecraft.nbt CompoundTag]
-           [net.minecraft.world.level.Level]
-           [net.minecraft.world.entity.item ItemEntity]))
+  (:import (net.minecraft.world.item ItemStack Item Items Rarity)
+           (net.minecraft.world.entity.player Player)
+           (net.minecraft.world.item.enchantment Enchantment)
+           (net.minecraft.core.component DataComponents)
+           (net.minecraft.nbt CompoundTag)
+           (net.minecraft.world.level Level)
+           (net.minecraft.world.entity.item ItemEntity)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -25,7 +25,7 @@
 
    参数:
    - item: Item、ResourceLocation、String 或 Keyword
-   - count: 数量（默认 1）
+   - count: 数量( 默认 1)
 
    示例:
    ```clojure
@@ -105,9 +105,9 @@
    参数:
    - stack: 物品栈
    - amount: 损伤量
-   - entity: 使用物品的实体（可选）
+   - entity: 使用物品的实体( 可选)
 
-   返回：是否损坏到完全破碎"
+   返回: 是否损坏到完全破碎"
   ([^ItemStack stack amount]
    (.hurt stack amount nil (constantly nil)))
   ([^ItemStack stack amount entity]
@@ -125,12 +125,12 @@
 (defn get-durability
   "获取当前耐久度
 
-   参数：
+   参数:
    - stack: 物品栈
 
-   返回：当前耐久度值
+   返回: 当前耐久度值
 
-   示例：
+   示例:
    ```clojure
    (get-durability sword-stack)  ; => 1550 (假设最大 1561，损伤 11)
    ```"
@@ -140,12 +140,12 @@
 (defn get-durability-ratio
   "获取耐久度百分比
 
-   参数：
+   参数:
    - stack: 物品栈
 
-   返回：0.0-1.0 之间的浮点数
+   返回: 0.0-1.0 之间的浮点数
 
-   示例：
+   示例:
    ```clojure
    (get-durability-ratio sword-stack)  ; => 0.993 (99.3% 耐久)
    ```"
@@ -157,24 +157,24 @@
       1.0)))
 
 (defn hurt-and-break!
-  "损坏物品（带实体和破碎回调）
+  "损坏物品( 带实体和破碎回调)
 
    这是对 ItemStack.hurtAndBreak 的封装，正确处理耐久度和破碎逻辑。
 
-   参数：
+   参数:
    - stack: 物品栈
    - amount: 损伤量
-   - entity: 使用物品的实体（可选）
-   - on-break: 物品破碎时的回调函数（可选）
+   - entity: 使用物品的实体( 可选)
+   - on-break: 物品破碎时的回调函数( 可选)
 
-   返回：boolean（是否完全破碎）
+   返回: boolean( 是否完全破碎)
 
-   示例：
+   示例:
    ```clojure
    ;; 基本用法
    (hurt-and-break! sword-stack 1)
 
-   ;; 带实体（会触发 Unbreaking 等附魔效果）
+   ;; 带实体( 会触发 Unbreaking 等附魔效果)
    (hurt-and-break! sword-stack 1 player)
 
    ;; 带破碎回调
@@ -212,7 +212,7 @@
 (defn get-display-name
   "获取显示名称
 
-   返回：Component 对象"
+   返回: Component 对象"
   [^ItemStack stack]
   (.getHoverName stack))
 
@@ -230,9 +230,9 @@
   stack)
 
 (defn get-lore
-  "获取物品描述（Lore）
+  "获取物品描述( Lore)
 
-   返回：Component 列表"
+   返回: Component 列表"
   [^ItemStack stack]
   (when-let [lore-component (.get stack DataComponents/LORE)]
     (.lines lore-component)))
@@ -242,7 +242,7 @@
 
    参数:
    - stack: 物品栈
-   - lines: 描述文本列表（字符串或 Component）
+   - lines: 描述文本列表( 字符串或 Component)
 
    示例:
    ```clojure
@@ -260,7 +260,7 @@
 (defn get-custom-data
   "获取自定义 NBT 数据
 
-   返回：CompoundTag"
+   返回: CompoundTag"
   ^CompoundTag [^ItemStack stack]
   (when-let [custom (.get stack DataComponents/CUSTOM_DATA)]
     (.copyTag custom)))
@@ -270,7 +270,7 @@
 
    参数:
    - stack: 物品栈
-   - tag: CompoundTag 或 Map（自动转换）
+   - tag: CompoundTag 或 Map( 自动转换)
 
    示例:
    ```clojure
@@ -297,7 +297,7 @@
 
    参数:
    - stack: 物品栈
-   - key: 字段名（关键字或字符串）
+   - key: 字段名( 关键字或字符串)
    - type: 数据类型 (:int/:float/:double/:string/:boolean)
 
    示例:
@@ -339,12 +339,12 @@
 ;; ============================================================================
 
 (defn same-item?
-  "比较两个物品栈是否为相同物品（不考虑数量和 NBT）"
+  "比较两个物品栈是否为相同物品( 不考虑数量和 NBT) "
   [^ItemStack stack1 ^ItemStack stack2]
   (ItemStack/isSameItem stack1 stack2))
 
 (defn same-item-components?
-  "比较两个物品栈是否完全相同（包括 NBT/Components）"
+  "比较两个物品栈是否完全相同( 包括 NBT/Components) "
   [^ItemStack stack1 ^ItemStack stack2]
   (ItemStack/isSameItemSameComponents stack1 stack2))
 
@@ -352,11 +352,11 @@
 ;; 玩家物品操作
 ;; ============================================================================
 
-;; 保留手持物品操作（与 ItemStack 直接相关）
+;; 保留手持物品操作( 与 ItemStack 直接相关)
 (defn get-held-item
   "获取玩家主手物品
 
-   注意：此函数返回 ItemStack，如需玩家物品管理请使用 game-objects.players 模块"
+   注意: 此函数返回 ItemStack，如需玩家物品管理请使用 game-objects.players 模块"
   ^ItemStack [^Player player]
   (.getMainHandItem player))
 
@@ -382,7 +382,7 @@
    - x, y, z: 坐标
    - stack: 物品栈
 
-   返回：ItemEntity"
+   返回: ItemEntity"
   ^ItemEntity [^Level level x y z ^ItemStack stack]
   (let [entity (ItemEntity. level x y z stack)]
     (.addFreshEntity level entity)
@@ -407,18 +407,18 @@
 (defn food-properties
   "创建食物属性构建器
 
-   参数（关键字参数）：
-   - :nutrition - 饥饿值恢复量（默认 0）
-   - :saturation - 饱和度修正值（默认 0.0）
-   - :always-eat? - 是否总是可以吃（即使不饿）（默认 false）
-   - :fast-food? - 是否快速食用（默认 false）
-   - :meat? - 是否为肉类（默认 false）
-   - :effects - 效果列表，每个效果为 map：
+   参数( 关键字参数) :
+   - :nutrition - 饥饿值恢复量( 默认 0)
+   - :saturation - 饱和度修正值( 默认 0.0)
+   - :always-eat? - 是否总是可以吃( 即使不饿) ( 默认 false)
+   - :fast-food? - 是否快速食用( 默认 false)
+   - :meat? - 是否为肉类( 默认 false)
+   - :effects - 效果列表，每个效果为 map:
      {:effect :effect-id :duration ticks :amplifier level :probability 0.0-1.0}
 
-   返回：FoodProperties
+   返回: FoodProperties
 
-   示例：
+   示例:
    ```clojure
    ;; 简单食物
    (food-properties :nutrition 4 :saturation 0.5)
@@ -515,7 +515,7 @@
 (defn get-rarity
   "获取物品稀有度
 
-   返回：:common/:uncommon/:rare/:epic"
+   返回: :common/:uncommon/:rare/:epic"
   [^ItemStack stack]
   (let [rarity (.getRarity stack)]
     (condp = rarity
@@ -541,7 +541,7 @@
    - stack: 物品栈
    - amount: 减少量
 
-   返回：修改后的物品栈（可能为空）"
+   返回: 修改后的物品栈( 可能为空) "
   [^ItemStack stack amount]
   (.shrink stack amount)
   stack)
@@ -553,7 +553,7 @@
    - stack: 物品栈
    - amount: 增加量
 
-   返回：修改后的物品栈"
+   返回: 修改后的物品栈"
   [^ItemStack stack amount]
   (.grow stack amount)
   stack)

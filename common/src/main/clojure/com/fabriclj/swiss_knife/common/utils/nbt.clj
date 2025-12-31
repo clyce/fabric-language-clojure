@@ -1,15 +1,14 @@
 (ns com.fabriclj.swiss-knife.common.utils.nbt
   "NBT 数据工具
 
-   提供 Minecraft NBT（Named Binary Tag）系统的 Clojure 封装：
+   提供 Minecraft NBT( Named Binary Tag) 系统的 Clojure 封装:
    - NBT 解析和序列化
    - NBT 与 Clojure 数据结构互转
    - NBT 美化输出
 
    NBT 是 Minecraft 用于保存和传输结构化数据的格式。"
-  (:import [net.minecraft.nbt CompoundTag Tag ListTag StringTag
-            IntTag DoubleTag FloatTag LongTag
-            ByteTag ShortTag TagParser]))
+  (:import (net.minecraft.nbt CompoundTag Tag ListTag StringTag
+            IntTag DoubleTag FloatTag LongTag ByteTag ShortTag TagParser))
 
 (set! *warn-on-reflection* true)
 
@@ -23,7 +22,7 @@
    参数:
    - nbt-string: NBT 格式字符串
 
-   返回：CompoundTag
+   返回: CompoundTag
 
    NBT 格式示例:
    - `{Health:20.0f,OnGround:1b}`
@@ -43,7 +42,7 @@
    参数:
    - nbt-tag: NBT Tag
 
-   返回：格式化的字符串
+   返回: 格式化的字符串
 
    示例:
    ```clojure
@@ -73,12 +72,12 @@
    - ByteTag -> Byte
    - 其他 -> 字符串形式
 
-   注意：ListTag 不会被转换，保留为字符串
+   注意: ListTag 不会被转换，保留为字符串
 
    参数:
    - nbt: CompoundTag
 
-   返回：Clojure Map
+   返回: Clojure Map
 
    示例:
    ```clojure
@@ -123,7 +122,7 @@
    参数:
    - data: Clojure Map
 
-   返回：CompoundTag
+   返回: CompoundTag
 
    示例:
    ```clojure
@@ -157,7 +156,7 @@
    参数:
    - nbt: CompoundTag
    - key: 键名
-   - default: 默认值（可选）
+   - default: 默认值( 可选)
 
    示例:
    ```clojure
@@ -189,7 +188,7 @@
    参数:
    - nbts: CompoundTag 序列
 
-   返回：合并后的 CompoundTag
+   返回: 合并后的 CompoundTag
 
    示例:
    ```clojure
@@ -279,3 +278,4 @@
       (.put nbt "display" display)
       (.setTag item-stack nbt)
       item-stack)))
+  )

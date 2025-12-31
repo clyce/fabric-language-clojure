@@ -18,25 +18,25 @@
 
 ### 1. 更新版本号
 
-编辑 `gradle.properties`：
+编辑 `gradle.properties`:
 
 ```properties
-# 语义化版本：主版本.次版本.修订版
+# 语义化版本: 主版本.次版本.修订版
 mod_version = 1.0.0
 
 # 或带 Clojure 版本标识
 mod_version = 1.0.0+clojure.1.11.1
 ```
 
-**版本号规范**：
-- **主版本**（Major）：不兼容的 API 变更
-- **次版本**（Minor）：向后兼容的功能新增
-- **修订版**（Patch）：向后兼容的问题修正
-- **+clojure.x.x.x**：可选，标识捆绑的 Clojure 版本
+**版本号规范**:
+- **主版本**（Major）: 不兼容的 API 变更
+- **次版本**（Minor）: 向后兼容的功能新增
+- **修订版**（Patch）: 向后兼容的问题修正
+- **+clojure.x.x.x**: 可选，标识捆绑的 Clojure 版本
 
 ### 2. 更新 CHANGELOG
 
-创建或更新 `CHANGELOG.md`：
+创建或更新 `CHANGELOG.md`:
 
 ```markdown
 # Changelog
@@ -58,9 +58,9 @@ mod_version = 1.0.0+clojure.1.11.1
 
 ### 3. 排除 example 模块
 
-**重要**：部署时必须排除 `example` 项目，因为它只是测试 mod，不是语言库的一部分。
+**重要**: 部署时必须排除 `example` 项目，因为它只是测试 mod，不是语言库的一部分。
 
-编辑 `settings.gradle`：
+编辑 `settings.gradle`:
 
 ```groovy
 include 'common'
@@ -69,7 +69,7 @@ include 'fabric'
 // include 'forge'
 ```
 
-**为什么要排除**：
+**为什么要排除**:
 - `example` 是一个独立的 mod，不是语言库本身
 - 发布语言库不应包含示例代码的编译产物
 - 用户应该参考 GitHub 上的源码示例，而不是打包的 JAR
@@ -102,7 +102,7 @@ rm -rf common/build fabric/build
 .\gradlew.bat build -x checkClojure -x compileClojure
 ```
 
-**预期输出**：
+**预期输出**:
 ```
 BUILD SUCCESSFUL in Xs
 ```
@@ -113,7 +113,7 @@ BUILD SUCCESSFUL in Xs
 Get-ChildItem -Recurse fabric\build\libs -Include *.jar
 ```
 
-应该看到：
+应该看到:
 ```
 fabric-language-clojure-fabric-1.0.0.jar          # 最终发布文件 (~4-5MB)
 fabric-language-clojure-fabric-1.0.0-sources.jar  # 源码 JAR
@@ -131,14 +131,14 @@ fabric-language-clojure-fabric-1.0.0-dev-shadow.jar  # 开发用（不发布）
 jar -tf fabric\build\libs\fabric-language-clojure-fabric-1.0.0.jar | Select-Object -First 30
 ```
 
-**必须包含**：
+**必须包含**:
 - ✅ `com/fabriclj/` - 语言库的 Java 类
 - ✅ `clojure/` - Clojure 运行时（relocated）
 - ✅ `nrepl/` - nREPL 库（relocated）
 - ✅ `clojure/com/fabriclj/` - 语言库的 Clojure 源码
 - ✅ `fabric.mod.json` - Fabric 模组元数据
 
-**不应包含**：
+**不应包含**:
 - ❌ `com/example/` - example 模块的代码
 - ❌ Minecraft 类（已被 Loom provided）
 - ❌ Fabric API 类（已被 provided）
@@ -151,7 +151,7 @@ jar -xf fabric\build\libs\fabric-language-clojure-fabric-1.0.0.jar fabric.mod.js
 Get-Content fabric.mod.json
 ```
 
-**检查要点**：
+**检查要点**:
 - ✅ `id` 为 `fabric-language-clojure`
 - ✅ `version` 正确
 - ✅ `languageAdapters` 包含 `"clojure": "com.fabriclj.fabric.ClojureLanguageAdapter"`
@@ -159,12 +159,12 @@ Get-Content fabric.mod.json
 
 ### 3. 测试加载
 
-在一个测试 Minecraft 实例中：
+在一个测试 Minecraft 实例中:
 
 1. 创建 `.minecraft/mods/` 目录
 2. 复制 `fabric-language-clojure-fabric-1.0.0.jar`
 3. 启动游戏
-4. 检查日志：
+4. 检查日志:
    ```
    [fabric-language-clojure] Initializing Fabric Language Clojure
    [fabric-language-clojure] Clojure runtime initialized successfully
@@ -172,7 +172,7 @@ Get-Content fabric.mod.json
 
 ### 4. 测试 example mod（可选）
 
-恢复 `settings.gradle` 中的 `include 'example'`：
+恢复 `settings.gradle` 中的 `include 'example'`:
 
 ```powershell
 # 停止 Daemon 以刷新配置
@@ -194,11 +194,11 @@ Copy-Item example\build\libs\example-clojure-mod-fabric-1.0.0.jar .minecraft\mod
 
 ## 发布到 Maven 仓库
 
-### 方案 1：发布到 Maven Central
+### 方案 1: 发布到 Maven Central
 
 #### 配置 Gradle
 
-在 `fabric/build.gradle` 添加：
+在 `fabric/build.gradle` 添加:
 
 ```groovy
 plugins {
@@ -268,7 +268,7 @@ signing {
 
 #### 配置凭据
 
-在 `~/.gradle/gradle.properties` 添加：
+在 `~/.gradle/gradle.properties` 添加:
 
 ```properties
 ossrhUsername=your-username
@@ -284,9 +284,9 @@ signing.secretKeyRingFile=/path/to/secring.gpg
 .\gradlew.bat publish
 ```
 
-### 方案 2：发布到 GitHub Packages
+### 方案 2: 发布到 GitHub Packages
 
-在 `fabric/build.gradle`：
+在 `fabric/build.gradle`:
 
 ```groovy
 publishing {
@@ -303,7 +303,7 @@ publishing {
 }
 ```
 
-发布：
+发布:
 
 ```powershell
 $env:GITHUB_ACTOR = "your-username"
@@ -311,7 +311,7 @@ $env:GITHUB_TOKEN = "ghp_your_token"
 .\gradlew.bat publish
 ```
 
-### 方案 3：本地测试（Maven Local）
+### 方案 3: 本地测试（Maven Local）
 
 ```powershell
 .\gradlew.bat publishToMavenLocal
@@ -331,7 +331,7 @@ $env:GITHUB_TOKEN = "ghp_your_token"
 2. 创建新项目或进入现有项目
 3. 点击"Upload File"
 4. 上传 `fabric-language-clojure-fabric-1.0.0.jar`
-5. 填写：
+5. 填写:
    - **Display Name**: `1.0.0`
    - **Game Version**: `1.20.1` 等
    - **Release Type**: `Release`
@@ -345,7 +345,7 @@ $env:GITHUB_TOKEN = "ghp_your_token"
 2. 创建新项目或进入现有项目
 3. 点击"Upload a version"
 4. 拖拽 JAR 文件
-5. 填写：
+5. 填写:
    - **Version Number**: `1.0.0`
    - **Version Title**: `1.0.0 - Initial Release`
    - **Changelog**: Markdown 格式
@@ -357,7 +357,7 @@ $env:GITHUB_TOKEN = "ghp_your_token"
 
 ### 使用 minotaur 自动发布（可选）
 
-在 `fabric/build.gradle` 添加：
+在 `fabric/build.gradle` 添加:
 
 ```groovy
 plugins {
@@ -376,7 +376,7 @@ modrinth {
 }
 ```
 
-发布：
+发布:
 
 ```powershell
 $env:MODRINTH_TOKEN = "your-token"
@@ -389,7 +389,7 @@ $env:MODRINTH_TOKEN = "your-token"
 
 ### 语义化版本
 
-遵循 [SemVer 2.0.0](https://semver.org/)：
+遵循 [SemVer 2.0.0](https://semver.org/):
 
 | 版本变更 | 示例 | 说明 |
 |---------|------|------|
@@ -399,7 +399,7 @@ $env:MODRINTH_TOKEN = "your-token"
 
 ### Git 标签
 
-发布后创建 Git 标签：
+发布后创建 Git 标签:
 
 ```bash
 git tag -a v1.0.0 -m "Release 1.0.0"
@@ -421,7 +421,7 @@ main         - 稳定版本，每次发布打 tag
 
 ### GitHub Actions 示例
 
-创建 `.github/workflows/release.yml`：
+创建 `.github/workflows/release.yml`:
 
 ```yaml
 name: Release
@@ -482,7 +482,7 @@ jobs:
 
 ### 手动发布检查清单
 
-发布前检查：
+发布前检查:
 
 - [ ] 更新 `gradle.properties` 中的版本号
 - [ ] 更新 `CHANGELOG.md`
@@ -505,7 +505,7 @@ jobs:
 
 ### Q: 为什么 JAR 文件这么大（4-5MB）？
 
-**正常现象**。因为捆绑了：
+**正常现象**。因为捆绑了:
 - Clojure 运行时（~3.7MB）
 - nREPL（~200KB）
 - 其他依赖
@@ -522,7 +522,7 @@ jobs:
 
 ### Q: 如何发布快照版本？
 
-版本号使用 `-SNAPSHOT` 后缀：
+版本号使用 `-SNAPSHOT` 后缀:
 
 ```properties
 mod_version = 1.1.0-SNAPSHOT
@@ -532,8 +532,8 @@ mod_version = 1.1.0-SNAPSHOT
 
 ### Q: 发布后发现问题怎么办？
 
-1. **小问题**：发布 patch 版本（如 `1.0.1`）
-2. **严重问题**：
+1. **小问题**: 发布 patch 版本（如 `1.0.1`）
+2. **严重问题**:
    - 从 CurseForge/Modrinth 下架问题版本
    - 尽快发布修复版本
    - 在项目页面添加警告

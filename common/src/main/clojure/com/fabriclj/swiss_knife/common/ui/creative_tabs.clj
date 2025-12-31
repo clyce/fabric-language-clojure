@@ -4,10 +4,10 @@
    封装创造模式物品栏标签页的创建和管理。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.registry :as reg])
-  (:import [net.minecraft.world.item CreativeModeTab CreativeModeTab$Builder Item ItemStack]
-           [net.minecraft.network.chat Component]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.core.registries Registries]))
+  (:import (net.minecraft.world.item CreativeModeTab CreativeModeTab$Builder Item ItemStack)
+           (net.minecraft.network.chat Component)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.core.registries Registries)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -20,10 +20,10 @@
   "创建创造模式标签页构建器
 
    参数:
-   - title: 标题（字符串或 Component）
+   - title: 标题( 字符串或 Component)
    - icon: 图标物品或物品栈
 
-   返回：CreativeModeTab$Builder
+   返回: CreativeModeTab$Builder
 
    示例:
    ```clojure
@@ -49,9 +49,9 @@
 
    参数:
    - builder: CreativeModeTab$Builder
-   - items: 物品列表（Item 或 ItemStack）
+   - items: 物品列表( Item 或 ItemStack)
 
-   返回：builder（用于链式调用）"
+   返回: builder( 用于链式调用) "
   ^CreativeModeTab$Builder [^CreativeModeTab$Builder builder items]
   (.displayItems builder
                  (reify net.minecraft.world.item.CreativeModeTab$DisplayItemsGenerator
@@ -64,7 +64,7 @@
 (defn build-tab
   "构建创造模式标签页
 
-   返回：CreativeModeTab"
+   返回: CreativeModeTab"
   ^CreativeModeTab [^CreativeModeTab$Builder builder]
   (.build builder))
 
@@ -77,12 +77,12 @@
 
    参数:
    - registry: 创造标签注册表
-   - id: 标签 ID（字符串）
+   - id: 标签 ID( 字符串)
    - title: 标题
    - icon: 图标
    - items: 物品列表
 
-   返回：RegistrySupplier
+   返回: RegistrySupplier
 
    示例:
    ```clojure
@@ -107,7 +107,7 @@
 ;; ============================================================================
 
 (defmacro defcreative-tab
-  "定义创造模式标签页（语法糖）
+  "定义创造模式标签页( 语法糖)
 
    示例:
    ```clojure
@@ -126,14 +126,14 @@
   ;; 创建注册表
   (def tabs (reg/create-registry "mymod" :creative-tab))
 
-  ;; 方式 1：使用函数
+  ;; 方式 1: 使用函数
   (def my-tab
     (register-creative-tab! tabs "main_tab"
                             "My Mod Items"
                             my-icon-item
                             [sword gem armor]))
 
-  ;; 方式 2：使用宏
+  ;; 方式 2: 使用宏
   (defcreative-tab tabs weapons-tab "weapons"
     :title "Weapons"
     :icon magic-sword

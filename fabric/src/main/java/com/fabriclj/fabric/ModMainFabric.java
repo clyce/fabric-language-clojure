@@ -11,7 +11,7 @@ import com.fabriclj.ModMain;
  * 负责初始化 Clojure 运行时和注册语言适配器。
  *
  * <p>
- * 注意：用户 mod 不需要依赖此类，而是通过在 {@code fabric.mod.json}
+ * 注意: 用户 mod 不需要依赖此类，而是通过在 {@code fabric.mod.json}
  * 中使用 {@code "adapter": "clojure"} 来声明 Clojure 入口点。
  *
  * @see ClojureLanguageAdapter

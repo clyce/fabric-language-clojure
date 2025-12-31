@@ -1,7 +1,7 @@
 (ns com.fabriclj.swiss-knife.client.debug.visualizer
   "增强调试可视化系统
 
-   扩展 debug-render.clj，提供额外的可视化功能：
+   扩展 debug-render.clj，提供额外的可视化功能:
    - 网络流量监控和可视化
    - 区块加载状态可视化
    - 实体数量热图
@@ -10,12 +10,12 @@
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.client.rendering.debug-render :as debug]
             [com.fabriclj.swiss-knife.common.data.profiler :as prof])
-  (:import [net.minecraft.client Minecraft]
-           [net.minecraft.world.level.chunk LevelChunk]
-           [net.minecraft.core BlockPos]
-           [net.minecraft.world.phys Vec3]
-           [com.mojang.blaze3d.vertex PoseStack]
-           [java.awt Color]))
+  (:import (net.minecraft.client Minecraft)
+          (net.minecraft.world.level.chunk LevelChunk)
+          (net.minecraft.core BlockPos)
+          (net.minecraft.world.phys Vec3)
+          (com.mojang.blaze3d.vertex PoseStack)
+          (java.awt Color)))
 
 (set! *warn-on-reflection* true)
 
@@ -36,7 +36,7 @@
 
    参数:
    - direction: :sent :received
-   - size: 数据包大小（字节）
+   - size: 数据包大小( 字节)
 
    内部使用，通常在网络事件中调用"
   [direction size]
@@ -55,13 +55,13 @@
 (defn get-network-stats
   "获取网络统计数据
 
-   返回：{:sent 总发送字节
+   返回: {:sent 总发送字节
           :received 总接收字节
           :packets-sent 发送数据包数
           :packets-received 接收数据包数
           :history 历史记录
-          :rate-sent 发送速率（字节/秒）
-          :rate-received 接收速率（字节/秒）}
+          :rate-sent 发送速率( 字节/秒)
+          :rate-received 接收速率( 字节/秒) }
 
    示例:
    ```clojure
@@ -99,7 +99,7 @@
 
    示例:
    ```clojure
-   (mb/events/on-render-hud
+   (events/on-render-hud
      (fn [graphics partial-tick]
        (render-network-overlay! graphics 10 10)))
    ```"
@@ -112,18 +112,18 @@
     ;; 渲染文本
     (.drawString graphics font \"Network Stats\" (+ x 5) (+ y 5) 0xFFFFFF)
     (.drawString graphics font
-                 (format \"Sent: %.2f KB\" (/ (:sent stats) 1024.0))
+                 (format "Sent: %.2f KB" (/ (:sent stats) 1024.0))
                  (+ x 5) (+ y 20) 0x00FF00)
     (.drawString graphics font
-                 (format \"Received: %.2f KB\" (/ (:received stats) 1024.0))
+                 (format "Received: %.2f KB" (/ (:received stats) 1024.0))
                  (+ x 5) (+ y 35) 0x00FFFF)
     (.drawString graphics font
-                 (format \"Rate: �?.1f KB/s �?.1f KB/s\"
+                 (format "Rate: %.1f KB/s %.1f KB/s"
                          (/ (:rate-sent stats) 1024.0)
                          (/ (:rate-received stats) 1024.0))
                  (+ x 5) (+ y 50) 0xFFFF00)
     (.drawString graphics font
-                 (format \"Packets: �?d �?d\"
+                 (format "Packets: %d %d"
                          (:packets-sent stats)
                          (:packets-received stats))
                  (+ x 5) (+ y 65) 0xAAAAAA)))
@@ -159,11 +159,11 @@
    参数:
    - level: Level
    - player-pos: 玩家位置
-   - radius: 显示半径（区块数�?
+   - radius: 显示半径( 区块数�?
    - opts: 选项
-     - :color - 边界颜色（默�?:white�?
-     - :height - 显示高度（默认玩家高度）
-     - :duration - 持续时间（默�?20 tick�?
+     - :color - 边界颜色( 默�?:white�?
+     - :height - 显示高度( 默认玩家高度)
+     - :duration - 持续时间( 默�?20 tick�?
 
    示例:
    ```clojure
@@ -195,8 +195,8 @@
    参数:
    - level: Level
    - opts: 选项
-     - :loaded-color - 已加载区块颜色（默认 :green�?
-     - :unloaded-color - 未加载区块颜色（默认 :red�?
+     - :loaded-color - 已加载区块颜色( 默认 :green�?
+     - :unloaded-color - 未加载区块颜色( 默认 :red�?
      - :duration - 持续时间
 
    示例:
@@ -223,7 +223,7 @@
             color (if chunk loaded-color unloaded-color)
             y (int (.y player-pos))]
         (when chunk
-          (debug/show-area! (keyword (str \"chunk_\" cx \"_\" cz))
+          (debug/show-area! (keyword (str "chunk_" cx "_" cz))
                            (Vec3. (* cx 16) (- y 10) (* cz 16))
                            (Vec3. (+ (* cx 16) 16) (+ y 10) (+ (* cz 16) 16))
                            :color color
@@ -241,7 +241,7 @@
    - center: 中心位置
    - radius: 半径
 
-   返回：实体密度映�?{chunk-pos entity-count}"
+   返回: 实体密度映射{chunk-pos entity-count}"
   [level center radius]
   (let [entities (.getAllEntities level)
         chunk-counts (atom {})]
@@ -261,11 +261,11 @@
    参数:
    - level: Level
    - center: 中心位置
-   - radius: 半径（区块数�?
+   - radius: 半径( 区块数)
    - opts: 选项
      - :duration - 持续时间
-     - :min-color - 低密度颜�?
-     - :max-color - 高密度颜�?
+     - :min-color - 低密度颜色
+     - :max-color - 高密度颜色
 
    示例:
    ```clojure
@@ -284,10 +284,10 @@
     (doseq [[[cx cz] count] density-map]
       (let [intensity (/ count max-density)
             ;; 从绿到红的渐�?
-            color (keyword (format \"#%02X%02X00\"
+            color (keyword (format "#%02X%02X00"
                                   (int (* 255 intensity))
                                   (int (* 255 (- 1 intensity)))))]
-        (debug/show-area! (keyword (str \"density_\" cx \"_\" cz))
+        (debug/show-area! (keyword (str "density_" cx "_" cz))
                          (Vec3. (* cx 16) (- y 5) (* cz 16))
                          (Vec3. (+ (* cx 16) 16) (+ y 5) (+ (* cz 16) 16))
                          :color color
@@ -307,7 +307,7 @@
 
    示例:
    ```clojure
-   (mb/events/on-render-hud
+   (events/on-render-hud
      (fn [graphics partial-tick]
        (render-tps-graph! graphics 10 100 200 100)))
    ```"
@@ -338,14 +338,14 @@
                        (>= tps 19.0) 0x00FF00  ; 绿色
                        (>= tps 15.0) 0xFFFF00  ; 黄色
                        :else 0xFF0000)]         ; 红色
-            ;; 绘制�?
+            ;; 绘制
             (.fill graphics (int px) (int py) (+ (int px) 2) (+ (int py) 2) color)
-            ;; 绘制�?
+            ;; 绘制
             (when next-py
               (.fill graphics (int px) (int py) (int next-px) (int next-py) color))))))))
 
 ;; ============================================================================
-;; 性能热点可视�?
+;; 性能热点可视化
 ;; ============================================================================
 
 (defn show-performance-hotspots!
@@ -374,18 +374,18 @@
                      :or {duration 100}}]
   (doseq [{:keys [pos lag-ms label]} hotspots]
     (let [color (cond
-                 (> lag-ms 10.0) :red
-                 (> lag-ms 5.0) :yellow
-                 :else :green)
+                  (> lag-ms 10.0) :red
+                  (> lag-ms 5.0) :yellow
+                  :else :green)
           size (+ 1.0 (* 0.1 lag-ms))]
       ;; 显示标记区域
-      (debug/show-area! (keyword (str \"hotspot_\" (.x pos) \"_\" (.z pos)))
-                       (.subtract pos (Vec3. size size size))
-                       (.add pos (Vec3. size size size))
-                       :color color
-                       :duration duration)
+      (debug/show-area! (keyword (str "hotspot_" (.x pos) "_" (.z pos)))
+                        (.subtract pos (Vec3. size size size))
+                        (.add pos (Vec3. size size size))
+                        :color color
+                        :duration duration)
 
-      ;; TODO: 添加文本标签（需要文本渲染支持）
+      ;; TODO: 添加文本标签( 需要文本渲染支持)
       )))
 
 ;; ============================================================================
@@ -399,14 +399,14 @@
 
    示例:
    ```clojure
-   (mb/keybindings/create-keybinding :toggle-debug
+   (keybindings/create-keybinding :toggle-debug
      \"Toggle Debug Panel\"
      \"key.keyboard.f3.d\"
      :on-press toggle-debug-panel!)
    ```"
   []
   (swap! debug-panel-enabled not)
-  (core/log-info (str \"Debug panel: \" (if @debug-panel-enabled \"ON\" \"OFF\"))))
+  (core/log-info (str "Debug panel: " (if @debug-panel-enabled "ON" "OFF"))))
 
 (defn render-debug-panel!
   "渲染完整的调试面板
@@ -419,7 +419,7 @@
 
    示例:
    ```clojure
-   (mb/events/on-render-hud
+   (events/on-render-hud
      (fn [graphics partial-tick]
        (when @debug-panel-enabled
          (render-debug-panel! graphics partial-tick))))
@@ -438,15 +438,15 @@
           x 10
           y 210]
       (.fill graphics x y (+ x 200) (+ y 50) 0x80000000)
-      (.drawString graphics font \"Memory\" (+ x 5) (+ y 5) 0xFFFFFF)
+      (.drawString graphics font "Memory" (+ x 5) (+ y 5) 0xFFFFFF)
       (.drawString graphics font
-                   (format \"Heap: %.0f/%.0f MB (%.1f%%)\"
+                   (format "Heap: %.0f/%.0f MB (%.1f%%)"
                            (:heap-used-mb memory)
                            (:heap-max-mb memory)
                            (:heap-usage-percent memory))
                    (+ x 5) (+ y 20) 0x00FFFF)
       (.drawString graphics font
-                   (format \"Non-Heap: %.0f MB\" (:non-heap-used-mb memory))
+                   (format "Non-Heap: %.0f MB" (:non-heap-used-mb memory))
                    (+ x 5) (+ y 35) 0xAAAAAA))))
 
 (comment
@@ -454,28 +454,28 @@
 
   ;; ========== 网络流量监控 ==========
 
-  ;; 1. 记录网络数据包（在网络事件中�?
-  (mb/events/on-packet-sent
+  ;; 1. 记录网络数据包( 在网络事件中)
+  (events/on-packet-sent
     (fn [packet]
       (record-network-packet! :sent (.size packet))))
 
-  (mb/events/on-packet-received
+  (events/on-packet-received
     (fn [packet]
       (record-network-packet! :received (.size packet))))
 
   ;; 2. 显示网络统计
-  (mb/events/on-render-hud
+  (events/on-render-hud
     (fn [graphics partial-tick]
       (render-network-overlay! graphics 10 10)))
 
   ;; 3. 获取网络统计数据
   (let [stats (get-network-stats)]
-    (println \"Network rate:\" (:rate-sent stats) \"B/s\"))
+    (println "Network rate:" (:rate-sent stats) "B/s"))
 
-  ;; ========== 区块可视�?==========
+  ;; ========== 区块可视化==========
 
   ;; 4. 显示区块边界
-  (mb/events/on-client-tick
+  (events/on-client-tick
     (fn []
       (let [mc (Minecraft/getInstance)
             player (.player mc)
@@ -484,7 +484,7 @@
           :color :cyan
           :duration 2))))
 
-  ;; 5. 高亮已加载区�?
+  ;; 5. 高亮已加载区块
   (show-loaded-chunks! level
     :loaded-color :green
     :unloaded-color :gray
@@ -509,12 +509,12 @@
   (toggle-debug-panel!)
 
   ;; 9. 渲染调试面板
-  (mb/events/on-render-hud
+  (events/on-render-hud
     (fn [graphics partial-tick]
       (render-debug-panel! graphics partial-tick)))
 
   ;; 10. 创建按键绑定
-  (mb/keybindings/create-keybinding :toggle-debug
-    \"Toggle Debug Panel\"
-    \"key.keyboard.f3.d\"
+  (keybindings/create-keybinding :toggle-debug
+    "Toggle Debug Panel"
+    "key.keyboard.f3.d"
     :on-press toggle-debug-panel!))

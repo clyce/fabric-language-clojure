@@ -1,22 +1,22 @@
 (ns com.fabriclj.swiss-knife.common.gameplay.advancements
   "进度系统 (Advancements)
 
-   提供进度创建、授予和管理功能：
+   提供进度创建、授予和管理功能:
    - 进度创建和注册
    - 进度触发条件
    - 进度奖励
    - 进度树管理"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.advancements Advancement AdvancementRewards AdvancementProgress
-            AdvancementType DisplayInfo FrameType]
-           [net.minecraft.advancements.critereon InventoryChangeTrigger$TriggerInstance
+  (:import (net.minecraft.advancements Advancement AdvancementRewards AdvancementProgress
+            AdvancementType DisplayInfo FrameType)
+           (net.minecraft.advancements.critereon InventoryChangeTrigger$TriggerInstance
             LocationTrigger$TriggerInstance
-            EntityHurtPlayerTrigger$TriggerInstance]
-           [net.minecraft.server.level ServerPlayer]
-           [net.minecraft.world.item ItemStack Items]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.network.chat Component]
-           [net.minecraft.server PlayerAdvancements]))
+            EntityHurtPlayerTrigger$TriggerInstance)
+           (net.minecraft.server.level ServerPlayer)
+           (net.minecraft.world.item ItemStack Items)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.network.chat Component)
+           (net.minecraft.server PlayerAdvancements)))
 
 (set! *warn-on-reflection* true)
 
@@ -29,9 +29,9 @@
 
    参数:
    - player: ServerPlayer
-   - advancement-id: 进度 ID（ResourceLocation 或字符串）
+   - advancement-id: 进度 ID( ResourceLocation 或字符串)
 
-   返回：boolean（是否成功）
+   返回: boolean( 是否成功)
 
    示例:
    ```clojure
@@ -61,7 +61,7 @@
    - player: ServerPlayer
    - advancement-id: 进度 ID
 
-   返回：boolean（是否成功）"
+   返回: boolean( 是否成功) "
   [^ServerPlayer player advancement-id]
   (let [^ResourceLocation res-loc (if (instance? ResourceLocation advancement-id)
                                     advancement-id
@@ -85,7 +85,7 @@
    - player: ServerPlayer
    - advancement-id: 进度 ID
 
-   返回：boolean"
+   返回: boolean"
   [^ServerPlayer player advancement-id]
   (let [^ResourceLocation res-loc (if (instance? ResourceLocation advancement-id)
                                     advancement-id
@@ -105,7 +105,7 @@
    - player: ServerPlayer
    - advancement-id: 进度 ID
 
-   返回：进度信息 {:completed? boolean
+   返回: 进度信息 {:completed? boolean
                  :total-criteria int
                  :completed-criteria int
                  :progress-percentage float}"
@@ -132,11 +132,11 @@
        :progress-percentage 0.0})))
 
 ;; ============================================================================
-;; 进度数据结构（用于数据生成）
+;; 进度数据结构( 用于数据生成)
 ;; ============================================================================
 
 (defn advancement-data
-  "创建进度数据（用于 JSON 生成）
+  "创建进度数据( 用于 JSON 生成)
 
    参数:
    - id: 进度 ID
@@ -144,10 +144,10 @@
      - :parent - 父进度 ID
      - :display - 显示信息 {:icon :title :description :frame :background :show-toast? :announce-chat? :hidden?}
      - :criteria - 触发条件映射
-     - :requirements - 需求（默认所有条件）
+     - :requirements - 需求( 默认所有条件)
      - :rewards - 奖励 {:experience :loot :recipes :function}
 
-   返回：进度数据映射
+   返回: 进度数据映射
 
    示例:
    ```clojure
@@ -167,7 +167,7 @@
   [id & {:keys [parent display criteria requirements rewards]}]
   {:id (if (string? id)
          id
-         (str (.getNamespace ^ResourceLocation id) \":\" (.getPath ^ResourceLocation id)))
+         (str (.getNamespace ^ResourceLocation id) "/" (.getPath ^ResourceLocation id)))
    :parent parent
    :display display
    :criteria criteria
@@ -184,17 +184,17 @@
   "创建进度显示信息
 
    参数:
-   - icon: 图标（ItemStack）
-   - title: 标题（Component 或字符串）
-   - description: 描述（Component 或字符串）
+   - icon: 图标( ItemStack)
+   - title: 标题( Component 或字符串)
+   - description: 描述( Component 或字符串)
    - opts: 选项
-     - :frame - 框架类型（:task/:challenge/:goal，默认 :task）
-     - :background - 背景纹理路径（可选，仅根进度使用）
-     - :show-toast? - 显示成就弹窗（默认 true）
-     - :announce-chat? - 在聊天中公告（默认 true）
-     - :hidden? - 是否隐藏（默认 false）
+     - :frame - 框架类型( :task/:challenge/:goal，默认 :task)
+     - :background - 背景纹理路径( 可选，仅根进度使用)
+     - :show-toast? - 显示成就弹窗( 默认 true)
+     - :announce-chat? - 在聊天中公告( 默认 true)
+     - :hidden? - 是否隐藏( 默认 false)
 
-   返回：显示信息映射"
+   返回: 显示信息映射"
   [icon title description & {:keys [frame background show-toast? announce-chat? hidden?]
                              :or {frame :task
                                   show-toast? true
@@ -224,10 +224,10 @@
 ;; ============================================================================
 
 (defn inventory-changed-criterion
-  "物品栏变化条件（获得物品）
+  "物品栏变化条件( 获得物品)
 
    参数:
-   - items: 物品列表（字符串 ID 列表）
+   - items: 物品列表( 字符串 ID 列表)
    - opts: 选项
      - :min-count - 最小数量
      - :max-count - 最大数量
@@ -246,11 +246,11 @@
                  false nil)})
 
 (defn location-criterion
-  "位置条件（进入特定位置）
+  "位置条件( 进入特定位置)
 
    参数:
    - opts: 选项
-     - :dimension - 维度（\"minecraft:overworld\"/\"minecraft:the_nether\"/\"minecraft:the_end\"）
+     - :dimension - 维度( \"minecraft:overworld\"/\"minecraft:the_nether\"/\"minecraft:the_end\")
      - :biome - 生物群系
      - :structure - 结构
      - :x :y :z - 坐标范围 {:min :max}
@@ -300,9 +300,9 @@
   "击杀实体条件
 
    参数:
-   - entity-type: 实体类型（\"minecraft:zombie\" 等）
+   - entity-type: 实体类型( \"minecraft:zombie\" 等)
    - opts: 选项
-     - :killed-by-player? - 是否由玩家击杀（默认 true）
+     - :killed-by-player? - 是否由玩家击杀( 默认 true)
 
    示例:
    ```clojure
@@ -320,17 +320,17 @@
 ;; ============================================================================
 
 (defmacro defadvancement
-  "定义进度的宏（简化版）
+  "定义进度的宏( 简化版)
 
    参数:
    - name: 变量名
-   - id: 进度 ID（字符串）
+   - id: 进度 ID( 字符串)
    - icon: 图标物品
    - title: 标题
    - description: 描述
    - opts: 选项
      - :parent - 父进度 ID
-     - :frame - 框架类型（:task/:challenge/:goal）
+     - :frame - 框架类型( :task/:challenge/:goal)
      - :criteria - 触发条件
      - :rewards - 奖励
      - :background - 背景纹理
@@ -376,7 +376,7 @@
          ~@(when rewards [:rewards rewards])))))
 
 (defmacro defadvancement-root
-  "定义根进度（带背景图）
+  "定义根进度( 带背景图)
 
    参数:
    - name: 变量名
@@ -409,7 +409,7 @@
        :criteria {:auto {:trigger "minecraft:tick"}})))
 
 (defmacro defadvancement-challenge
-  "定义挑战进度（高亮显示，有聊天公告）
+  "定义挑战进度( 高亮显示，有聊天公告)
 
    参数:
    - name: 变量名
@@ -454,7 +454,7 @@
 (defn example-advancement-tree
   "示例进度树
 
-   返回：进度数据列表"
+   返回: 进度数据列表"
   []
   [(advancement-data "mymod:root"
      :display (display-info
@@ -502,7 +502,7 @@
 
   ;; 3. 获取进度进展
   (let [progress (get-advancement-progress player "mymod:boss_kill")]
-    (println "完成度：" (:progress-percentage progress) "%"))
+    (println "完成度: " (:progress-percentage progress) "%"))
 
   ;; 4. 撤销进度
   (revoke-advancement! player "mymod:first_diamond")
@@ -552,7 +552,7 @@
 
   ;; ========== 使用 defadvancement 宏 ==========
 
-  ;; 9. 使用 defadvancement 宏（更简洁）
+  ;; 9. 使用 defadvancement 宏( 更简洁)
   (defadvancement my-first-diamond
     "mymod:first_diamond"
     Items/DIAMOND
@@ -563,7 +563,7 @@
     :criteria {:has_diamond (inventory-changed-criterion ["minecraft:diamond"])}
     :rewards {:experience 100})
 
-  ;; 10. 使用 defadvancement-root（定义根进度）
+  ;; 10. 使用 defadvancement-root( 定义根进度)
   (defadvancement-root my-mod-root
     "mymod:root"
     Items/GRASS_BLOCK
@@ -571,7 +571,7 @@
     "开始你的冒险之旅"
     "minecraft:textures/gui/advancements/backgrounds/adventure.png")
 
-  ;; 11. 使用 defadvancement-challenge（定义挑战）
+  ;; 11. 使用 defadvancement-challenge( 定义挑战)
   (defadvancement-challenge defeat-wither
     "mymod:defeat_wither"
     Items/NETHER_STAR
@@ -581,7 +581,7 @@
     {:killed (killed-entity-criterion "minecraft:wither")}
     :rewards {:experience 500})
 
-  ;; 12. 定义进度树（使用宏）
+  ;; 12. 定义进度树( 使用宏)
   (defadvancement-root my-adventure-root
     "mymod:adventure_root"
     Items/COMPASS

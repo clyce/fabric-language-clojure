@@ -1,19 +1,19 @@
 (ns com.fabriclj.swiss-knife.common.gameplay.ai
   "AI 行为系统
 
-   提供实体 AI 目标（Goals）、行为树、寻路的高级封装。
+   提供实体 AI 目标( Goals) 、行为树、寻路的高级封装。
 
-   核心功能：
+   核心功能:
    - AI 目标创建和管理
    - 常用 AI 目标封装
    - 目标选择器
    - 寻路系统
-   - 行为树（BehaviorTree）
-   - 黑板系统（Blackboard）
+   - 行为树( BehaviorTree)
+   - 黑板系统( Blackboard)
    - 群体行为"
   (:require [clojure.string :as str])
-  (:import [net.minecraft.world.entity Mob LivingEntity Entity PathfinderMob]
-           [net.minecraft.world.entity.ai.goal Goal GoalSelector
+  (:import (net.minecraft.world.entity Mob LivingEntity Entity PathfinderMob)
+           (net.minecraft.world.entity.ai.goal Goal GoalSelector
             WrappedGoal
             FloatGoal
             LookAtPlayerGoal
@@ -28,16 +28,16 @@
             target.NearestAttackableTargetGoal
             target.HurtByTargetGoal
             target.OwnerHurtByTargetGoal
-            target.OwnerHurtTargetGoal]
-           [net.minecraft.world.entity.ai.navigation PathNavigation
-            GroundPathNavigation]
-           [net.minecraft.world.level.pathfinder Path]
-           [net.minecraft.world.entity.player Player]
-           [net.minecraft.world.entity.ai.targeting TargetingConditions]
-           [net.minecraft.world.phys Vec3]
-           [net.minecraft.core BlockPos]
-           [net.minecraft.world.item ItemStack Items crafting.Ingredient]
-           [java.util EnumSet]))
+            target.OwnerHurtTargetGoal)
+           (net.minecraft.world.entity.ai.navigation PathNavigation
+            GroundPathNavigation)
+           (net.minecraft.world.level.pathfinder Path)
+           (net.minecraft.world.entity.player Player)
+           (net.minecraft.world.entity.ai.targeting TargetingConditions)
+           (net.minecraft.world.phys Vec3)
+           (net.minecraft.core BlockPos)
+           (net.minecraft.world.item ItemStack Items crafting.Ingredient)
+           (java.util EnumSet)))
 
 (set! *warn-on-reflection* true)
 
@@ -49,16 +49,16 @@
   "创建自定义 AI 目标
 
    参数:
-   - priority: 优先级（数字越小优先级越高）
+   - priority: 优先级( 数字越小优先级越高)
    - opts: 配置选项
-     - :flags - 目标标志集合（:move/:look/:jump）
+     - :flags - 目标标志集合( :move/:look/:jump)
      - :can-use? - 是否可以使用的判断函数 (fn [entity] -> boolean)
      - :should-continue? - 是否继续执行的判断函数 (fn [entity] -> boolean)
      - :start! - 开始执行的函数 (fn [entity] -> void)
      - :tick! - 每 tick 执行的函数 (fn [entity] -> void)
      - :stop! - 停止执行的函数 (fn [entity] -> void)
 
-   返回：Goal 实例
+   返回: Goal 实例
 
    示例:
    ```clojure
@@ -184,7 +184,7 @@
 ;; 移动类目标
 
 (defn float-goal
-  "漂浮目标（在水中漂浮）
+  "漂浮目标( 在水中漂浮)
 
    参数:
    - entity: Mob 实体
@@ -201,8 +201,8 @@
 
    参数:
    - entity: PathfinderMob 实体
-   - speed: 移动速度（默认 1.0）
-   - interval: 游荡间隔（tick，默认 120）
+   - speed: 移动速度( 默认 1.0)
+   - interval: 游荡间隔( tick，默认 120)
 
    示例:
    ```clojure
@@ -216,11 +216,11 @@
    (WaterAvoidingRandomStrollGoal. entity speed (int interval))))
 
 (defn panic-goal
-  "恐慌逃跑目标（受到伤害时逃跑）
+  "恐慌逃跑目标( 受到伤害时逃跑)
 
    参数:
    - entity: PathfinderMob 实体
-   - speed: 逃跑速度（默认 2.0）
+   - speed: 逃跑速度( 默认 2.0)
 
    示例:
    ```clojure
@@ -271,7 +271,7 @@
    参数:
    - entity: PathfinderMob 实体
    - speed: 移动速度
-   - items: 吸引物品（Ingredient）
+   - items: 吸引物品( Ingredient)
    - can-scare: 是否会被吓跑
 
    示例:
@@ -307,9 +307,9 @@
   "远程攻击目标
 
    参数:
-   - entity: Mob 实体（必须实现 RangedAttackMob 接口）
+   - entity: Mob 实体( 必须实现 RangedAttackMob 接口)
    - speed: 移动速度
-   - attack-interval: 攻击间隔（tick）
+   - attack-interval: 攻击间隔( tick)
    - max-distance: 最大攻击距离
 
    示例:
@@ -327,8 +327,8 @@
 
    参数:
    - entity: Mob 实体
-   - look-distance: 注视距离（默认 6.0）
-   - probability: 概率（默认 0.02）
+   - look-distance: 注视距离( 默认 6.0)
+   - probability: 概率( 默认 0.02)
 
    示例:
    ```clojure
@@ -363,8 +363,8 @@
 
    参数:
    - entity: Mob 实体
-   - target-type: 目标类型（Class）
-   - must-see: 是否必须看见（默认 true）
+   - target-type: 目标类型( Class)
+   - must-see: 是否必须看见( 默认 true)
 
    示例:
    ```clojure
@@ -382,7 +382,7 @@
 
    参数:
    - entity: PathfinderMob 实体
-   - call-for-help: 呼叫同类帮助（可选，Class 数组）
+   - call-for-help: 呼叫同类帮助( 可选，Class 数组)
 
    示例:
    ```clojure
@@ -397,7 +397,7 @@
     entity (into-array Class help-classes))))
 
 (defn owner-hurt-by-target-goal
-  "保护主人目标（攻击伤害主人者）
+  "保护主人目标( 攻击伤害主人者)
 
    参数:
    - entity: TamableAnimal 实体
@@ -410,7 +410,7 @@
   (net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal. entity))
 
 (defn owner-hurt-target-goal
-  "保护主人目标（攻击主人攻击的对象）"
+  "保护主人目标( 攻击主人攻击的对象) "
   [entity]
   (net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal. entity))
 
@@ -423,10 +423,10 @@
 
    参数:
    - entity: Mob 实体
-   - pos: 目标位置（BlockPos 或 [x y z]）
+   - pos: 目标位置( BlockPos 或 [x y z])
    - speed: 移动速度
 
-   返回：是否成功开始导航"
+   返回: 是否成功开始导航"
   [^Mob entity pos speed]
   (let [^BlockPos target-pos (if (vector? pos)
                                (BlockPos. (int (nth pos 0))
@@ -444,7 +444,7 @@
    - target: 目标实体
    - speed: 移动速度
 
-   返回：是否成功开始导航"
+   返回: 是否成功开始导航"
   [^Mob entity ^Entity target speed]
   (let [^PathNavigation nav (.getNavigation entity)]
     (boolean (.moveTo nav target speed))))
@@ -463,7 +463,7 @@
    参数:
    - entity: Mob 实体
 
-   返回：boolean"
+   返回: boolean"
   [^Mob entity]
   (not (.isDone (.getNavigation entity))))
 
@@ -474,7 +474,7 @@
    - entity: Mob 实体
    - pos: 目标位置
 
-   返回：boolean"
+   返回: boolean"
   [^Mob entity pos]
   (let [^BlockPos target-pos (if (vector? pos)
                                (BlockPos. (int (nth pos 0))
@@ -492,7 +492,7 @@
    - entity: Mob 实体
    - target: 目标位置或实体
 
-   返回：Path 或 nil"
+   返回: Path 或 nil"
   [^Mob entity target]
   (let [^PathNavigation nav (.getNavigation entity)]
     (cond
@@ -509,30 +509,30 @@
 
       :else nil)))
 
-;; 注意：路径可视化功能应在客户端模块实现。
+;; 注意: 路径可视化功能应在客户端模块实现。
 ;;
-;; 建议的客户端渲染功能：
+;; 建议的客户端渲染功能:
 ;; 1. show-path - 显示完整寻路路径
-;;    - 参数：entity, colors {:start :line :end :waypoint}
-;;    - 渲染：沿路径点绘制彩色线条
+;;    - 参数: entity, colors {:start :line :end :waypoint}
+;;    - 渲染: 沿路径点绘制彩色线条
 ;; 2. show-navigation-goal - 显示导航目标
-;;    - 参数：entity, colors {:start :end}
-;;    - 渲染：从实体到目标的直线
+;;    - 参数: entity, colors {:start :end}
+;;    - 渲染: 从实体到目标的直线
 ;; 3. show-ai-debug - 显示 AI 状态
-;;    - 参数：entity
-;;    - 渲染：当前目标、优先级、状态
+;;    - 参数: entity
+;;    - 渲染: 当前目标、优先级、状态
 ;;
 ;; 这些功能将在 client.rendering 或新的 client.debug-render 模块中实现，
-;; 因为它们需要访问客户端渲染 API（RenderSystem、PoseStack 等）。
+;; 因为它们需要访问客户端渲染 API( RenderSystem、PoseStack 等) 。
 ;;
-;; 实现参考位置：common/src/main/clojure/com/fabriclj/swiss-knife/client/rendering.clj
+;; 实现参考位置: common/src/main/clojure/com/fabriclj/swiss-knife/client/rendering.clj
 
 (defn set-path-search-range
   "设置寻路搜索范围
 
    参数:
    - entity: Mob 实体
-   - range: 搜索范围（方块数）"
+   - range: 搜索范围( 方块数) "
   [^Mob entity range]
   (.. entity getNavigation (setMaxVisitedNodesMultiplier (float range))))
 
@@ -542,16 +542,15 @@
 ;; ============================================================================
 
 (defprotocol BehaviorNode
-  "行为树节点协议
-
+  "行为树节点协议"
   (execute [this entity context]
     "执行节点
 
      参数:
      - entity: 实体
-     - context: 上下文（黑板）
+     - context: 上下文( 黑板)
 
-     返回：:success/:failure/:running")")
+     返回: :success/:failure/:running)"))
 
 ;; 叶子节点
 
@@ -662,7 +661,7 @@
   (->ActionNode action))
 
 (defn sequence-node
-  "创建顺序节点（所有子节点都成功才成功）
+  "创建顺序节点( 所有子节点都成功才成功)
 
    参数:
    - children: 子节点列表
@@ -678,7 +677,7 @@
   (->SequenceNode (vec children)))
 
 (defn selector-node
-  "创建选择节点（任一子节点成功即成功）
+  "创建选择节点( 任一子节点成功即成功)
 
    参数:
    - children: 子节点列表
@@ -694,17 +693,17 @@
   (->SelectorNode (vec children)))
 
 (defn parallel-node
-  "创建并行节点（同时执行多个子节点）"
+  "创建并行节点( 同时执行多个子节点) "
   [& children]
   (->ParallelNode (vec children)))
 
 (defn inverter-node
-  "创建反转节点（反转子节点结果）"
+  "创建反转节点( 反转子节点结果) "
   [child]
   (->InverterNode child))
 
 (defn repeater-node
-  "创建重复节点（重复执行 N 次）"
+  "创建重复节点( 重复执行 N 次) "
   [child times]
   (->RepeaterNode child times))
 
@@ -718,12 +717,12 @@
 ;; ============================================================================
 
 (defn create-blackboard
-  "创建黑板（AI 共享数据）
+  "创建黑板( AI 共享数据)
 
    参数:
-   - initial-data: 初始数据（可选）
+   - initial-data: 初始数据( 可选)
 
-   返回：atom
+   返回: atom
 
    示例:
    ```clojure
@@ -740,9 +739,9 @@
    参数:
    - blackboard: 黑板 atom
    - key: 键
-   - default: 默认值（可选）
+   - default: 默认值( 可选)
 
-   返回：值"
+   返回: 值"
   ([blackboard key]
    (get @blackboard key))
   ([blackboard key default]
@@ -877,7 +876,7 @@
 
   ;; ========== 高级示例 ==========
 
-  ;; 10. 复杂行为树：守卫行为
+  ;; 10. 复杂行为树: 守卫行为
   (defbehavior advanced-guard-behavior
     (sequence-node
      ;; 首先检查是否需要治疗
@@ -900,3 +899,4 @@
       ;; 否则巡逻
       (action-node (fn [entity ctx]
                      :running)))))
+  )

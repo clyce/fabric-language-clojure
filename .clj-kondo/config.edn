@@ -1,0 +1,9 @@
+{
+ :linters {:unresolved-symbol {:level :warning
+                               :exclude [(clojure.core/import)]}
+           :unused-namespace {:level :warning}
+           :unused-referred-var {:level :warning}
+           :missing-docstring {:level :off}
+           :invalid-arity {:level :warning}
+           :redefined-var {:level :off}}
+ :output {:pattern "{{filename}}:{{row}}:{{col}}: {{level}}: {{message}}"}}

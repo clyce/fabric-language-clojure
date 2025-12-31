@@ -1,10 +1,10 @@
 (ns com.fabriclj.swiss-knife.common.utils.core
   "瑞士军刀 - 通用工具集
 
-   **模块定位**：真正通用的辅助函数
+   **模块定位**: 真正通用的辅助函数
 
-   **重要提示**：
-   许多原本在此模块的函数已移至专门的模块以提高组织性：
+   **重要提示**:
+   许多原本在此模块的函数已移至专门的模块以提高组织性:
    - 文本和翻译 → `com.fabriclj.swiss-knife.common.utils.text`
    - 时间和计时 → `com.fabriclj.swiss-knife.common.utils.time`
    - 数学和随机 → `com.fabriclj.swiss-knife.common.utils.math`
@@ -12,11 +12,11 @@
    - 区域操作 → `com.fabriclj.swiss-knife.common.world.regions`
    - 玩家工具 → `com.fabriclj.swiss-knife.common.game-objects.players`
 
-   **本模块保留**：
-   - 空间查询辅助函数（基于距离的查找、排序）
-   - 调试工具（日志、性能分析）
+   **本模块保留**:
+   - 空间查询辅助函数( 基于距离的查找、排序)
+   - 调试工具( 日志、性能分析)
 
-   **使用示例**：
+   **使用示例**:
    ```clojure
    (require '[com.fabriclj.swiss-knife.common.utils.core :as utils])
 
@@ -30,9 +30,9 @@
    (utils/profile-fn expensive-function args)
    ```"
   (:require [com.fabriclj.swiss-knife.common.utils.math :as math])
-  (:import [net.minecraft.world.entity Entity]
-           [net.minecraft.world.phys Vec3]
-           [net.minecraft.core BlockPos]))
+  (:import (net.minecraft.world.entity Entity)
+           (net.minecraft.world.phys Vec3)
+           (net.minecraft.core BlockPos)))
 
 (set! *warn-on-reflection* true)
 
@@ -44,13 +44,13 @@
   "查找最近的元素
 
    参数:
-   - pos: 参考位置，支持多种格式：
+   - pos: 参考位置，支持多种格式:
      - [x y z] - 向量
      - Vec3 对象
      - BlockPos 对象
    - entities: 实体集合
 
-   返回：最近的实体或 nil
+   返回: 最近的实体或 nil
 
    示例:
    ```clojure
@@ -76,11 +76,11 @@
   "查找半径内的元素
 
    参数:
-   - pos: 中心位置（支持多种格式）
+   - pos: 中心位置( 支持多种格式)
    - entities: 实体集合
-   - radius: 半径（单位：方块）
+   - radius: 半径( 单位: 方块)
 
-   返回：半径内的实体列表
+   返回: 半径内的实体列表
 
    示例:
    ```clojure
@@ -110,10 +110,10 @@
   "按距离排序
 
    参数:
-   - pos: 参考位置（支持多种格式）
+   - pos: 参考位置( 支持多种格式)
    - entities: 实体集合
 
-   返回：按距离从近到远排序的实体列表
+   返回: 按距离从近到远排序的实体列表
 
    示例:
    ```clojure
@@ -145,12 +145,12 @@
 ;; ============================================================================
 
 (defn debug-log
-  "调试日志（带级别）
+  "调试日志( 带级别)
 
    参数:
    - level: 日志级别 (:info/:warn/:error/:debug)
-   - message: 消息字符串（支持 format 占位符）
-   - args: 消息参数（可选）
+   - message: 消息字符串( 支持 format 占位符)
+   - args: 消息参数( 可选)
 
    示例:
    ```clojure
@@ -177,11 +177,11 @@
    测量函数执行时间，用于性能调试。
 
    参数:
-   - label: 标签（用于日志输出）
+   - label: 标签( 用于日志输出)
    - f: 要分析的函数
    - args: 函数参数
 
-   返回：{:result 函数返回值 :time-ms 耗时（毫秒） :label 标签}
+   返回: {:result 函数返回值 :time-ms 耗时( 毫秒)  :label 标签}
 
    示例:
    ```clojure
@@ -196,7 +196,7 @@
    (println \"A:\" (:time-ms impl-a) \"ms\")
    (println \"B:\" (:time-ms impl-b) \"ms\")
 
-   ;; 使用宏形式（更简洁）
+   ;; 使用宏形式( 更简洁)
    (let [{:keys [result time-ms]} (profile-fn \"complex-task\" #(do-complex-task))]
      (when (> time-ms 100)
        (debug-log :warn \"Task took %d ms (threshold: 100ms)\" time-ms)))
@@ -211,7 +211,7 @@
      :label label}))
 
 (defmacro profile
-  "性能分析宏（更简洁的语法）
+  "性能分析宏( 更简洁的语法)
 
    自动测量代码块的执行时间。
 
@@ -219,7 +219,7 @@
    - label: 标签字符串
    - body: 要分析的代码
 
-   返回：{:result 代码返回值 :time-ms 耗时}
+   返回: {:result 代码返回值 :time-ms 耗时}
 
    示例:
    ```clojure

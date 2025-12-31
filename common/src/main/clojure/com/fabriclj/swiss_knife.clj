@@ -68,12 +68,12 @@
   ;; 工具函数
   [com.fabriclj.swiss-knife.common.utils.core :as utils]
 
-  ;; 客户端系统（延迟加载）
+  ;; 客户端系统( 延迟加载)
   [com.fabriclj.swiss-knife.client.ui.config_screen :as config-screen]
   [com.fabriclj.swiss-knife.client.debug.visualizer :as debug-viz]))
 
 ;; ============================================================================
-;; 命名空间别名（便于使用）
+;; 命名空间别名( 便于使用)
 ;; ============================================================================
 
 ;; 核心系统
@@ -173,19 +173,19 @@
 (def log-debug core/log-debug)
 
 ;; ============================================================================
-;; 客户端模块（延迟加载，避免在服务端加载客户端类）
+;; 客户端模块( 延迟加载，避免在服务端加载客户端类)
 ;; ============================================================================
 
 (defn client
-  "获取客户端命名空间（仅在客户端环境可用）
+  "获取客户端命名空间( 仅在客户端环境可用)
 
-   返回：包含所有客户端模块的映射
+   返回: 包含所有客户端模块的映射
 
    示例:
    ```clojure
    (when (client-side?)
      (require '[com.fabriclj.swiss-knife :as mb])
-     (let [client (mb/client)]
+     (let [client (client)]
        ((:get-player (:core client)))))
    ```"
   []
@@ -218,18 +218,18 @@
   (require '[com.fabriclj.swiss-knife :as mb])
 
   ;; 3. 使用核心功能
-  (when (mb/fabric?)
-    (mb/log-info "Running on Fabric!"))
+  (when (fabric?)
+    (log-info "Running on Fabric!"))
 
   ;; 4. 创建注册表
-  (def items (mb/create-registry "mymod" :item))
+  (def items (create-registry "mymod" :item))
 
   ;; 5. 注册事件
-  (mb/on-player-join
+  (on-player-join
    (fn [player]
-     (mb/log-info (.getName player) "joined!")))
+     (log-info (.getName player) "joined!")))
 
-  ;; 6. 客户端功能（仅在客户端）
-  (when (mb/client-side?)
+  ;; 6. 客户端功能( 仅在客户端)
+  (when (client-side?)
     (require '[com.fabriclj.swiss-knife.client.core :as client])
     (println "Player:" (client/get-player))))

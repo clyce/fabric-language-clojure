@@ -5,7 +5,7 @@
 
    【安全警告】nREPL 服务仅应在开发环境启用！
 
-   用法示例：
+   用法示例:
    ```clojure
    (ns com.mymod.core
      (:require [com.fabriclj.nrepl :as nrepl]
@@ -27,7 +27,7 @@
   7888)
 
 (def default-bind
-  "nREPL 默认绑定地址（仅本地访问）"
+  "nREPL 默认绑定地址( 仅本地访问) "
   "127.0.0.1")
 
 ;; ============================================================================
@@ -44,17 +44,17 @@
 (defn start-server!
   "启动 nREPL 服务器
 
-   参数：
-   - port: 端口号（默认 7888）
-   - bind: 绑定地址（默认 127.0.0.1）
+   参数:
+   - port: 端口号( 默认 7888)
+   - bind: 绑定地址( 默认 127.0.0.1)
 
    返回启动的服务器实例，如果已启动则返回现有实例。
 
-   用法：
+   用法:
    ```clojure
    (start-server!)              ; 使用默认端口 7888
    (start-server! 9999)         ; 使用自定义端口
-   (start-server! 9999 \"0.0.0.0\") ; 允许远程连接（危险！）
+   (start-server! 9999 \"0.0.0.0\") ; 允许远程连接( 危险！)
    ```"
   ([] (start-server! default-port default-bind))
   ([port] (start-server! port default-bind))
@@ -99,7 +99,7 @@
   (some? @server-atom))
 
 (defn get-port
-  "获取当前 nREPL 服务器端口（如果正在运行）"
+  "获取当前 nREPL 服务器端口( 如果正在运行) "
   []
   (when-let [server @server-atom]
     (:port server)))

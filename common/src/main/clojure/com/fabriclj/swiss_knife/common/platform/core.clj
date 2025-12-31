@@ -3,13 +3,13 @@
 
    提供平台检测、环境检测、资源定位、日志等基础功能。
    基于 Architectury API 的 Platform Abstraction。"
-  (:import [dev.architectury.platform Platform]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.core.registries BuiltInRegistries]
-           [net.minecraft.server MinecraftServer]
-           [net.minecraft.world.level Level]
-           [net.minecraft.world.level.block Block]
-           [net.minecraft.world.entity.EntityType]))
+  (:import (dev.architectury.platform Platform)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.core.registries BuiltInRegistries)
+           (net.minecraft.server MinecraftServer)
+           (net.minecraft.world.level Level)
+           (net.minecraft.world.level.block Block)
+           (net.minecraft.world.entity EntityType)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -65,12 +65,12 @@
 ;; ============================================================================
 
 (defn client-side?
-  "是否在物理客户端运行（包括单人游戏）"
+  "是否在物理客户端运行( 包括单人游戏) "
   []
   (-> (Platform/getEnv) (.isClient)))
 
 (defn server-side?
-  "是否在物理服务端运行（包括单人游戏的集成服务器）"
+  "是否在物理服务端运行( 包括单人游戏的集成服务器) "
   []
   (-> (Platform/getEnv) (.isServer)))
 
@@ -87,7 +87,7 @@
   "创建资源定位符
 
    参数:
-   - namespace: 命名空间（通常是 mod id）
+   - namespace: 命名空间( 通常是 mod id)
    - path: 资源路径
 
    或单参数形式:
@@ -107,9 +107,9 @@
   "将对象转换为 ResourceLocation
 
    接受:
-   - ResourceLocation（直接返回）
-   - String（解析为资源定位符）
-   - Keyword（转换为字符串后解析）
+   - ResourceLocation( 直接返回)
+   - String( 解析为资源定位符)
+   - Keyword( 转换为字符串后解析)
 
    示例:
    ```clojure
@@ -132,16 +132,16 @@
   "根据资源定位符获取物品
 
    参数:
-   - id: 资源定位符（ResourceLocation、String 或 Keyword）
+   - id: 资源定位符( ResourceLocation、String 或 Keyword)
 
-   返回: Item 对象或 nil（如果不存在）"
+   返回: Item 对象或 nil( 如果不存在) "
   [id]
   (let [^ResourceLocation loc (->resource-location id)]
     (when (.containsKey BuiltInRegistries/ITEM loc)
       (.get BuiltInRegistries/ITEM loc))))
 
 (defn get-item-by-id
-  "根据 ID 从注册表获取物品（别名）"
+  "根据 ID 从注册表获取物品( 别名) "
   [id]
   (get-item id))
 
@@ -151,9 +151,9 @@
    参数:
    - id: ResourceLocation、字符串或关键字
 
-   返回：Block 对象或 nil
+   返回: Block 对象或 nil
 
-   注意：这是从注册表获取方块定义，不是从世界中获取方块
+   注意: 这是从注册表获取方块定义，不是从世界中获取方块
    如果要获取世界中某个位置的方块，请使用 blocks/get-block-at
 
    示例:
@@ -172,7 +172,7 @@
    参数:
    - id: ResourceLocation、字符串或关键字
 
-   返回：EntityType 对象或 nil
+   返回: EntityType 对象或 nil
 
    示例:
    ```clojure
@@ -183,7 +183,7 @@
     (when (.containsKey BuiltInRegistries/ENTITY_TYPE loc)
       (.get BuiltInRegistries/ENTITY_TYPE loc))))
 
-;; 向后兼容的别名（已弃用，请使用带 -by-id 后缀的新函数）
+;; 向后兼容的别名( 已弃用，请使用带 -by-id 后缀的新函数)
 (def get-block get-block-by-id)
 (def get-entity-type get-entity-type-by-id)
 
@@ -194,16 +194,16 @@
 (defonce ^:private current-server (atom nil))
 
 (defn set-server!
-  "设置当前服务器实例（内部使用）
+  "设置当前服务器实例( 内部使用)
 
-   注意：通常不需要手动调用，由框架自动管理"
+   注意: 通常不需要手动调用，由框架自动管理"
   [^MinecraftServer server]
   (reset! current-server server))
 
 (defn get-server
   "获取当前服务器实例
 
-   返回: MinecraftServer 或 nil（如果不在服务器环境）"
+   返回: MinecraftServer 或 nil( 如果不在服务器环境) "
   ^MinecraftServer []
   @current-server)
 
@@ -211,7 +211,7 @@
   "根据维度 ID 获取 Level
 
    参数:
-   - dimension: 维度资源定位符（支持 :minecraft:overworld 等）
+   - dimension: 维度资源定位符( 支持 :minecraft:overworld 等)
 
    返回: Level 对象或 nil"
   ^Level [dimension]
@@ -246,7 +246,7 @@
   (println log-prefix "ERROR:" (apply str msgs)))
 
 (defn log-debug
-  "记录调试日志（仅在开发环境）"
+  "记录调试日志( 仅在开发环境) "
   [& msgs]
   (when (development?)
     (println log-prefix "DEBUG:" (apply str msgs))))
@@ -261,23 +261,18 @@
    参数:
    - f: 要执行的函数
 
-   注意：需要配合事件系统使用"
+   注意: 需要配合事件系统使用"
   [f]
   (future (f)))
 
 ;; ============================================================================
 ;; 配置管理
 ;; ============================================================================
-;; 注意：简单的配置管理功能已被移除
-;; 请使用更强大的 config-file 模块：
+;; 注意: 简单的配置管理功能已被移除
+;; 请使用更强大的 config-file 模块:
 ;;   (require '[com.fabriclj.swiss-knife.common.config.core :as config])
 ;;   (config/register-config! "mymod" "default" {...})
 ;;   (config/get-config-value "mymod" [:key :path])
-
-(defn config-reset!
-  "清空所有配置"
-  []
-  (reset! config-store {}))
 
 ;; ============================================================================
 ;; 工具宏

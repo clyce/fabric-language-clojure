@@ -3,7 +3,7 @@
    此命名空间提供客户端相关的工具函数。
 
    【注意】此命名空间中的函数只能在客户端环境调用！"
-  (:import [net.minecraft.client Minecraft]))
+  (:import (net.minecraft.client Minecraft)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)

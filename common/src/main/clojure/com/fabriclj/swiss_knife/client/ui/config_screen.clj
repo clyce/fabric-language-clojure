@@ -1,9 +1,9 @@
 (ns com.fabriclj.swiss-knife.client.ui.config-screen
   "配置 GUI 系统
 
-   提供游戏内配置界面，支持：
+   提供游戏内配置界面，支持:
    - 自动生成配置屏幕
-   - 多种配置组件（文本框、滑块、开关、下拉框）
+   - 多种配置组件( 文本框、滑块、开关、下拉框)
    - 配置验证和保存
    - 分类和分组
    - 搜索和过滤"
@@ -11,12 +11,12 @@
             [com.fabriclj.swiss-knife.common.config.core :as config]
             [com.fabriclj.swiss-knife.client.ui.screens :as screens]
             [com.fabriclj.swiss-knife.client.platform.core :as client])
-  (:import [net.minecraft.client.gui.screens Screen]
-           [net.minecraft.client.gui.components Button EditBox AbstractWidget]
-           [net.minecraft.client.gui GuiGraphics]
-           [net.minecraft.network.chat Component]
-           [net.minecraft.client Minecraft]
-           [java.util.function Consumer]))
+  (:import (net.minecraft.client.gui.screens Screen)
+           (net.minecraft.client.gui.components Button EditBox AbstractWidget)
+           (net.minecraft.client.gui GuiGraphics)
+           (net.minecraft.network.chat Component)
+           (net.minecraft.client Minecraft)
+           (java.util.function Consumer)))
 
 (set! *warn-on-reflection* true)
 
@@ -28,7 +28,7 @@
   "创建配置条目定义
 
    参数:
-   - key: 配置键（关键字）
+   - key: 配置键( 关键字)
    - label: 显示标签
    - type: 组件类型
      - :boolean - 开关
@@ -39,13 +39,13 @@
      - :slider - 滑块
    - opts: 选项
      - :default - 默认值
-     - :min/:max - 最小/最大值（数字类型）
-     - :options - 选项列表（枚举类型）
+     - :min/:max - 最小/最大值( 数字类型)
+     - :options - 选项列表( 枚举类型)
      - :validator - 验证函数
      - :tooltip - 提示文本
      - :category - 分类
 
-   返回：配置条目映射
+   返回: 配置条目映射
 
    示例:
    ```clojure
@@ -81,7 +81,7 @@
   "注册配置屏幕
 
    参数:
-   - screen-id: 屏幕 ID（关键字）
+   - screen-id: 屏幕 ID( 关键字)
    - title: 标题
    - config-path: 配置文件路径
    - entries: 配置条目列表
@@ -113,7 +113,7 @@
   (core/log-info (str "Registered config screen: " screen-id)))
 
 (defn create-boolean-widget
-  "创建布尔值组件（按钮开关）
+  "创建布尔值组件( 按钮开关)
 
    参数:
    - x, y: 位置
@@ -122,7 +122,7 @@
    - value: 当前值
    - on-change: 变更回调
 
-   返回：Button"
+   返回: Button"
   [x y width entry value on-change]
   (let [label (str (:label entry) ": " (if value "ON" "OFF"))]
     (Button/builder
@@ -147,7 +147,7 @@
    - value: 当前值
    - on-change: 变更回调
 
-   返回：EditBox"
+   返回: EditBox"
   [x y width entry value on-change]
   (let [edit-box (EditBox.
                    (.font (Minecraft/getInstance))
@@ -175,14 +175,14 @@
    - value: 当前值
    - on-change: 变更回调
 
-   返回：Slider（简化实现使用按钮）"
+   返回: Slider( 简化实现使用按钮) "
   [x y width entry value on-change]
   (let [min-val (or (:min entry) 0)
         max-val (or (:max entry) 100)
         range (- max-val min-val)
         normalized (/ (- value min-val) range)
         label (str (:label entry) ": " value)]
-    ;; 简化版：使用两个按钮 - 和 +
+    ;; 简化版: 使用两个按钮 - 和 +
     [(Button/builder
        (Component/literal "-")
        (reify Consumer
@@ -207,7 +207,7 @@
        (.build))]))
 
 (defn create-enum-widget
-  "创建枚举选择组件（循环按钮）
+  "创建枚举选择组件( 循环按钮)
 
    参数:
    - x, y: 位置
@@ -216,7 +216,7 @@
    - value: 当前值
    - on-change: 变更回调
 
-   返回：Button"
+   返回: Button"
   [x y width entry value on-change]
   (let [options (:options entry)
         current-idx (.indexOf (vec options) value)
@@ -243,9 +243,9 @@
 
    参数:
    - screen-id: 屏幕 ID
-   - parent: 父屏幕（可选）
+   - parent: 父屏幕( 可选)
 
-   返回：Screen 实例
+   返回: Screen 实例
 
    示例:
    ```clojure
@@ -254,7 +254,7 @@
    ```"
   [screen-id & [parent]]
   (when-let [screen-def (get @config-screens screen-id)]
-    (let [current-values (atom (config/load-config (:config-path screen-def)))
+    (let [current-values (atom (config/read-edn-file (:config-path screen-def)))
           widgets (atom [])]
 
       (proxy [Screen] [(Component/literal (:title screen-def))]
@@ -366,7 +366,7 @@
      \"config/mymod.edn\")
    ```"
   [screen-id categories config-path & opts]
-  ;; 简化实现：将所有分类的条目合并
+  ;; 简化实现: 将所有分类的条目合并
   (let [all-entries (mapcat :entries (vals categories))
         first-category-title (:title (first (vals categories)))]
     (apply register-config-screen!
@@ -446,7 +446,7 @@
     my-config-entries
     :on-save (fn [config]
                (println "Configuration saved:" config)
-               (mb/log-info "Config updated"))
+               (log-info "Config updated"))
     :on-cancel (fn []
                  (println "Configuration cancelled")))
 
@@ -454,7 +454,7 @@
   (open-config-screen! :my-mod-config)
 
   ;; 4. 在游戏菜单中添加配置按钮
-  (mb/events/on-init-menu
+  (events/on-init-menu
     (fn [screen widgets]
       (.add widgets
         (screens/create-button
@@ -485,7 +485,7 @@
                (println "Advanced config saved")))
 
   ;; 6. 与按键绑定集成
-  (mb/keybindings/create-keybinding :open-config
+  (keybindings/create-keybinding :open-config
     "Open Configuration"
     "key.keyboard.c"
     :category "My Mod"

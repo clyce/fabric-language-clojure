@@ -3,11 +3,11 @@
 
    提供附魔查询、添加和管理功能。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.item ItemStack]
-           [net.minecraft.world.item.enchantment Enchantment EnchantmentHelper Enchantments]
-           [net.minecraft.core.component DataComponents]
-           [net.minecraft.core Holder]
-           [net.minecraft.core.registries Registries]))
+  (:import (net.minecraft.world.item ItemStack)
+           (net.minecraft.world.item.enchantment Enchantment EnchantmentHelper Enchantments)
+           (net.minecraft.core.component DataComponents)
+           (net.minecraft.core Holder)
+           (net.minecraft.core.registries Registries)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -19,7 +19,7 @@
 (defn get-enchantments
   "获取物品的所有附魔
 
-   返回：{Enchantment level} Map"
+   返回: {Enchantment level} Map"
   [^ItemStack stack]
   (let [enchantments (.get stack DataComponents/ENCHANTMENTS)]
     (when enchantments
@@ -35,7 +35,7 @@
    - stack: ItemStack
    - enchantment: Enchantment 或关键字
 
-   返回：附魔等级（0 表示没有）
+   返回: 附魔等级( 0 表示没有)
 
    示例:
    ```clojure
@@ -114,9 +114,9 @@
 
    参数:
    - stack: ItemStack
-   - target: 目标实体（可选）
+   - target: 目标实体( 可选)
 
-   返回：伤害加成"
+   返回: 伤害加成"
   ([^ItemStack stack]
    (calculate-damage-bonus stack nil))
   ([^ItemStack stack target]
@@ -131,7 +131,7 @@
    - armor-items: 护甲物品列表
    - damage-source: 伤害源
 
-   返回：保护值"
+   返回: 保护值"
   [armor-items ^net.minecraft.world.damagesource.DamageSource damage-source]
   (EnchantmentHelper/getDamageProtection armor-items damage-source))
 
@@ -145,9 +145,9 @@
    参数:
    - enchantment-key: 附魔关键字
 
-   返回：Enchantment
+   返回: Enchantment
 
-   支持的关键字：
+   支持的关键字:
    :protection, :fire-protection, :feather-falling, :blast-protection,
    :projectile-protection, :respiration, :aqua-affinity, :thorns,
    :depth-strider, :frost-walker, :soul-speed, :sharpness, :smite,
@@ -166,9 +166,9 @@
 
 ;; Response to clyce: 自定义附魔系统设计
 ;;
-;; Clojure-style 的优雅附魔系统可以这样设计：
+;; Clojure-style 的优雅附魔系统可以这样设计:
 ;;
-;; 1. 基于数据的附魔定义：
+;; 1. 基于数据的附魔定义:
 ;;    (defenchantment fire-aspect
 ;;      {:max-level 2
 ;;       :rarity :rare
@@ -176,7 +176,7 @@
 ;;       :effects {:on-hit (fn [level target attacker]
 ;;                           (.setSecondsOnFire target (* level 4)))}})
 ;;
-;; 2. 组合式效果系统：
+;; 2. 组合式效果系统:
 ;;    (defenchantment-effect :ignite
 ;;      (fn [level target]
 ;;        (.setSecondsOnFire target (* level 4))))
@@ -188,8 +188,8 @@
 ;;    (compose-enchantment :deadly-blade
 ;;      [:ignite 2] [:poison 1])
 ;;
-;; 3. 事件驱动模型：
-;;    附魔监听特定事件（攻击/防御/移动/挖掘等）
+;; 3. 事件驱动模型:
+;;    附魔监听特定事件( 攻击/防御/移动/挖掘等)
 ;;    使用 multimethod 根据附魔类型分发
 ;;
 ;; 建议单独创建 enchantments-dsl.clj 实现完整系统
@@ -203,13 +203,13 @@
 
 ;; 附魔效果多态分发
 (defmulti apply-enchantment-effect
-  "应用附魔效果（多态分发）
+  "应用附魔效果( 多态分发)
 
-   分发键：[effect-id event-type]"
+   分发键: [effect-id event-type]"
   (fn [effect-id event-type & _args]
     [effect-id event-type]))
 
-;; 默认实现：查找已注册的效果函数
+;; 默认实现: 查找已注册的效果函数
 (defmethod apply-enchantment-effect :default
   [effect-id event-type & args]
   (when-let [effect-map (get @enchantment-effects effect-id)]
@@ -224,8 +224,8 @@
   "注册可重用的附魔效果
 
    参数:
-   - effect-id: 效果 ID（关键字）
-   - event-type: 事件类型（:on-hit/:on-defense/:on-tick 等）
+   - effect-id: 效果 ID( 关键字)
+   - event-type: 事件类型( :on-hit/:on-defense/:on-tick 等)
    - effect-fn: 效果函数
 
    示例:
@@ -251,7 +251,7 @@
    参数:
    - effects: 效果列表 [[effect-id level] ...]
 
-   返回：组合后的效果函数
+   返回: 组合后的效果函数
 
    示例:
    ```clojure
@@ -269,7 +269,7 @@
 ;; ============================================================================
 
 (defn defenchantment
-  "定义自定义附魔（数据驱动）
+  "定义自定义附魔( 数据驱动)
 
    参数:
    - enchantment-id: 附魔 ID
@@ -284,7 +284,7 @@
 
    示例:
    ```clojure
-   ;; 方式1：直接定义效果
+   ;; 方式1: 直接定义效果
    (defenchantment :fire-aspect
      {:max-level 2
       :rarity :rare
@@ -292,7 +292,7 @@
       :effects {:on-hit (fn [level target attacker]
                           (.setSecondsOnFire target (* level 4)))}})
 
-   ;; 方式2：使用组合效果
+   ;; 方式2: 使用组合效果
    (defenchantment :deadly-blade
      {:max-level 3
       :rarity :epic
@@ -334,12 +334,12 @@
       (when-let [config (get-enchantment-config enchantment)]
         (let [effects (:effects config)]
           (cond
-            ;; 映射形式：{:on-hit fn ...}
+            ;; 映射形式: {:on-hit fn ...}
             (map? effects)
             (when-let [effect-fn (get effects event-type)]
               (apply effect-fn level args))
 
-            ;; 函数形式：组合效果
+            ;; 函数形式: 组合效果
             (fn? effects)
             (apply effects event-type args)))))))
 

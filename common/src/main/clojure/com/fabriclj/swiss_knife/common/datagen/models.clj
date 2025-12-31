@@ -1,9 +1,9 @@
 (ns com.fabriclj.swiss-knife.common.datagen.models
-  "瑞士军刀 - 数据生成：模型
+  "瑞士军刀 - 数据生成: 模型
 
    提供物品和方块模型的生成功能。
 
-   使用示例：
+   使用示例:
    ```clojure
    (require '[com.fabriclj.swiss-knife.common.datagen.models :as models])
 
@@ -30,12 +30,12 @@
 (defn item-model
   "创建物品模型数据
 
-   参数：
-   - parent: 父模型路径（如 \"minecraft:item/generated\"）
-   - textures: 纹理映射（如 {:layer0 \"mymod:item/sword\"}）
+   参数:
+   - parent: 父模型路径( 如 \"minecraft:item/generated\")
+   - textures: 纹理映射( 如 {:layer0 \"mymod:item/sword\"})
    - display: 可选，显示设置
 
-   示例：
+   示例:
    ```clojure
    (item-model \"minecraft:item/generated\"
                {:layer0 \"mymod:item/gem\"})
@@ -50,12 +50,12 @@
 (defn block-model
   "创建方块模型数据
 
-   参数：
+   参数:
    - parent: 父模型路径
    - textures: 纹理映射
    - elements: 可选，自定义元素
 
-   示例：
+   示例:
    ```clojure
    (block-model \"minecraft:block/cube_all\"
                 {:all \"mymod:block/ore\"})
@@ -68,12 +68,12 @@
      elements (assoc :elements elements))))
 
 (defn handheld-item-model
-  "创建手持物品模型（如工具、武器）
+  "创建手持物品模型( 如工具、武器)
 
-   参数：
+   参数:
    - texture-path: 纹理路径
 
-   示例：
+   示例:
    ```clojure
    (handheld-item-model \"mymod:item/magic_sword\")
    ```"
@@ -82,13 +82,13 @@
    :textures {:layer0 texture-path}})
 
 (defn generated-item-model
-  "创建生成的物品模型（如材料、食物）
+  "创建生成的物品模型( 如材料、食物)
 
-   参数：
+   参数:
    - texture-path: 纹理路径
    - layers: 可选，额外的纹理层
 
-   示例：
+   示例:
    ```clojure
    (generated-item-model \"mymod:item/gem\")
    (generated-item-model \"mymod:item/potion\"
@@ -107,10 +107,10 @@
 (defn cube-all-block-model
   "创建六面同纹理的立方体方块模型
 
-   参数：
+   参数:
    - texture-path: 纹理路径
 
-   示例：
+   示例:
    ```clojure
    (cube-all-block-model \"mymod:block/magic_ore\")
    ```"
@@ -121,10 +121,10 @@
 (defn cube-block-model
   "创建六面不同纹理的立方体方块模型
 
-   参数：
+   参数:
    - textures: 纹理映射 {:down :up :north :south :west :east :particle}
 
-   示例：
+   示例:
    ```clojure
    (cube-block-model {:down \"mymod:block/ore_bottom\"
                       :up \"mymod:block/ore_top\"
@@ -139,13 +139,13 @@
    :textures textures})
 
 (defn cube-column-block-model
-  "创建柱状方块模型（上下和侧面不同纹理）
+  "创建柱状方块模型( 上下和侧面不同纹理)
 
-   参数：
+   参数:
    - end-texture: 顶部和底部纹理
    - side-texture: 侧面纹理
 
-   示例：
+   示例:
    ```clojure
    (cube-column-block-model \"mymod:block/log_top\"
                             \"mymod:block/log_side\")
@@ -169,13 +169,13 @@
 (defn save-model!
   "保存模型到文件
 
-   参数：
-   - base-path: 基础路径（如 \"./src/main/resources\"）
-   - namespace: 命名空间（mod id）
-   - path: 相对路径（如 \"block/magic_ore\" 或 \"item/magic_sword\"）
-   - model-data: 模型数据（map）
+   参数:
+   - base-path: 基础路径( 如 \"./src/main/resources\")
+   - namespace: 命名空间( mod id)
+   - path: 相对路径( 如 \"block/magic_ore\" 或 \"item/magic_sword\")
+   - model-data: 模型数据( map)
 
-   示例：
+   示例:
    ```clojure
    (save-model! \"./src/main/resources\" \"mymod\" \"block/ore\"
                 (cube-all-block-model \"mymod:block/ore\"))
@@ -191,13 +191,13 @@
 (defn save-item-model!
   "保存物品模型
 
-   参数：
+   参数:
    - base-path: 基础路径
    - namespace: 命名空间
    - item-name: 物品名称
    - model-data: 模型数据
 
-   示例：
+   示例:
    ```clojure
    (save-item-model! \"./src/main/resources\" \"mymod\" \"magic_sword\"
                      (handheld-item-model \"mymod:item/magic_sword\"))
@@ -208,13 +208,13 @@
 (defn save-block-model!
   "保存方块模型
 
-   参数：
+   参数:
    - base-path: 基础路径
    - namespace: 命名空间
    - block-name: 方块名称
    - model-data: 模型数据
 
-   示例：
+   示例:
    ```clojure
    (save-block-model! \"./src/main/resources\" \"mymod\" \"magic_ore\"
                       (cube-all-block-model \"mymod:block/magic_ore\"))
@@ -229,13 +229,13 @@
 (defn generate-simple-items!
   "批量生成简单物品模型
 
-   参数：
+   参数:
    - base-path: 基础路径
    - namespace: 命名空间
    - item-names: 物品名称列表
-   - type: 模型类型，:generated（默认）或 :handheld
+   - type: 模型类型，:generated( 默认) 或 :handheld
 
-   示例：
+   示例:
    ```clojure
    (generate-simple-items! \"./src/main/resources\" \"mymod\"
                            [\"ruby\" \"sapphire\" \"emerald\"]
@@ -257,14 +257,14 @@
        (save-item-model! base-path namespace item-name model-data)))))
 
 (defn generate-simple-blocks!
-  "批量生成简单方块模型（cube_all）
+  "批量生成简单方块模型( cube_all)
 
-   参数：
+   参数:
    - base-path: 基础路径
    - namespace: 命名空间
    - block-names: 方块名称列表
 
-   示例：
+   示例:
    ```clojure
    (generate-simple-blocks! \"./src/main/resources\" \"mymod\"
                             [\"copper_ore\" \"tin_ore\" \"zinc_ore\"])

@@ -71,25 +71,25 @@
 
 2. **魔法宝石系统**
    - 耐久度 100，每次使用消耗 1 点耐久
-   - 右键使用：发射魔法弹（雪球弹道）
-   - 按 R 键：向前传送 10 格（需手持魔法宝石）
-   - 魔法弹命中树叶：召唤森林守卫
+   - 右键使用: 发射魔法弹（雪球弹道）
+   - 按 R 键: 向前传送 10 格（需手持魔法宝石）
+   - 魔法弹命中树叶: 召唤森林守卫
 
 3. **森林守卫战斗**
    - 敌对生物，攻击玩家
-   - 100% 掉落珍贵物品：森林之魂药水 + 自然亲和附魔书
+   - 100% 掉落珍贵物品: 森林之魂药水 + 自然亲和附魔书
    - 击败时播放升级音效
 
 4. **HUD 显示**
    - 手持魔法宝石时，左下角显示能量条
-   - 能量条颜色根据耐久度变化：绿色（高）→ 黄色（中）→ 红色（低）
+   - 能量条颜色根据耐久度变化: 绿色（高）→ 黄色（中）→ 红色（低）
 
 5. **怪物掉落**
    - 击杀普通怪物有 20% 概率掉落 1-3 个魔法碎片
    - 击杀森林守卫 100% 掉落森林之魂药水和附魔书
 
 6. **配置系统**
-   - 配置文件：`config/example/config.edn`
+   - 配置文件: `config/example/config.edn`
    - 可调整宝石威力、耐久度、粒子数量等参数
 
 7. **欢迎系统**
@@ -122,11 +122,11 @@
 #### 服务端功能
 | 功能 | 演示代码位置 | 说明 |
 |------|------------|------|
-| **物品注册** | `core.clj` L96-159 | 4 个物品：魔法宝石（带交互）、碎片、药水、附魔书 |
+| **物品注册** | `core.clj` L96-159 | 4 个物品: 魔法宝石（带交互）、碎片、药水、附魔书 |
 | **方块注册** | `core.clj` L76-89 | 魔法水晶矿（发光、需要工具、自定义掉落） |
 | **实体注册** | `core.clj` L166-178 | 森林守卫（敌对 mob，自定义掉落） |
 | **配置系统** | `core.clj` L36-61 | EDN 文件 + **配置验证器** ✨ |
-| **事件系统** | `core.clj` L198-300 | 8+ 事件：加入、Tick、击杀、破坏、弹道 |
+| **事件系统** | `core.clj` L198-300 | 8+ 事件: 加入、Tick、击杀、破坏、弹道 |
 | **玩家工具** | `core.clj` L229-345 | 物品操作、传送、消息发送 |
 | **音效系统** | 多处 | 发射音效、召唤音效、掉落音效 |
 | **网络通信** | `core.clj` L306-341 | 双向数据包、EDN 序列化 |
@@ -155,7 +155,7 @@
 
 1. **获取魔法水晶矿**
    - 首次加入游戏时自动获得 3 个
-   - 或使用命令：`/give @p example:magic_crystal_ore 3`
+   - 或使用命令: `/give @p example:magic_crystal_ore 3`
    - 放置在地上作为装饰（会发光）
 
 2. **挖掘魔法宝石**
@@ -175,7 +175,7 @@
 
 5. **击败森林守卫**
    - 森林守卫会攻击你
-   - 击败后 100% 掉落：
+   - 击败后 100% 掉落:
      - 森林之魂药水 x1
      - 自然亲和附魔书 x1
 
@@ -260,7 +260,7 @@
 ;; 3. 运行 (config/reload-config! "example")
 ;; 4. 会看到验证失败的警告
 
-;; 验证器会防止：
+;; 验证器会防止:
 ;; - 负数或零值
 ;; - 超出范围的值
 ;; - 缺失必需的键
@@ -269,7 +269,7 @@
 
 ### 配置文件编辑
 
-配置文件位于：`config/example/config.edn`
+配置文件位于: `config/example/config.edn`
 
 ```clojure
 {:magic-gem {:power 10.0              ; 魔法威力（未来版本使用）
@@ -295,10 +295,10 @@ example/
 │   │   └── mixin/
 │   │       └── ExampleMixin.java   # 示例 Mixin（玩家跳跃钩子）
 │   ├── clojure/com/example/
-│   │   ├── core.clj                # 主逻辑：物品注册、事件、配置
-│   │   ├── client.clj              # 客户端：按键、HUD、粒子
+│   │   ├── core.clj                # 主逻辑: 物品注册、事件、配置
+│   │   ├── client.clj              # 客户端: 按键、HUD、粒子
 │   │   ├── hooks.clj               # Mixin 钩子实现
-│   │   └── datagen.clj             # ✨ DataGen：自动生成资源文件
+│   │   └── datagen.clj             # ✨ DataGen: 自动生成资源文件
 │   └── resources/
 │       ├── fabric.mod.json         # Mod 元数据配置
 │       └── example.mixins.json     # Mixin 配置
@@ -338,7 +338,7 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### 调试方式
 
-#### 方式 1：使用 nREPL（强烈推荐）
+#### 方式 1: 使用 nREPL（强烈推荐）
 
 **这是最快的开发方式！无需重启游戏即可测试代码修改。**
 
@@ -348,7 +348,7 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
    ```
 
 2. **确认 nREPL 已启动**
-   查看控制台输出：
+   查看控制台输出:
    ```
    [ExampleMod] 检测到开发模式，启动 nREPL 服务器...
    [nREPL] Server started on 127.0.0.1:7888
@@ -395,32 +395,32 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 5. **修改代码并重新求值**
    - 修改 `.clj` 文件
    - 光标放在函数上 → `Alt+Enter` 重新求值
-   - 或重新加载整个文件：`Ctrl+Alt+C Enter`
+   - 或重新加载整个文件: `Ctrl+Alt+C Enter`
    - 修改立即生效，无需重启游戏！
 
-#### 方式 2：日志调试
+#### 方式 2: 日志调试
 
 ```clojure
 ;; 在代码中添加日志
 (require '[com.fabriclj.swiss-knife :as mb])
 
-(mb/log-info "调试信息：" some-value)
+(mb/log-info "调试信息: " some-value)
 (mb/log-warn "警告信息")
 (mb/log-error "错误信息")
 ```
 
-日志输出到：
+日志输出到:
 - 控制台
 - `example/run/logs/latest.log`
 
-#### 方式 3：使用 IDE 调试器（高级）
+#### 方式 3: 使用 IDE 调试器（高级）
 
-1. 在 VS Code 中配置 Java 调试：
+1. 在 VS Code 中配置 Java 调试:
    - 打开 Run and Debug 面板
-   - 添加配置：`Java: Attach`
+   - 添加配置: `Java: Attach`
    - Port: `5005`
 
-2. 以调试模式启动游戏：
+2. 以调试模式启动游戏:
    ```bash
    .\gradlew.bat :example:runClient --debug-jvm
    ```
@@ -429,20 +429,20 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### 热重载开发流程（推荐）
 
-典型工作流程：
+典型工作流程:
 
 ```
 1. 启动游戏 → 2. 连接 nREPL → 3. 修改代码 → 4. 重新求值 → 5. 游戏内测试 → 6. 重复 3-5
 ```
 
-**优势**：
+**优势**:
 - ⚡ 快速迭代（秒级反馈）
 - 🔄 无需重启游戏
 - 🧪 可以在 REPL 中实验代码
 - 🐛 实时调试和修复
 
-**注意**：
-- 如果函数被 `ClojureBridge` 调用（如 Mixin 钩子），需要清除缓存：
+**注意**:
+- 如果函数被 `ClojureBridge` 调用（如 Mixin 钩子），需要清除缓存:
   ```clojure
   (com.fabriclj.ClojureBridge/clearCache "com.example.hooks")
   ```
@@ -463,7 +463,7 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 ;; 3. 重新注册
 (reg/register-all! items-registry)
 
-;; 4. 在游戏中使用命令获取：
+;; 4. 在游戏中使用命令获取:
 ;; /give @p example:my_new_item
 ```
 
@@ -471,10 +471,10 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ```clojure
 ;; 1. 编辑 config/example/config.edn
-;; 2. 在游戏中执行命令重新加载：
+;; 2. 在游戏中执行命令重新加载:
 ;; /reload
 
-;; 或在 nREPL 中：
+;; 或在 nREPL 中:
 (config/reload-config! "example")
 ```
 
@@ -484,7 +484,7 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 ;; 在 core.clj 的 setup-events! 函数中添加
 (events/on-block-break
   (fn [level pos state player]
-    (println "方块被破坏：" state)
+    (println "方块被破坏: " state)
     (events/event-pass)))
 
 ;; 重新求值 setup-events! 函数
@@ -555,9 +555,9 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### Q: nREPL 未启动
 
-**原因**：不在开发模式，或端口被占用
+**原因**: 不在开发模式，或端口被占用
 
-**解决**：
+**解决**:
 ```clojure
 ;; 检查开发模式
 (com.fabriclj.core/dev-mode?) ;; 应该返回 true
@@ -568,11 +568,11 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### Q: 魔法宝石使用后没有粒子效果
 
-**原因**：客户端网络处理器可能未正确注册
+**原因**: 客户端网络处理器可能未正确注册
 
-**解决**：
+**解决**:
 1. 检查控制台是否有错误信息
-2. 在 nREPL 中验证：
+2. 在 nREPL 中验证:
    ```clojure
    (in-ns 'com.example.client)
    (spawn-gem-particles [0 64 0])  ; 应该看到粒子效果
@@ -580,9 +580,9 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### Q: HUD 不显示
 
-**原因**：HUD 渲染器未注册，或不在客户端
+**原因**: HUD 渲染器未注册，或不在客户端
 
-**解决**：
+**解决**:
 ```clojure
 ;; 重新注册 HUD
 (in-ns 'com.example.client)
@@ -594,18 +594,18 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### Q: 按 R 键没有反应
 
-**原因**：按键未绑定，或未手持魔法宝石
+**原因**: 按键未绑定，或未手持魔法宝石
 
-**解决**：
+**解决**:
 1. 确保手持魔法宝石
-2. 检查按键是否冲突：`选项 → 控制 → 按键绑定`
+2. 检查按键是否冲突: `选项 → 控制 → 按键绑定`
 3. 重新绑定按键
 
 ### Q: 配置修改不生效
 
-**原因**：配置未重新加载
+**原因**: 配置未重新加载
 
-**解决**：
+**解决**:
 ```clojure
 ;; 在游戏中执行
 /reload
@@ -616,9 +616,9 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### Q: ClassNotFoundException 或 NoClassDefFoundError
 
-**原因**：依赖配置错误
+**原因**: 依赖配置错误
 
-**解决**：
+**解决**:
 ```bash
 # 清理并重新构建
 .\gradlew.bat clean :example:build
@@ -640,7 +640,7 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### 📚 学习路径
 
-#### 第一步：理解项目结构（30 分钟）
+#### 第一步: 理解项目结构（30 分钟）
 
 1. **阅读 `core.clj`** - 理解初始化流程
    - 配置加载（L36-61）
@@ -662,7 +662,7 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
    - 方块状态生成
    - 多语言支持
 
-#### 第二步：运行和测试（1 小时）
+#### 第二步: 运行和测试（1 小时）
 
 1. **启动游戏**
    ```bash
@@ -682,7 +682,7 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
    - 修改配置值并重载
    - 修改函数并热重载
 
-#### 第三步：深入学习（2-3 小时）
+#### 第三步: 深入学习（2-3 小时）
 
 1. **研究每个功能的实现**
    - 物品的 `use` 方法如何实现交互
@@ -712,9 +712,9 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
    (players/give-item! p Items/DIAMOND 64)
    ```
 
-#### 第四步：扩展功能（根据兴趣）
+#### 第四步: 扩展功能（根据兴趣）
 
-尝试添加以下功能来练习：
+尝试添加以下功能来练习:
 
 1. **合成配方** ✨
    - 使用魔法碎片合成魔法宝石

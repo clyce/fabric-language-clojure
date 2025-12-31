@@ -1,19 +1,19 @@
 (ns com.fabriclj.swiss-knife.common.data.profiler
   "性能分析工具
 
-   提供全面的性能测量和分析功能：
+   提供全面的性能测量和分析功能:
    - 代码执行时间分析
    - 内存使用监控
-   - TPS（每秒Tick数）监控
+   - TPS( 每秒Tick数) 监控
    - 实体/方块/区块性能统计
    - 性能热点识别
    - 性能报告生成"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [java.lang.management ManagementFactory MemoryMXBean]
-           [java.util.concurrent ConcurrentHashMap]
-           [net.minecraft.server MinecraftServer]
-           [net.minecraft.world.level Level]
-           [net.minecraft.world.entity Entity]))
+  (:import (java.lang.management ManagementFactory MemoryMXBean)
+           (java.util.concurrent ConcurrentHashMap)
+           (net.minecraft.server MinecraftServer)
+           (net.minecraft.world.level Level)
+           (net.minecraft.world.entity Entity)))
 
 (set! *warn-on-reflection* true)
 
@@ -30,15 +30,15 @@
 ;; ============================================================================
 
 (defmacro profile
-  "性能分析宏：测量代码块执行时间
+  "性能分析宏: 测量代码块执行时间
 
    参数:
-   - name: 分析标识（字符串或关键字）
+   - name: 分析标识( 字符串或关键字)
    - body: 要分析的代码
 
-   返回：代码块的返回值
+   返回: 代码块的返回值
 
-   注意：
+   注意:
    - 标识符会自动添加当前命名空间作为前缀，避免冲突
    - 例如在 com.example.core 中调用 (profile :my-fn ...)
      实际标识符将为 :com.example.core/my-fn
@@ -68,11 +68,11 @@
   "分析函数执行时间
 
    参数:
-   - name: 分析标识（会自动添加调用者的命名空间前缀）
+   - name: 分析标识( 会自动添加调用者的命名空间前缀)
    - f: 要分析的函数
    - args: 函数参数
 
-   返回：函数返回值
+   返回: 函数返回值
 
    示例:
    ```clojure
@@ -102,7 +102,7 @@
 
    参数:
    - name: 标识
-   - duration-ns: 持续时间（纳秒）
+   - duration-ns: 持续时间( 纳秒)
 
    内部使用"
   [name duration-ns]
@@ -126,9 +126,9 @@
   "获取时间统计数据
 
    参数:
-   - name: 分析标识（可选，如果不提供则返回所有）
+   - name: 分析标识( 可选，如果不提供则返回所有)
 
-   返回：统计数据映射
+   返回: 统计数据映射
 
    示例:
    ```clojure
@@ -176,7 +176,7 @@
 (defn get-memory-usage
   "获取当前内存使用情况
 
-   返回：内存使用映射
+   返回: 内存使用映射
    {:heap-used-mb float
     :heap-max-mb float
     :heap-usage-percent float
@@ -207,7 +207,7 @@
    - name: 分析标识
    - body: 要分析的代码
 
-   返回：{:result 代码返回值
+   返回: {:result 代码返回值
           :memory-before 执行前内存
           :memory-after 执行后内存
           :memory-delta 内存变化}
@@ -238,7 +238,7 @@
 (def ^:private max-tps-history 100)
 
 (defn record-tps!
-  "记录 TPS（每秒Tick数）
+  "记录 TPS( 每秒Tick数)
 
    参数:
    - tps: 当前 TPS 值
@@ -256,7 +256,7 @@
 (defn get-tps-stats
   "获取 TPS 统计
 
-   返回：{:current float
+   返回: {:current float
           :average float
           :min float
           :max float
@@ -279,12 +279,12 @@
        :history history})))
 
 (defn get-server-tps
-  "获取服务器当前 TPS（通过平均 tick 时间计算）
+  "获取服务器当前 TPS( 通过平均 tick 时间计算)
 
    参数:
    - server: MinecraftServer
 
-   返回：TPS 值（理想值为 20.0）"
+   返回: TPS 值( 理想值为 20.0) "
   [^MinecraftServer server]
   (let [tick-times (.tickTimes server)
         avg-tick-time (/ (reduce + tick-times) (count tick-times))
@@ -303,7 +303,7 @@
 
    参数:
    - entity-type: 实体类型
-   - duration-ns: 持续时间（纳秒）"
+   - duration-ns: 持续时间( 纳秒) "
   [entity-type duration-ns]
   (swap! entity-stats update entity-type
          (fn [current]
@@ -316,7 +316,7 @@
 (defn get-entity-performance
   "获取实体性能统计
 
-   返回：实体类型 -> 统计数据的映射
+   返回: 实体类型 -> 统计数据的映射
 
    示例:
    ```clojure
@@ -333,9 +333,9 @@
   "获取导致延迟最严重的实体类型
 
    参数:
-   - n: 返回前 N 个（默认 10）
+   - n: 返回前 N 个( 默认 10)
 
-   返回：[{:type entity-type :avg-ms float :count int}]"
+   返回: [{:type entity-type :avg-ms float :count int}]"
   [& [n]]
   (let [limit (or n 10)
         stats (get-entity-performance)]
@@ -355,13 +355,13 @@
 
    参数:
    - opts: 选项
-     - :include-timing? - 包含时间统计（默认 true）
-     - :include-memory? - 包含内存统计（默认 true）
-     - :include-tps? - 包含 TPS 统计（默认 true）
-     - :include-entities? - 包含实体统计（默认 true）
-     - :top-n - 显示前 N 个热点（默认 10）
+     - :include-timing? - 包含时间统计( 默认 true)
+     - :include-memory? - 包含内存统计( 默认 true)
+     - :include-tps? - 包含 TPS 统计( 默认 true)
+     - :include-entities? - 包含实体统计( 默认 true)
+     - :top-n - 显示前 N 个热点( 默认 10)
 
-   返回：性能报告映射
+   返回: 性能报告映射
 
    示例:
    ```clojure
@@ -397,7 +397,7 @@
   "打印性能报告到控制台
 
    参数:
-   - report: 性能报告（由 generate-performance-report 生成）
+   - report: 性能报告( 由 generate-performance-report 生成)
 
    示例:
    ```clojure
@@ -452,7 +452,7 @@
 (defn stop-monitoring!
   "停止性能监控并生成报告
 
-   返回：性能报告"
+   返回: 性能报告"
   []
   (let [report (generate-performance-report)]
     (print-performance-report report)
@@ -513,7 +513,7 @@
 
   ;; ========== TPS 监控 ==========
 
-  ;; 8. 记录 TPS（在 tick 事件中）
+  ;; 8. 记录 TPS( 在 tick 事件中)
   (events/on-server-tick
     (fn [server]
       (record-tps! (get-server-tps server))))

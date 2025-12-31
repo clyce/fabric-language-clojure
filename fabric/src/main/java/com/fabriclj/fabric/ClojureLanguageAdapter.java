@@ -26,7 +26,7 @@ import java.lang.reflect.Proxy;
  *
  * <h2>使用示例</h2>
  * <p>
- * 在 {@code fabric.mod.json} 中：
+ * 在 {@code fabric.mod.json} 中:
  *
  * <pre>{@code
  * {

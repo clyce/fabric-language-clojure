@@ -3,12 +3,12 @@
 
    提供在游戏界面上绘制自定义 HUD 元素的功能。
 
-   注意：此命名空间仅在客户端环境可用！"
+   注意: 此命名空间仅在客户端环境可用！"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.client.rendering.core :as render]
             [com.fabriclj.swiss-knife.client.events.core :as events]
             [com.fabriclj.swiss-knife.client.platform.core :as client])
-  (:import [net.minecraft.client.gui.GuiGraphics]))
+  (:import (net.minecraft.client.gui GuiGraphics)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -24,10 +24,10 @@
 
    参数:
    - renderer: 渲染函数 (fn [^GuiGraphics graphics delta-time] ...)
-   - priority: 渲染优先级（数字越小越先渲染，默认 0）
-   - id: 渲染器 ID（可选，用于后续移除）
+   - priority: 渲染优先级( 数字越小越先渲染，默认 0)
+   - id: 渲染器 ID( 可选，用于后续移除)
 
-   返回：渲染器 ID
+   返回: 渲染器 ID
 
    示例:
    ```clojure
@@ -71,11 +71,11 @@
 (defn init-hud-system!
   "初始化 HUD 系统
 
-   注意：必须在客户端初始化时调用一次！"
+   注意: 必须在客户端初始化时调用一次！"
   []
   (events/on-screen-render-post
    (fn [screen graphics mouse-x mouse-y delta]
-     (when (nil? screen)  ; 仅在没有 GUI 时渲染（即游戏中）
+     (when (nil? screen)  ; 仅在没有 GUI 时渲染( 即游戏中)
        (doseq [{:keys [renderer]} @hud-renderers]
          (try
            (renderer graphics delta)
@@ -90,24 +90,24 @@
 (defn get-screen-center
   "获取屏幕中心坐标
 
-   返回：{:x x :y y}"
+   返回: {:x x :y y}"
   []
   (let [{:keys [width height]} (client/get-window-size)]
     {:x (/ width 2)
      :y (/ height 2)}))
 
 (defn get-top-left
-  "获取屏幕左上角坐标（带边距）
+  "获取屏幕左上角坐标( 带边距)
 
    参数:
-   - margin: 边距（默认 5）"
+   - margin: 边距( 默认 5) "
   ([]
    (get-top-left 5))
   ([margin]
    {:x margin :y margin}))
 
 (defn get-top-right
-  "获取屏幕右上角坐标（带边距）"
+  "获取屏幕右上角坐标( 带边距) "
   ([]
    (get-top-right 5))
   ([margin]
@@ -115,7 +115,7 @@
      {:x (- width margin) :y margin})))
 
 (defn get-bottom-left
-  "获取屏幕左下角坐标（带边距）"
+  "获取屏幕左下角坐标( 带边距) "
   ([]
    (get-bottom-left 5))
   ([margin]
@@ -123,7 +123,7 @@
      {:x margin :y (- height margin)})))
 
 (defn get-bottom-right
-  "获取屏幕右下角坐标（带边距）"
+  "获取屏幕右下角坐标( 带边距) "
   ([]
    (get-bottom-right 5))
   ([margin]
@@ -141,8 +141,8 @@
    - graphics: GuiGraphics
    - text: 文本
    - pos: 位置 {:x x :y y}
-   - color: 颜色（可选，默认白色）
-   - shadow?: 是否有阴影（可选，默认 true）"
+   - color: 颜色( 可选，默认白色)
+   - shadow?: 是否有阴影( 可选，默认 true) "
   ([^GuiGraphics graphics text pos]
    (draw-text-hud graphics text pos 0xFFFFFF true))
   ([^GuiGraphics graphics text pos color]
@@ -160,7 +160,7 @@
    - value: 当前值
    - max-value: 最大值
    - bar-color: 进度条颜色
-   - bg-color: 背景颜色（可选）
+   - bg-color: 背景颜色( 可选)
 
    示例:
    ```clojure
@@ -183,7 +183,7 @@
    - graphics: GuiGraphics
    - item-stack: ItemStack
    - pos: 位置 {:x x :y y}
-   - show-count?: 是否显示数量（可选，默认 true）"
+   - show-count?: 是否显示数量( 可选，默认 true) "
   ([^GuiGraphics graphics item-stack pos]
    (draw-item-hud graphics item-stack pos true))
   ([^GuiGraphics graphics item-stack {:keys [x y]} show-count?]
@@ -196,21 +196,33 @@
 ;; ============================================================================
 
 (defmacro defhud
-  "定义 HUD 渲染器（语法糖）
+  "定义 HUD 渲染器( 语法糖)
 
    示例:
    ```clojure
-   (defhud my-hud :priority 0
+   (defhud my-hud
      [graphics delta]
      (let [pos (get-top-left 10)]
        (draw-text-hud graphics \"My HUD\" pos)))
    ```"
-  [hud-name & {:keys [priority] :or {priority 0} :as opts} binding & body]
-  `(def ~hud-name
-     (register-hud-renderer!
-      (fn ~binding ~@body)
-      ~priority
-      ~(keyword hud-name))))
+  ([hud-name binding & body]
+   `(def ~hud-name
+      (register-hud-renderer!
+       (fn ~binding ~@body)
+       0
+       ~(keyword hud-name))))
+  ([hud-name priority binding & body]
+   (if (keyword? priority)
+     `(def ~hud-name
+        (register-hud-renderer!
+         (fn ~binding ~@body)
+         0
+         ~(keyword hud-name)))
+     `(def ~hud-name
+        (register-hud-renderer!
+         (fn ~priority ~@(cons binding body))
+         0
+         ~(keyword hud-name))))))
 
 (comment
   ;; 使用示例

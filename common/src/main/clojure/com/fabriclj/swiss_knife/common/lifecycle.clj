@@ -1,15 +1,15 @@
 (ns com.fabriclj.swiss-knife.common.lifecycle
   "瑞士军刀 - 生命周期管理模块
 
-   **模块定位**：统一的初始化和资源管理
+   **模块定位**: 统一的初始化和资源管理
 
-   **核心功能**：
+   **核心功能**:
    - 统一的初始化入口
    - 正确的模块加载顺序
    - 资源清理和关闭管理
    - 客户端/服务端分离初始化
 
-   **使用示例**：
+   **使用示例**:
    ```clojure
 
    ;; mod 主类 common init
@@ -22,17 +22,17 @@
      {:enable-hud? true
       :enable-debug? true})
 
-   ;; mod 卸载时（如果需要）
+   ;; mod 卸载时( 如果需要)
    (lifecycle/shutdown! \"mymod\")
    ```
 
-   **初始化顺序**：
+   **初始化顺序**:
    1. Common: 配置系统 → 网络系统 → 注册系统
    2. Client: HUD系统 → 调试系统 → 渲染系统
 
-   **为什么需要这个模块**：
+   **为什么需要这个模块**:
    - 避免用户忘记初始化某些系统
-   - 确保初始化顺序正确（例如网络系统必须在配置同步之前初始化）
+   - 确保初始化顺序正确( 例如网络系统必须在配置同步之前初始化)
    - 提供统一的资源清理机制
    - 减少样板代码"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
@@ -64,18 +64,18 @@
 ;; ============================================================================
 
 (defn init-common!
-  "初始化通用模块（服务端+客户端共用）
+  "初始化通用模块( 服务端+客户端共用)
 
-   **参数**：
-   - mod-id: Mod ID（字符串）
-   - opts: 初始化选项（可选）
+   **参数**:
+   - mod-id: Mod ID( 字符串)
+   - opts: 初始化选项( 可选)
 
-   **选项**：
-   - `:enable-generic-packets?` - 启用通用数据包系统（默认 false）
-   - `:enable-config-sync?` - 启用配置同步系统（默认 false）
-   - `:packet-channel-name` - 自定义数据包通道名称（默认 \"swiss_knife_generic\"）
+   **选项**:
+   - `:enable-generic-packets?` - 启用通用数据包系统( 默认 false)
+   - `:enable-config-sync?` - 启用配置同步系统( 默认 false)
+   - `:packet-channel-name` - 自定义数据包通道名称( 默认 \"swiss_knife_generic\")
 
-   **示例**：
+   **示例**:
    ```clojure
 
    ;; 最小配置
@@ -92,7 +92,7 @@
       :packet-channel-name \"mymod_packets\"})
    ```
 
-   **注意**：
+   **注意**:
    - 必须在 mod 主类的 common 初始化阶段调用
    - 如果启用配置同步，会自动启用通用数据包系统
    - 此函数幂等，重复调用不会有副作用"
@@ -102,7 +102,7 @@
    (when-not (initialized? :common mod-id :core)
      (core/log-info "[Swiss Knife]" "Initializing common modules for" mod-id)
 
-     ;; 1. 初始化通用数据包系统（如果需要）
+     ;; 1. 初始化通用数据包系统( 如果需要)
      (when (or (:enable-generic-packets? opts)
                (:enable-config-sync? opts))
        (let [channel-name (:packet-channel-name opts "swiss_knife_generic")]
@@ -110,11 +110,11 @@
          (network/init-generic-packet-system! mod-id {:channel-name channel-name})
          (mark-initialized! :common mod-id :generic-packets)))
 
-     ;; 2. 初始化配置同步系统（如果需要）
-     (when (:enable-config-sync? opts)
-       (core/log-info "[Swiss Knife]" "  - Initializing config sync system")
-       (config-sync/register-config-sync-packets! mod-id)
-       (mark-initialized! :common mod-id :config-sync))
+    ;; 2. 初始化配置同步系统( 如果需要)
+    (when (:enable-config-sync? opts)
+      (core/log-info "[Swiss Knife]" "  - Initializing config sync system")
+      (config-sync/register-config-sync-packets!)
+      (mark-initialized! :common mod-id :config-sync))
 
      (mark-initialized! :common mod-id :core)
      (core/log-info "[Swiss Knife]" "Common initialization complete for" mod-id))))
@@ -126,15 +126,15 @@
 (defn init-client!
   "初始化客户端模块
 
-   **参数**：
-   - mod-id: Mod ID（字符串）
-   - opts: 初始化选项（可选）
+   **参数**:
+   - mod-id: Mod ID( 字符串)
+   - opts: 初始化选项( 可选)
 
-   **选项**：
-   - `:enable-hud?` - 启用 HUD 系统（默认 false）
-   - `:enable-debug?` - 启用调试渲染系统（默认 false）
+   **选项**:
+   - `:enable-hud?` - 启用 HUD 系统( 默认 false)
+   - `:enable-debug?` - 启用调试渲染系统( 默认 false)
 
-   **示例**：
+   **示例**:
    ```clojure
 
    ;; 最小配置
@@ -150,7 +150,7 @@
       :enable-debug? true})
    ```
 
-   **注意**：
+   **注意**:
    - 必须在 mod 主类的 client 初始化阶段调用
    - 只能在客户端调用
    - 此函数幂等，重复调用不会有副作用"
@@ -161,7 +161,7 @@
      (when-not (initialized? :client mod-id :core)
        (core/log-info "[Swiss Knife]" "Initializing client modules for" mod-id)
 
-       ;; 1. 初始化 HUD 系统（如果需要）
+       ;; 1. 初始化 HUD 系统( 如果需要)
        (when (:enable-hud? opts)
          (core/log-info "[Swiss Knife]" "  - Initializing HUD system")
          (try
@@ -171,7 +171,7 @@
            (catch Exception e
              (core/log-error "[Swiss Knife]" "Failed to initialize HUD system:" (.getMessage e)))))
 
-       ;; 2. 初始化调试系统（如果需要）
+       ;; 2. 初始化调试系统( 如果需要)
        (when (:enable-debug? opts)
          (core/log-info "[Swiss Knife]" "  - Initializing debug system")
          (try
@@ -191,22 +191,22 @@
 (defn shutdown!
   "清理和关闭所有已初始化的系统
 
-   **参数**：
-   - mod-id: Mod ID（字符串）
+   **参数**:
+   - mod-id: Mod ID( 字符串)
 
-   **功能**：
+   **功能**:
    - 清理所有注册的事件处理器
    - 清理网络系统资源
-   - 清理客户端渲染资源（如果在客户端）
+   - 清理客户端渲染资源( 如果在客户端)
 
-   **示例**：
+   **示例**:
    ```clojure
 
    ;; mod 卸载时
    (lifecycle/shutdown! \"mymod\")
    ```
 
-   **注意**：
+   **注意**:
    - 通常不需要手动调用，Minecraft 会自动清理
    - 主要用于开发时的热重载或测试"
   [mod-id]
@@ -234,10 +234,10 @@
 (defn get-initialization-status
   "获取指定 mod 的初始化状态
 
-   **参数**：
-   - mod-id: Mod ID（字符串）
+   **参数**:
+   - mod-id: Mod ID( 字符串)
 
-   **返回**：
+   **返回**:
    ```clojure
 
    {:common {:core true
@@ -252,7 +252,7 @@
    :client (get-in @initialization-state [:client mod-id] {})})
 
 (defn print-initialization-status
-  "打印所有 mod 的初始化状态（用于调试）"
+  "打印所有 mod 的初始化状态( 用于调试) "
   []
   (core/log-info "[Swiss Knife] Initialization Status:")
   (doseq [[side mods] @initialization-state]

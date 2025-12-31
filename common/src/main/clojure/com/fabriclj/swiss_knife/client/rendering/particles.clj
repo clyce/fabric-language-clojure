@@ -3,13 +3,13 @@
 
    提供便捷的粒子效果生成和控制功能。
 
-   注意：此命名空间仅在客户端环境可用！"
+   注意: 此命名空间仅在客户端环境可用！"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.client Minecraft]
-           [net.minecraft.client.particle ParticleEngine]
-           [net.minecraft.core.particles ParticleOptions ParticleTypes SimpleParticleType]
-           [net.minecraft.world.phys Vec3]
-           [net.minecraft.world.level Level]))
+  (:import (net.minecraft.client Minecraft)
+           (net.minecraft.client.particle ParticleEngine)
+           (net.minecraft.core.particles ParticleOptions ParticleTypes SimpleParticleType)
+           (net.minecraft.world.phys Vec3)
+           (net.minecraft.world.level Level)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -21,7 +21,7 @@
 (defn get-particle-engine
   "获取粒子引擎
 
-   返回：ParticleEngine"
+   返回: ParticleEngine"
   ^ParticleEngine []
   (.particleEngine (Minecraft/getInstance)))
 
@@ -109,9 +109,9 @@
   "获取粒子类型
 
    参数:
-   - type: 粒子类型（关键字或 ParticleOptions）
+   - type: 粒子类型( 关键字或 ParticleOptions)
 
-   返回：ParticleOptions"
+   返回: ParticleOptions"
   ^ParticleOptions [type]
   (if (keyword? type)
     (get particle-types type)
@@ -125,9 +125,9 @@
   "生成单个粒子
 
    参数:
-   - particle-type: 粒子类型（关键字或 ParticleOptions）
-   - x, y, z: 位置（或 Vec3 或向量 [x y z]）
-   - vx, vy, vz: 速度（可选，默认 0）
+   - particle-type: 粒子类型( 关键字或 ParticleOptions)
+   - x, y, z: 位置( 或 Vec3 或向量 [x y z])
+   - vx, vy, vz: 速度( 可选，默认 0)
 
    示例:
    ```clojure
@@ -190,7 +190,7 @@
    - radius: 半径
    - count: 粒子数量
    - opts: 可选参数
-     - :vertical? - 是否垂直圆（默认 false，水平圆）
+     - :vertical? - 是否垂直圆( 默认 false，水平圆)
      - :speed - 粒子速度
 
    示例:
@@ -206,13 +206,13 @@
     (dotimes [i count]
       (let [angle (* i angle-step)]
         (if vertical?
-          ;; 垂直圆（XY 平面）
+          ;; 垂直圆( XY 平面)
           (spawn-particle! particle-type
                            [(+ cx (* radius (Math/cos angle)))
                             (+ cy (* radius (Math/sin angle)))
                             cz]
                            0.0 0.0 0.0)
-          ;; 水平圆（XZ 平面）
+          ;; 水平圆( XZ 平面)
           (spawn-particle! particle-type
                            [(+ cx (* radius (Math/cos angle)))
                             cy
@@ -281,7 +281,7 @@
    - height: 高度
    - count: 粒子数量
    - opts: 可选参数
-     - :turns - 螺旋圈数（默认 2）
+     - :turns - 螺旋圈数( 默认 2)
 
    示例:
    ```clojure
@@ -311,7 +311,7 @@
 
    参数:
    - pos: 位置
-   - size: 大小（:small/:medium/:large）"
+   - size: 大小( :small/:medium/:large) "
   [pos & [size]]
   (let [size (or size :medium)
         [count spread] (case size
@@ -367,11 +367,11 @@
   "开始持续粒子效果
 
    参数:
-   - id: 效果 ID（用于停止）
+   - id: 效果 ID( 用于停止)
    - effect-fn: 效果函数 (fn [] ...)
-   - interval: 间隔（tick）
+   - interval: 间隔( tick)
 
-   返回：效果 ID
+   返回: 效果 ID
 
    示例:
    ```clojure
@@ -395,9 +395,9 @@
   (swap! active-effects dissoc id))
 
 (defn tick-continuous-effects!
-  "更新持续粒子效果（需要在客户端 tick 中调用）
+  "更新持续粒子效果( 需要在客户端 tick 中调用)
 
-   注意：需要在客户端初始化时注册到 tick 事件"
+   注意: 需要在客户端初始化时注册到 tick 事件"
   []
   (doseq [[id {:keys [fn interval counter]}] @active-effects]
     (let [new-counter (inc counter)]

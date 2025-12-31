@@ -1,15 +1,15 @@
 (ns com.fabriclj.swiss-knife.common.builders.runtime
   "瑞士军刀 - 链式构建器模块
 
-   **模块定位**：运行时链式API，提供流畅的属性构建
-   
-   **与 dsl 模块的关系**：
+   **模块定位**: 运行时链式API，提供流畅的属性构建
+
+   **与 dsl 模块的关系**:
    - `dsl.clj` - 编译时宏展开，适合静态配置，代码简洁
    - `builders.clj` - 运行时链式API，适合动态构建，组合灵活
-   
-   **使用场景**：
+
+   **使用场景**:
    ```clojure
-   ;; 使用场景 1：需要运行时决定属性
+   ;; 使用场景 1: 需要运行时决定属性
    (defn create-tiered-item [tier]
      (let [props (cond-> (item-properties)
                    (= tier :common) (with-stack-size 64)
@@ -19,39 +19,39 @@
                                       (with-rarity :epic)
                                       fireproof))]
        (Item. props)))
-   
-   ;; 使用场景 2：复杂的条件组合
+
+   ;; 使用场景 2: 复杂的条件组合
    (let [props (-> (item-properties)
                    (with-stack-size 16)
                    (cond-> is-rare? (with-rarity :rare))
                    (cond-> is-fireproof? fireproof)
                    (cond-> is-food? (with-food food-props)))]
      (Item. props))
-   
-   ;; 使用场景 3：函数式组合
+
+   ;; 使用场景 3: 函数式组合
    (defn apply-tier-modifiers [props tier]
      (case tier
        :wood (with-durability props 59)
        :stone (with-durability props 131)
        :iron (with-durability props 250)))
-   
+
    ;; 如果配置是静态的，推荐使用 dsl 宏更简洁
    (def props (-> (item-properties)
                   (with-stack-size 64)
                   (with-rarity :rare)))
-   ;; 应改为：(defitem+ items my-item \"my_item\" :stack-size 64 :rarity :rare)
+   ;; 应改为: (defitem+ items my-item \"my_item\" :stack-size 64 :rarity :rare)
    ```
-   
-   **提示**：如果配置是编译时常量，使用 `dsl` 宏更简洁。"
+
+   **提示**: 如果配置是编译时常量，使用 `dsl` 宏更简洁。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.item Item Item$Properties ItemStack]
-           [net.minecraft.world.level.block Block Block$Properties]
-           [net.minecraft.world.level.block.state BlockBehaviour BlockBehaviour$Properties]
-           [net.minecraft.world.food FoodProperties FoodProperties$Builder]
-           [net.minecraft.world.item Rarity CreativeModeTab CreativeModeTab$Builder]
-           [net.minecraft.world.entity.ai.attributes AttributeModifier AttributeModifier$Operation]
-           [net.minecraft.network.chat Component]
-           [net.minecraft.resources ResourceLocation]))
+  (:import (net.minecraft.world.item Item Item$Properties ItemStack)
+           (net.minecraft.world.level.block Block Block$Properties)
+           (net.minecraft.world.level.block.state BlockBehaviour BlockBehaviour$Properties)
+           (net.minecraft.world.food FoodProperties FoodProperties$Builder)
+           (net.minecraft.world.item Rarity CreativeModeTab CreativeModeTab$Builder)
+           (net.minecraft.world.entity.ai.attributes AttributeModifier AttributeModifier$Operation)
+           (net.minecraft.network.chat Component)
+           (net.minecraft.resources ResourceLocation)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -63,7 +63,7 @@
 (defn item-properties
   "创建物品属性构建器
 
-   返回：Item$Properties
+   返回: Item$Properties
 
    示例:
    ```clojure
@@ -121,7 +121,7 @@
 (defn food-properties
   "创建食物属性构建器
 
-   返回：FoodProperties$Builder
+   返回: FoodProperties$Builder
 
    示例:
    ```clojure
@@ -163,7 +163,7 @@
 (defn build-food
   "构建食物属性
 
-   返回：FoodProperties"
+   返回: FoodProperties"
   ^FoodProperties [^FoodProperties$Builder builder]
   (.build builder))
 
@@ -174,7 +174,7 @@
 (defn block-properties
   "创建方块属性构建器
 
-   返回：BlockBehaviour$Properties
+   返回: BlockBehaviour$Properties
 
    示例:
    ```clojure
@@ -192,7 +192,7 @@
 
    参数:
    - hardness: 硬度
-   - resistance: 抗性（可选，默认等于硬度）"
+   - resistance: 抗性( 可选，默认等于硬度) "
   (^BlockBehaviour$Properties [props hardness]
    (with-strength props hardness hardness))
   (^BlockBehaviour$Properties [^BlockBehaviour$Properties props hardness resistance]
@@ -246,9 +246,9 @@
 
    参数:
    - item: Item
-   - count: 数量（可选，默认 1）
+   - count: 数量( 可选，默认 1)
 
-   返回：ItemStack
+   返回: ItemStack
 
    示例:
    ```clojure
@@ -287,7 +287,7 @@
 (defn creative-tab
   "创建创造模式标签页构建器
 
-   返回：CreativeModeTab$Builder
+   返回: CreativeModeTab$Builder
 
    示例:
    ```clojure
@@ -334,7 +334,7 @@
 (defn build-tab
   "构建创造模式标签页
 
-   返回：CreativeModeTab"
+   返回: CreativeModeTab"
   ^CreativeModeTab [^CreativeModeTab$Builder builder]
   (.build builder))
 
@@ -348,7 +348,7 @@
    参数:
    - opts: {:stack-size :durability :rarity :fireproof?}
 
-   返回：Item$Properties
+   返回: Item$Properties
 
    示例:
    ```clojure
@@ -369,7 +369,7 @@
    参数:
    - opts: {:nutrition :saturation :meat? :fast-eat? :always-edible? ...}
 
-   返回：Item$Properties
+   返回: Item$Properties
 
    示例:
    ```clojure
@@ -396,7 +396,7 @@
    参数:
    - opts: {:strength :sound :light-level :requires-tool? :no-drops?}
 
-   返回：BlockBehaviour$Properties
+   返回: BlockBehaviour$Properties
 
    示例:
    ```clojure

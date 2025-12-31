@@ -3,10 +3,10 @@
 
    封装资源和数据包重载监听，用于响应 /reload 命令。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [dev.architectury.event.events.common LifecycleEvent]
-           [net.minecraft.server.packs.resources ResourceManager PreparableReloadListener]
-           [net.minecraft.util.profiling ProfilerFiller]
-           [java.util.concurrent CompletableFuture Executor]))
+  (:import (dev.architectury.event.events.common LifecycleEvent)
+           (net.minecraft.server.packs.resources ResourceManager PreparableReloadListener)
+           (net.minecraft.util.profiling ProfilerFiller)
+           (java.util.concurrent CompletableFuture Executor)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -22,7 +22,7 @@
    - prepare-fn: 准备阶段函数 (fn [^ResourceManager manager] -> prepared-data)
    - apply-fn: 应用阶段函数 (fn [prepared-data ^ResourceManager manager] ...)
 
-   说明：
+   说明:
    - prepare-fn 在后台线程执行，用于加载资源
    - apply-fn 在主线程执行，用于应用加载的资源
 
@@ -59,7 +59,7 @@
        main-executor))))
 
 (defn create-simple-reload-listener
-  "创建简单的重载监听器（仅在主线程执行）
+  "创建简单的重载监听器( 仅在主线程执行)
 
    参数:
    - reload-fn: 重载函数 (fn [^ResourceManager manager] ...)
@@ -88,11 +88,11 @@
 
    参数:
    - listener: PreparableReloadListener 实例
-   - id: 监听器 ID（可选，用于管理）
+   - id: 监听器 ID( 可选，用于管理)
 
-   返回：监听器 ID
+   返回: 监听器 ID
 
-   注意：必须在服务器启动前调用（通常在 mod 初始化阶段）
+   注意: 必须在服务器启动前调用( 通常在 mod 初始化阶段)
 
    示例:
    ```clojure
@@ -112,7 +112,7 @@
    id))
 
 (defn on-reload!
-  "注册简单的重载回调（语法糖）
+  "注册简单的重载回调( 语法糖)
 
    参数:
    - callback: 重载时执行的函数 (fn [^ResourceManager manager] ...)
@@ -137,11 +137,11 @@
 
    参数:
    - manager: ResourceManager
-   - namespace: 命名空间（如 \"mymod\"）
-   - path: 路径前缀（如 \"configs\"）
-   - extension: 文件扩展名（如 \".json\"）
+   - namespace: 命名空间( 如 \"mymod\")
+   - path: 路径前缀( 如 \"configs\")
+   - extension: 文件扩展名( 如 \".json\")
 
-   返回：ResourceLocation 列表
+   返回: ResourceLocation 列表
 
    示例:
    ```clojure
@@ -166,7 +166,7 @@
    - manager: ResourceManager
    - location: ResourceLocation
 
-   返回：字符串内容或 nil
+   返回: 字符串内容或 nil
 
    示例:
    ```clojure
@@ -190,7 +190,7 @@
    - manager: ResourceManager
    - location: ResourceLocation
 
-   返回：解析后的 Clojure 数据或 nil"
+   返回: 解析后的 Clojure 数据或 nil"
   [^ResourceManager manager ^net.minecraft.resources.ResourceLocation location]
   (when-let [content (read-resource manager location)]
     (try
@@ -206,7 +206,7 @@
    - manager: ResourceManager
    - location: ResourceLocation
 
-   返回：解析后的 Clojure 数据或 nil"
+   返回: 解析后的 Clojure 数据或 nil"
   [^ResourceManager manager ^net.minecraft.resources.ResourceLocation location]
   (when-let [content (read-resource manager location)]
     (try
@@ -220,7 +220,7 @@
 ;; ============================================================================
 
 (defmacro on-reload-do
-  "重载时执行代码（语法糖）
+  "重载时执行代码( 语法糖)
 
    示例:
    ```clojure
@@ -248,15 +248,15 @@
    (println "Reloading...")
    (reload-my-system!))
 
-  ;; 3. 复杂重载（两阶段）
+  ;; 3. 复杂重载( 两阶段)
   (register-reload-listener!
    (create-reload-listener
-    ;; 准备阶段（后台线程）
+    ;; 准备阶段( 后台线程)
     (fn [manager]
       (println "Loading configs...")
       (let [configs (list-resources manager "mymod" "configs" ".json")]
         (map #(read-json-resource manager %) configs)))
-    ;; 应用阶段（主线程）
+    ;; 应用阶段( 主线程)
     (fn [configs manager]
       (println "Applying" (count configs) "configs")
       (doseq [config configs]

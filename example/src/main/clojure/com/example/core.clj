@@ -1,37 +1,34 @@
 (ns com.example.core
   "示例 Clojure mod 主入口 - 魔法宝石 (Magic Gem) mod
 
-  本示例展示 fabric-language-clojure 和 Swiss Knife 工具库的常用功能：
-  - 物品注册（魔法宝石、魔法碎片）
-  - 配置系统（宝石威力配置）
-  - 事件系统（玩家加入、击杀怪物）
-  - 玩家工具（物品操作、状态查询）
-  - 音效系统（使用宝石时播放音效）
-  - 网络通信（客户端-服务端数据包）"
+  本示例展示 fabric-language-clojure 和 Swiss Knife 工具库的常用功能:
+  - 物品注册( 魔法宝石、魔法碎片)
+  - 配置系统( 宝石威力配置)
+  - 事件系统( 玩家加入、击杀怪物)
+  - 玩家工具( 物品操作、状态查询)
+  - 音效系统( 使用宝石时播放音效)
+  - 网络通信( 客户端-服务端数据包) "
   (:require [com.fabriclj.core :as lib]
             [com.fabriclj.nrepl :as nrepl]
-  [com.fabriclj.swiss-knife :as mb]
-  [com.fabriclj.swiss-knife.common.lifecycle :as lifecycle]
-  [com.fabriclj.swiss-knife.common.registry.core :as reg]
-  [com.fabriclj.swiss-knife.common.events.core :as events]
-  [com.fabriclj.swiss-knife.common.game-objects.players :as players]
-  [com.fabriclj.swiss-knife.common.game-objects.items :as items]
-  [com.fabriclj.swiss-knife.common.game-objects.entities :as entities]
-  [com.fabriclj.swiss-knife.common.config.core :as config]
-  [com.fabriclj.swiss-knife.common.config.validators :as v]
-  [com.fabriclj.swiss-knife.common.gameplay.sounds :as sounds]
-  [com.fabriclj.swiss-knife.common.network.core :as net]
-  [com.fabriclj.swiss-knife.common.utils.text :as text]
-  [com.fabriclj.swiss-knife.common.physics.core :as physics])
- (:import [net.minecraft.world.item Item Item$Properties Rarity BlockItem]
-          [net.minecraft.world.level.block Block Block$Properties Blocks SoundType]
-          [net.minecraft.world.level.material MapColor]
-          [net.minecraft.world InteractionResult InteractionResultHolder]
-          [net.minecraft.world.entity.monster Monster]
-          [net.minecraft.world.entity EntityType EntityType$Builder MobCategory]
-          [net.minecraft.world.entity.projectile Snowball ThrowableItemProjectile]
-          [net.minecraft.world.phys HitResult$Type BlockHitResult EntityHitResult]
-          [net.minecraft.core BlockPos]))
+            [com.fabriclj.swiss-knife :as mb]
+            [com.fabriclj.swiss-knife.common.lifecycle :as lifecycle]
+            [com.fabriclj.swiss-knife.common.registry.core :as reg]
+            [com.fabriclj.swiss-knife.common.events.core :as events]
+            [com.fabriclj.swiss-knife.common.game-objects.players :as players]
+            [com.fabriclj.swiss-knife.common.game-objects.items :as items]
+            [com.fabriclj.swiss-knife.common.config.core :as config]
+            [com.fabriclj.swiss-knife.common.config.validators :as v]
+            [com.fabriclj.swiss-knife.common.gameplay.sounds :as sounds]
+            [com.fabriclj.swiss-knife.common.network.core :as net]
+            [com.fabriclj.swiss-knife.common.utils.text :as text])
+  (:import (net.minecraft.world.item Item Item$Properties Rarity BlockItem)
+           (net.minecraft.world.level.block Block Block$Properties Blocks SoundType)
+           (net.minecraft.world.level.material MapColor)
+           (net.minecraft.world InteractionResultHolder)
+           (net.minecraft.world.entity.monster Monster)
+           (net.minecraft.world.entity EntityType$Builder EntityType$EntityFactory MobCategory)
+           (net.minecraft.world.entity.projectile Snowball)
+           (net.minecraft.world.phys HitResult$Type BlockHitResult)))
 
 ;; ============================================================================
 ;; 配置系统 - 使用 EDN 配置文件 + 验证器
@@ -40,7 +37,7 @@
 (defn load-config!
   "加载或创建配置文件
 
-   演示功能：
+   演示功能:
    - 配置文件自动创建
    - 使用验证器确保配置有效性
    - 配置值的类型和范围验证"
@@ -52,7 +49,7 @@
                                         :cooldown-ticks 20}
                             :messages {:welcome "欢迎来到魔法世界！"
                                        :gem-activated "魔法宝石已激活！"}}
-                           ;; ✨ 新功能：使用配置验证器
+                           ;; ✨ 新功能: 使用配置验证器
                            :validator (v/all-of
                                        ;; 验证必需的键
                                        (v/has-keys? :magic-gem :messages)
@@ -83,8 +80,8 @@
 ;; 注册表创建
 ;; ============================================================================
 
-(def items-registry (reg/create-registry "example" :item))
 (def blocks-registry (reg/create-registry "example" :block))
+(def items-registry (reg/create-registry "example" :item))
 (def entities-registry (reg/create-registry "example" :entity-type))
 
 ;; ============================================================================
@@ -101,7 +98,7 @@
                       (.lightLevel (fn [_] 7)))]  ; 发光等级 7
     ))
 
-;; 魔法水晶矿的物品形式（用于创造模式和 /give 命令）
+;; 魔法水晶矿的物品形式( 用于创造模式和 /give 命令)
 (reg/defitem items-registry magic-crystal-ore-item
   (BlockItem. @magic-crystal-ore
               (-> (Item$Properties.)
@@ -129,7 +126,7 @@
       (if (.isClientSide level)
         (InteractionResultHolder/success (.getItemInHand player hand))
         (do
-          ;; 服务端逻辑：发射魔法弹
+          ;; 服务端逻辑: 发射魔法弹
           (let [snowball (Snowball. level player)]
             ;; 设置弹道速度
             (.shootFromRotation snowball player
@@ -140,7 +137,7 @@
             ;; 生成弹道实体
             (.addFreshEntity level snowball)
 
-            ;; 在数据包中标记这是魔法弹（用于客户端粒子效果）
+            ;; 在数据包中标记这是魔法弹( 用于客户端粒子效果)
             (net/send-to-player! player :gem-shoot
                                  {:pos [(.-x (.position player))
                                         (.-y (.position player))
@@ -220,7 +217,7 @@
       (sounds/play-sound! level pos :minecraft:entity.zombie.ambient
                           {:source :hostile :volume 1.0 :pitch 0.8})
 
-      (mb/log-info "森林守卫已生成"))))
+      (log-info "森林守卫已生成"))))
 
 (defn setup-events!
   "设置游戏事件监听器"
@@ -255,13 +252,13 @@
   ;; 玩家加入时发送欢迎消息和赠送物品
   (events/on-player-join
    (fn [player]
-     (mb/log-info "玩家加入:" (.getName (.getGameProfile player)))
+     (log-info "玩家加入:" (.getName (.getGameProfile player)))
 
      ;; 发送欢迎消息
      (players/send-message! player
                             (text/literal (get-welcome-message) :color :gold))
 
-     ;; 赠送魔法水晶矿（让玩家自己挖掘）
+     ;; 赠送魔法水晶矿( 让玩家自己挖掘)
      (when-not (players/has-item? player @magic-crystal-ore-item)
        (players/give-item! player @magic-crystal-ore-item 3)
        (players/send-message! player
@@ -276,7 +273,7 @@
    (fn [entity damage-source]
      (let [level (.level entity)
            pos (.position entity)]
-       ;; 检查是否是森林守卫（通过实体类型判断）
+       ;; 检查是否是森林守卫( 通过实体类型判断)
        (if (= (.getType entity) @forest-guardian)
          ;; 森林守卫 - 100% 掉落药水和附魔书
          (do
@@ -317,13 +314,13 @@
                               (text/literal "你获得了魔法宝石！" :color :light-purple)))
      (events/event-pass)))
 
-  ;; 服务端 Tick 事件（每秒执行一次，用于演示）
+  ;; 服务端 Tick 事件( 每秒执行一次，用于演示)
   (events/on-server-tick
    (fn [server]
      (let [tick-count (.getTickCount server)]
-       ;; 每 20 秒（400 ticks）执行一次
+       ;; 每 20 秒( 400 ticks) 执行一次
        (when (zero? (mod tick-count 400))
-         (mb/log-debug "服务器运行正常，在线玩家数:"
+         (log-debug "服务器运行正常，在线玩家数:"
                        (count (players/get-all-players server))))))))
 
 ;; ============================================================================
@@ -340,11 +337,11 @@
   (net/register-generic-handler! "example" :gem-shoot :client
                                  (fn [data player]
                                    ;; 在客户端生成魔法弹发射粒子效果
-                                   (when (mb/client-side?)
+                                   (when (client-side?)
                                      ((requiring-resolve 'com.example.client/spawn-shoot-particles)
                                       (:pos data)))))
 
-  ;; 注册服务端处理器 - 接收客户端的特殊能力请求（传送）
+  ;; 注册服务端处理器 - 接收客户端的特殊能力请求( 传送)
   (net/register-generic-handler! "example" :special-ability :server
                                  (fn [data player]
                                    (let [level (.level player)
@@ -443,7 +440,7 @@
   ;; 重新加载配置
   (config/reload-config! "example")
 
-  ;; 测试玩家工具（需要在游戏中测试）
+  ;; 测试玩家工具( 需要在游戏中测试)
   ;; 获取服务器和玩家
   ;; (require '[com.fabriclj.swiss-knife.client.platform.core :as c])
   ;; (def player (c/get-player))

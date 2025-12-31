@@ -59,7 +59,7 @@
   // 编辑器设置
   "editor.formatOnSave": false,
   "[clojure]": {
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.tabSize": 2,
     "editor.wordWrap": "on"
   },

@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </pre>
  *
  * <p>
- * 对应的 Clojure 代码：
+ * 对应的 Clojure 代码:
  *
  * <pre>{@code
  * (ns com.mymod.hooks)

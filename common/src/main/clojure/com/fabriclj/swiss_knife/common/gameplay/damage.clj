@@ -3,10 +3,10 @@
 
    提供伤害计算、伤害类型创建和伤害应用。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.damagesource DamageSource DamageTypes DamageType]
-           [net.minecraft.world.entity Entity LivingEntity]
-           [net.minecraft.core.registries Registries]
-           [net.minecraft.resources ResourceKey ResourceLocation]))
+  (:import (net.minecraft.world.damagesource DamageSource DamageTypes DamageType)
+           (net.minecraft.world.entity Entity LivingEntity)
+           (net.minecraft.core.registries Registries)
+           (net.minecraft.resources ResourceKey ResourceLocation)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -53,7 +53,7 @@
   key)
 
 (defn get-damage-type
-  "获取伤害类型（支持原版和自定义）"
+  "获取伤害类型( 支持原版和自定义) "
   [damage-type]
   (or (get damage-types damage-type)
       (get @custom-damage-types damage-type)
@@ -64,12 +64,12 @@
 
    参数:
    - level: Level
-   - damage-type: 伤害类型（关键字或 ResourceKey）
+   - damage-type: 伤害类型( 关键字或 ResourceKey)
    - opts: 可选参数
      - :direct-entity - 直接伤害实体
      - :causing-entity - 造成伤害的实体
 
-   返回：DamageSource
+   返回: DamageSource
 
    示例:
    ```clojure
@@ -106,7 +106,7 @@
    - amount: 伤害量
    - damage-source: DamageSource
 
-   返回：是否造成伤害
+   返回: 是否造成伤害
 
    示例:
    ```clojure
@@ -118,12 +118,12 @@
   (.hurt entity damage-source amount))
 
 (defn deal-damage-simple!
-  "造成简单伤害（无伤害源）
+  "造成简单伤害( 无伤害源)
 
    参数:
    - entity: 受伤实体
    - amount: 伤害量
-   - damage-type: 伤害类型（关键字）
+   - damage-type: 伤害类型( 关键字)
 
    示例:
    ```clojure
@@ -141,7 +141,7 @@
    - target: 目标实体
    - amount: 伤害量
    - attacker: 攻击者
-   - damage-type: 伤害类型（可选，默认 :mob-attack）
+   - damage-type: 伤害类型( 可选，默认 :mob-attack)
 
    示例:
    ```clojure
@@ -187,9 +187,9 @@
    - base-damage: 基础伤害
    - armor-value: 护甲值
    - toughness: 护甲韧性
-   - entity: 受伤实体（可选）
+   - entity: 受伤实体( 可选)
 
-   返回：最终伤害"
+   返回: 最终伤害"
   ([damage-type base-damage armor-value toughness]
    (calculate-damage-with-type damage-type base-damage armor-value toughness nil))
   ([damage-type base-damage armor-value toughness entity]
@@ -204,11 +204,11 @@
    参数:
    - base-damage: 基础伤害
    - armor-value: 护甲值
-   - toughness: 护甲韧性（可选，默认 0）
+   - toughness: 护甲韧性( 可选，默认 0)
 
-   返回：实际伤害
+   返回: 实际伤害
 
-   公式：damage * (1 - min(20, max(armor / 5, armor - damage / (2 + toughness / 4))) / 25)"
+   公式: damage * (1 - min(20, max(armor / 5, armor - damage / (2 + toughness / 4))) / 25)"
   ([base-damage armor-value]
    (calculate-armor-damage base-damage armor-value 0.0))
   ([base-damage armor-value toughness]
@@ -225,9 +225,9 @@
 
    参数:
    - base-damage: 基础伤害
-   - resistance-level: 抗性等级（0-4）
+   - resistance-level: 抗性等级( 0-4)
 
-   返回：实际伤害"
+   返回: 实际伤害"
   [base-damage resistance-level]
   (* base-damage (- 1.0 (* 0.2 resistance-level))))
 
@@ -238,7 +238,7 @@
    - base-damage: 基础伤害
    - protection-level: 保护等级
 
-   返回：实际伤害"
+   返回: 实际伤害"
   [base-damage protection-level]
   (let [reduction (min 0.8 (* 0.04 protection-level))]
     (* base-damage (- 1.0 reduction))))
@@ -250,15 +250,15 @@
 (defonce ^:private damage-listeners (atom {}))
 
 (defn on-damage!
-  "注册伤害监听器（支持按类型过滤）
+  "注册伤害监听器( 支持按类型过滤)
 
    参数:
    - handler: 处理函数 (fn [entity amount source] -> modified-amount)
    - opts: 可选参数
-     - :damage-types - 监听的伤害类型列表（nil 表示所有）
-     - :id - 自定义监听器 ID（可选）
+     - :damage-types - 监听的伤害类型列表( nil 表示所有)
+     - :id - 自定义监听器 ID( 可选)
 
-   返回：监听器 ID
+   返回: 监听器 ID
 
    示例:
    ```clojure
@@ -314,7 +314,7 @@
 
    参数:
    - id: 监听器 ID
-   - entity: Entity（可选，用于移除实体专属监听器）"
+   - entity: Entity( 可选，用于移除实体专属监听器) "
   ([id]
    (swap! damage-listeners dissoc id))
   ([entity id]

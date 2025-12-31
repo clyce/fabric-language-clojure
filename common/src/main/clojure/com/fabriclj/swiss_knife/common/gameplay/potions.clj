@@ -1,20 +1,20 @@
 (ns com.fabriclj.swiss-knife.common.gameplay.potions
   "药水效果系统
 
-   提供完整的药水效果管理功能，包括：
+   提供完整的药水效果管理功能，包括:
    - 效果添加/移除/查询
    - 自定义药水效果
    - 效果时间管理
    - 效果强度控制
    - 药水酿造配方"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.entity LivingEntity]
-           [net.minecraft.world.effect MobEffect MobEffectInstance MobEffects]
-           [net.minecraft.world.item ItemStack Items]
-           [net.minecraft.world.item.alchemy Potion PotionUtils Potions]
-           [net.minecraft.core Registry]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.world.item.crafting Ingredient]))
+  (:import (net.minecraft.world.entity LivingEntity)
+           (net.minecraft.world.effect MobEffect MobEffectInstance MobEffects)
+           (net.minecraft.world.item ItemStack Items)
+           (net.minecraft.world.item.alchemy Potion PotionUtils Potions)
+           (net.minecraft.core Registry)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.world.item.crafting Ingredient)))
 
 (set! *warn-on-reflection* true)
 
@@ -31,22 +31,22 @@
   "创建自定义药水效果
 
    参数:
-   - id: 效果 ID（关键字）
-   - category: 效果类别（:beneficial/:harmful/:neutral）
-   - color: 效果颜色（整数 RGB，如 0xFF0000 为红色）
+   - id: 效果 ID( 关键字)
+   - category: 效果类别( :beneficial/:harmful/:neutral)
+   - color: 效果颜色( 整数 RGB，如 0xFF0000 为红色)
 
    - opts: 选项
      - :on-tick - tick 回调函数 (fn [entity amplifier] ...)
-     - :tick-rate - tick 间隔（默认 20，即每秒一次）
-     - :instant? - 是否为瞬时效果（默认 false）
+     - :tick-rate - tick 间隔( 默认 20，即每秒一次)
+     - :instant? - 是否为瞬时效果( 默认 false)
      - :on-added - 效果添加时回调 (fn [entity amplifier] ...)
      - :on-removed - 效果移除时回调 (fn [entity amplifier] ...)
 
-   返回：MobEffect 实例
+   返回: MobEffect 实例
 
    示例:
    ```clojure
-   ;; 创建流血效果（每秒造成伤害
+   ;; 创建流血效果( 每秒造成伤害
    (def bleeding-effect
      (create-custom-effect :bleeding
        :harmful
@@ -81,7 +81,7 @@
                      (try
                        (on-tick entity amplifier)
                        (catch Exception e
-                         (core/log-error (str \"Error in custom effect tick: \" (.getMessage e)))))))
+                         (core/log-error (str "Error in custom effect tick: " (.getMessage e)))))))
 
                  (shouldApplyEffectTickThisTick [duration amplifier]
                    (and on-tick
@@ -93,7 +93,7 @@
                      (try
                        (on-tick entity amplifier)
                        (catch Exception e
-                         (core/log-error (str \"Error in instant effect: \" (.getMessage e)))))))
+                         (core/log-error (str "Error in instant effect: " (.getMessage e)))))))
 
                  (isInstantenous []
                    instant?))]
@@ -109,29 +109,29 @@
     effect))
 
 (defn register-custom-effect!
-  "注册自定义效果到游戏"
+  "注册自定义效果到游戏
 
    参数:
    - mod-id: 模组 ID
-   - effect-id: 效果 ID（关键字"
+   - effect-id: 效果 ID ( 关键字)
    - effect: MobEffect 实例
 
-   注意：必须在模组初始化阶段调"
+   注意: 必须在模组初始化阶段调用
 
    示例:
    ```clojure
-   (register-custom-effect! \"mymod\" :bleeding bleeding-effect)
+   (register-custom-effect! "mymod" :bleeding bleeding-effect)
    ```"
   [mod-id effect-id ^MobEffect effect]
   (let [res-loc (ResourceLocation. mod-id (name effect-id))]
     ;; 注册到注册表
-    ;; 注意：实际注册需要使用 DeferredRegister，这里提供接口
+    ;; 注意: 实际注册需要使用 DeferredRegister，这里提供接口
     (core/log-info (str "Registered custom effect: " res-loc))
     {:id res-loc
      :effect effect}))
 
 (defn defcustom-effect
-  "定义并注册自定义效果（宏样式函数"
+  "定义并注册自定义效果( 宏样式函数 )
 
    参数:
    - mod-id: 模组 ID
@@ -140,11 +140,11 @@
    - color: 效果颜色
    - opts: 其他选项
 
-   返回：注册信"
+   返回: 注册信息
 
    示例:
    ```clojure
-   (defcustom-effect \"mymod\" :bleeding
+   (defcustom-effect "mymod" :bleeding
      :harmful 0xAA0000
      :on-tick (fn [entity amplifier]
                 (.hurt entity (DamageSource. \"bleeding\") 0.5))
@@ -165,7 +165,7 @@
    - entity: LivingEntity
    - effect: MobEffect 或关键字
 
-   返回：boolean
+   返回: boolean
 
    示例:
    ```clojure
@@ -185,7 +185,7 @@
    - entity: LivingEntity
    - effect: MobEffect 或关键字
 
-   返回：MobEffectInstance 或 nil
+   返回: MobEffectInstance 或 nil
 
    示例:
    ```clojure
@@ -199,38 +199,38 @@
     (.getEffect entity mob-effect)))
 
 (defn get-effect-duration
-  "获取效果剩余时间（tick触发"
+  "获取效果剩余时间( tick 触发)
 
    参数:
    - entity: LivingEntity
    - effect: MobEffect 或关键字
 
-   返回：剩余时间（tick），如果没有效果返回 0"
+   返回: 剩余时间( tick) ，如果没有效果返回 0"
   [^LivingEntity entity effect]
   (if-let [^MobEffectInstance instance (get-effect-instance entity effect)]
     (.getDuration instance)
     0))
 
 (defn get-effect-amplifier
-  "获取效果强度（等级 - 1）
+  "获取效果强度( 等级 - 1)
 
    参数:
    - entity: LivingEntity
    - effect: MobEffect 或关键字
 
-   返回：强度值，如果没有效果返回 0"
+   返回: 强度值，如果没有效果返回 0"
   [^LivingEntity entity effect]
   (if-let [^MobEffectInstance instance (get-effect-instance entity effect)]
     (.getAmplifier instance)
     0))
 
 (defn get-all-effects
-  "获取实体所有效"
+  "获取实体所有效
 
    参数:
    - entity: LivingEntity
 
-   返回：效果实例列"
+   返回: 效果实例列表
 
    示例:
    ```clojure
@@ -251,14 +251,14 @@
    参数:
    - entity: LivingEntity
    - effect: MobEffect 或关键字
-   - duration: 持续时间（tick）
+   - duration: 持续时间( tick)
    - opts: 可选参数
-     - :amplifier - 强度（默认 0 = I级，1 = II级）
-     - :ambient? - 是否为环境效果（默认 false）
-     - :visible? - 是否可见（默认 true）
-     - :show-icon? - 是否显示图标（默认 true）
+     - :amplifier - 强度( 默认 0 = I级，1 = II级)
+     - :ambient? - 是否为环境效果( 默认 false)
+     - :visible? - 是否可见( 默认 true)
+     - :show-icon? - 是否显示图标( 默认 true)
 
-   返回：boolean（是否成功）
+   返回: boolean( 是否成功)
 
    示例:
    ```clojure
@@ -268,7 +268,7 @@
    ;; 添加 30 秒速度 II 效果
    (add-effect! player :speed 600 :amplifier 1)
 
-   ;; 添加隐形效果（不显示粒子
+   ;; 添加隐形效果( 不显示粒子
    (add-effect! player :invisibility 400
      :ambient? true
      :visible? false)
@@ -296,7 +296,7 @@
    - entity: LivingEntity
    - effect: MobEffect 或关键字
 
-   返回：boolean（是否成功）
+   返回: boolean( 是否成功)
 
    示例:
    ```clojure
@@ -323,7 +323,7 @@
     (.removeEffect entity (.getEffect effect))))
 
 (defn clear-negative-effects!
-  "清除所有负面效"
+  "清除所有负面效果
 
    参数:
    - entity: LivingEntity
@@ -352,14 +352,14 @@
 ;; ============================================================================
 
 (defn get-effect
-  "通过关键字获取效果（支持原版和自定义效果"
+  "通过关键字获取效果( 支持原版和自定义效果
 
    参数:
-   - keyword: 效果关键"
+   - keyword: 效果关键字
 
-   返回：MobEffect
+   返回: MobEffect
 
-   支持的原版效果：
+   支持的原版效果:
    - :speed - 速度
    - :slowness - 缓慢
    - :haste - 急迫
@@ -368,7 +368,7 @@
    - :jump_boost - 跳跃提升
    - :nausea - 反胃
    - :regeneration - 再生
-   - :resistance - 抗性提"
+   - :resistance - 抗性提升
    - :fire_resistance - 抗火
    - :water_breathing - 水下呼吸
    - :invisibility - 隐身
@@ -387,12 +387,12 @@
    - :unluck - 霉运
    - :slow_falling - 缓降
    - :conduit_power - 潮涌能量
-   - :dolphins_grace - 海豚的恩"
+   - :dolphins_grace - 海豚的恩惠
    - :bad_omen - 不祥之兆
    - :hero_of_the_village - 村庄英雄
    - :darkness - 黑暗
 
-   自定义效果：通过 create-custom-effect 创建的效果也可以通过关键字访"
+   自定义效果: 通过 create-custom-effect 创建的效果也可以通过关键字访问"
   [keyword]
   ;; 首先检查是否为自定义效果
   (if-let [custom-effect (get-in @custom-effects [keyword :effect])]
@@ -442,10 +442,10 @@
    参数:
    - potion: Potion 或关键字
    - opts: 可选参数
-     - :splash? - 是否为喷溅药水（默认 false）
-     - :lingering? - 是否为滞留药水（默认 false）
+     - :splash? - 是否为喷溅药水( 默认 false)
+     - :lingering? - 是否为滞留药水( 默认 false)
 
-   返回：ItemStack
+   返回: ItemStack
 
    示例:
    ```clojure
@@ -472,9 +472,9 @@
     stack))
 
 (defn get-potion
-  "通过关键字获取药水类"
+  "通过关键字获取药水类型
 
-   支持的药水：
+   支持的药水:
    - :water - 水瓶
    - :awkward - 粗制药水
    - :thick - 浓稠药水
@@ -545,7 +545,7 @@
    参数:
    - potion-stack: 药水物品栈
 
-   返回：效果实例列表"
+   返回: 效果实例列表"
   [^ItemStack potion-stack]
   (vec (PotionUtils/getMobEffects potion-stack)))
 
@@ -575,7 +575,7 @@
 (defn create-buff-set
   "创建增益效果集合
 
-   返回：效果配置向量
+   返回: 效果配置向量
 
    示例:
    ```clojure
@@ -595,24 +595,24 @@
 ;; ============================================================================
 
 (def combat-buffs
-  "战斗增益（力量、速度、抗性）"
+  "战斗增益( 力量、速度、抗性) "
   [[:strength 600 :amplifier 1]
    [:speed 400]
    [:resistance 600]])
 
 (def mining-buffs
-  "挖矿增益（急迫、夜视）"
+  "挖矿增益( 急迫、夜视) "
   [[:haste 1200 :amplifier 1]
    [:night_vision 1200]])
 
 (def exploration-buffs
-  "探险增益（速度、跳跃、夜视）"
+  "探险增益( 速度、跳跃、夜视) "
   [[:speed 1200]
    [:jump_boost 1200]
    [:night_vision 1200]])
 
 (def underwater-buffs
-  "水下增益（水肺、夜视、海豚的恩惠"
+  "水下增益( 水肺、夜视、海豚的恩惠"
   [[:water_breathing 1200]
    [:night_vision 1200]
    [:dolphins_grace 1200]])
@@ -671,7 +671,7 @@
 
   ;; ========== 自定义效果 ==========
 
-  ;; 9. 创建流血效果（每秒造成伤害）
+  ;; 9. 创建流血效果( 每秒造成伤害)
   (def bleeding-effect
     (create-custom-effect :bleeding
       :harmful 0xAA0000
@@ -700,7 +700,7 @@
       :on-removed (fn [entity amplifier]
                     (println "生命恢复效果已移除！"))))
 
-  ;; 13. 创建瞬时效果（如爆发性伤害）
+  ;; 13. 创建瞬时效果( 如爆发性伤害)
   (def burst-damage-effect
     (create-custom-effect :burst_damage
       :harmful 0xFF4400

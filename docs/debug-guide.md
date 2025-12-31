@@ -4,11 +4,11 @@
 
 ## nREPL 概述
 
-nREPL（Network REPL）允许你在游戏运行时连接到 Clojure 运行时，实现：
+nREPL（Network REPL）允许你在游戏运行时连接到 Clojure 运行时，实现:
 
-- **代码热替换**：修改函数后立即生效，无需重启游戏
-- **状态检查**：查看和修改运行时状态
-- **交互式开发**：在真实游戏环境中测试代码
+- **代码热替换**: 修改函数后立即生效，无需重启游戏
+- **状态检查**: 查看和修改运行时状态
+- **交互式开发**: 在真实游戏环境中测试代码
 
 ## 启动 nREPL
 
@@ -34,7 +34,7 @@ nREPL（Network REPL）允许你在游戏运行时连接到 Clojure 运行时，
 
 ### 验证启动成功
 
-控制台应显示：
+控制台应显示:
 
 ```
 [nREPL] Server started on 127.0.0.1:7888
@@ -51,7 +51,7 @@ nREPL（Network REPL）允许你在游戏运行时连接到 Clojure 运行时，
 3. 按 `Ctrl+Shift+P`
 4. 输入 `Calva: Connect to a running REPL`
 5. 选择 `Generic`
-6. 输入连接信息：`localhost:7888`
+6. 输入连接信息: `localhost:7888`
 
 ### 命令行
 
@@ -88,7 +88,7 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 
 ### 2. 清除 ClojureBridge 缓存
 
-如果你的函数通过 `ClojureBridge` 调用，需要清除缓存：
+如果你的函数通过 `ClojureBridge` 调用，需要清除缓存:
 
 ```clojure
 ;; 清除特定命名空间的缓存
@@ -164,7 +164,7 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 
 ### 使用 comment 块
 
-在源文件中添加 `comment` 块存放调试代码：
+在源文件中添加 `comment` 块存放调试代码:
 
 ```clojure
 (ns com.mymod.hooks)
@@ -216,7 +216,7 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 
 ### Q: 连接失败
 
-**检查项：**
+**检查项: **
 1. 游戏是否已完全启动？
 2. 控制台是否显示 nREPL 启动消息？
 3. 端口是否被占用？
@@ -231,12 +231,12 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 
 ### Q: 函数修改后无效
 
-**可能原因：**
+**可能原因: **
 1. 使用了 `defonce`（只执行一次）
 2. ClojureBridge 缓存未清除
 3. 命名空间未重新加载
 
-**解决：**
+**解决: **
 ```clojure
 ;; 清除 ClojureBridge 缓存
 (com.fabriclj.ClojureBridge/clearCache nil)
@@ -247,7 +247,7 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 
 ### Q: 游戏崩溃
 
-如果在 REPL 中执行代码导致游戏崩溃：
+如果在 REPL 中执行代码导致游戏崩溃:
 
 1. 检查是否在错误的线程执行了渲染代码
 2. 确保不在 tick 循环中执行耗时操作
@@ -262,7 +262,7 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 
 ## 生产环境
 
-**【重要】** 在发布 mod 时禁用 nREPL：
+**【重要】** 在发布 mod 时禁用 nREPL:
 
 ```clojure
 (defn init []

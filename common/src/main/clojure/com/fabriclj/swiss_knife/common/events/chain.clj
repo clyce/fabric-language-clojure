@@ -13,12 +13,11 @@
 ;; ============================================================================
 
 (defprotocol EventChain
-  "事件链协议
-
-  (execute [this context] \"执行事件链\")
-  (then [this next-chain] \"添加下一个事件链\")
-  (on-success [this success-fn] \"成功时执行\")
-  (on-failure [this failure-fn] \"失败时执行\")")
+  "事件链协议"
+  (execute [this context] "执行事件链")
+  (then [this next-chain] "添加下一个事件链")
+  (on-success [this success-fn] "成功时执行")
+  (on-failure [this failure-fn] "失败时执行"))
 
 (defrecord SimpleEventChain [handler next-chain success-fn failure-fn]
   EventChain
@@ -50,7 +49,7 @@
    参数:
    - handler: 处理函数 (fn [context] -> result)
 
-   返回：EventChain
+   返回: EventChain
 
    示例:
    ```clojure
@@ -81,7 +80,7 @@
    参数:
    - predicate: 条件函数 (fn [context] -> boolean)
    - then-chain: 满足条件时的链
-   - else-chain: 不满足条件时的链（可选）
+   - else-chain: 不满足条件时的链( 可选)
 
    示例:
    ```clojure
@@ -130,7 +129,7 @@
    参数:
    - chains: 事件链列表
 
-   返回：所有结果的列表
+   返回: 所有结果的列表
 
    示例:
    ```clojure
@@ -196,7 +195,7 @@
   "延迟执行事件链
 
    参数:
-   - delay-ticks: 延迟时间（tick）
+   - delay-ticks: 延迟时间( tick)
 
    示例:
    ```clojure
@@ -211,11 +210,11 @@
        (execute chain context)))))
 
 (defn schedule-chain
-  "计划执行事件链（带间隔重复）
+  "计划执行事件链( 带间隔重复)
 
    参数:
    - interval-ticks: 间隔时间
-   - times: 重复次数（nil 表示无限）
+   - times: 重复次数( nil 表示无限)
 
    示例:
    ```clojure
@@ -275,14 +274,19 @@
   (create-chain
    (fn [context]
      (loop [attempt 1]
-       (try
-         (execute chain (assoc context :attempt attempt))
-         (catch Exception e
+       (let [result (try
+                      {:success true
+                       :value (execute chain (assoc context :attempt attempt))}
+                      (catch Exception e
+                        {:success false
+                         :error e}))]
+         (if (:success result)
+           (:value result)
            (if (< attempt max-attempts)
              (do
                (println "Retry attempt" attempt)
                (recur (inc attempt)))
-             (throw e))))))))
+             (throw (:error result)))))))))
 
 (defn fallback-chain
   "失败回退链

@@ -2,30 +2,30 @@
   "配方和数据包系统
 
    提供 Minecraft 配方注册、战利品表、数据生成的 Clojure 友好接口。
-   核心功能：
-   - 配方创建（有序/无序/熔炼/切石/锻造）
+   核心功能:
+   - 配方创建( 有序/无序/熔炼/切石/锻造)
    - 战利品表定义
    - 数据生成和导出
    - DSL 宏简化配方定义"
   (:require [clojure.string :as str]
             [clojure.data.json :as json])
-  (:import [net.minecraft.world.item Item Items ItemStack]
-           [net.minecraft.world.item.crafting Ingredient RecipeSerializer
+  (:import (net.minecraft.world.item Item Items ItemStack)
+           (net.minecraft.world.item.crafting Ingredient RecipeSerializer
             ShapedRecipe ShapelessRecipe
-            SimpleCookingSerializer]
-           [net.minecraft.world.level.block Block Blocks]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.core NonNullList]
-           [net.minecraft.world.item.crafting CraftingBookCategory]
-           [net.minecraft.data.loot LootTableProvider]
-           [net.minecraft.world.level.storage.loot LootTable LootPool
-            LootContext$Builder]
-           [net.minecraft.world.level.storage.loot.entries LootItem LootPoolEntryContainer]
-           [net.minecraft.world.level.storage.loot.functions SetItemCountFunction
-            ApplyBonusCount]
-           [net.minecraft.world.level.storage.loot.predicates LootItemCondition]
-           [net.minecraft.world.level.storage.loot.providers.number UniformGenerator
-            ConstantValue]))
+            SimpleCookingSerializer)
+           (net.minecraft.world.level.block Block Blocks)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.core NonNullList)
+           (net.minecraft.world.item.crafting CraftingBookCategory)
+           (net.minecraft.data.loot LootTableProvider)
+           (net.minecraft.world.level.storage.loot LootTable LootPool
+            LootContext$Builder)
+           (net.minecraft.world.level.storage.loot.entries LootItem LootPoolEntryContainer)
+           (net.minecraft.world.level.storage.loot.functions SetItemCountFunction
+            ApplyBonusCount)
+           (net.minecraft.world.level.storage.loot.predicates LootItemCondition)
+           (net.minecraft.world.level.storage.loot.providers.number UniformGenerator
+            ConstantValue)))
 
 (set! *warn-on-reflection* true)
 
@@ -82,12 +82,12 @@
   "创建有序合成配方
 
    参数:
-   - id: 配方 ID（ResourceLocation 或字符串）
-   - pattern: 图案（字符串向量，最大 3x3）
-   - keys: 键映射（字符 -> 物品）
-   - result: 结果物品（Item 或 ItemStack）
+   - id: 配方 ID( ResourceLocation 或字符串)
+   - pattern: 图案( 字符串向量，最大 3x3)
+   - keys: 键映射( 字符 -> 物品)
+   - result: 结果物品( Item 或 ItemStack)
    - opts: 可选参数
-     - :category - 合成书分类（默认 :misc）
+     - :category - 合成书分类( 默认 :misc)
      - :group - 配方组
 
    示例:
@@ -137,7 +137,7 @@
 
    参数:
    - id: 配方 ID
-   - ingredients: 材料列表（Item 或 Ingredient 列表）
+   - ingredients: 材料列表( Item 或 Ingredient 列表)
    - result: 结果物品
    - opts: 可选参数
      - :category - 合成书分类
@@ -180,8 +180,8 @@
    - id: 配方 ID
    - ingredient: 材料
    - result: 结果物品
-   - experience: 经验值（浮点数）
-   - cooking-time: 烹饪时间（tick，默认 200）
+   - experience: 经验值( 浮点数)
+   - cooking-time: 烹饪时间( tick，默认 200)
 
    示例:
    ```clojure
@@ -201,7 +201,7 @@
    :group ""})
 
 (defn blasting-recipe
-  "创建高炉配方（熔炼时间减半）"
+  "创建高炉配方( 熔炼时间减半) "
   [id ingredient result experience & [cooking-time]]
   (assoc (smelting-recipe id ingredient result experience (or cooking-time 100))
          :type :blasting))
@@ -229,7 +229,7 @@
    - id: 配方 ID
    - ingredient: 材料
    - result: 结果物品
-   - count: 结果数量（默认 1）
+   - count: 结果数量( 默认 1)
 
    示例:
    ```clojure
@@ -250,7 +250,7 @@
 ;; ============================================================================
 
 (defn smithing-transform-recipe
-  "创建锻造台转换配方（1.20+）
+  "创建锻造台转换配方( 1.20+)
 
    参数:
    - id: 配方 ID
@@ -276,7 +276,7 @@
    :result (->item-stack result)})
 
 (defn smithing-trim-recipe
-  "创建锻造台装饰配方（盔甲纹饰）"
+  "创建锻造台装饰配方( 盔甲纹饰) "
   [id template base addition]
   {:id (->resource-location id)
    :type :smithing_trim
@@ -294,8 +294,8 @@
    参数:
    - item: 物品
    - opts: 可选参数
-     - :weight - 权重（默认 1）
-     - :quality - 品质（影响时运）
+     - :weight - 权重( 默认 1)
+     - :quality - 品质( 影响时运)
      - :functions - 战利品函数列表
      - :conditions - 条件列表
 
@@ -320,7 +320,7 @@
    参数:
    - entries: 战利品条目列表
    - opts: 可选参数
-     - :rolls - 抽取次数（可以是数字或 [min max]）
+     - :rolls - 抽取次数( 可以是数字或 [min max])
      - :bonus-rolls - 额外抽取次数
      - :conditions - 条件列表
 
@@ -350,7 +350,7 @@
 
    参数:
    - min: 最小数量
-   - max: 最大数量（可选，默认等于 min）
+   - max: 最大数量( 可选，默认等于 min)
 
    示例:
    ```clojure
@@ -368,7 +368,7 @@
   "应用时运加成
 
    参数:
-   - formula: 公式类型（:ore_drops/:uniform_bonus/:binomial_with_bonus_count）
+   - formula: 公式类型( :ore_drops/:uniform_bonus/:binomial_with_bonus_count)
 
    示例:
    ```clojure
@@ -381,7 +381,7 @@
    :parameters {}})
 
 (defn explosion-decay
-  "爆炸衰减（爆炸破坏时减少掉落）"
+  "爆炸衰减( 爆炸破坏时减少掉落) "
   []
   {:function :explosion_decay})
 
@@ -395,7 +395,7 @@
   "设置损坏值
 
    参数:
-   - damage: 损坏值（0.0-1.0）或 [min max]"
+   - damage: 损坏值( 0.0-1.0) 或 [min max]"
   ([damage]
    {:function :set_damage
     :damage {:type :constant :value damage}})
@@ -413,8 +413,8 @@
   "按等级附魔
 
    参数:
-   - levels: 附魔等级（数字或 [min max]）
-   - treasure: 是否包含宝藏附魔（默认 false）"
+   - levels: 附魔等级( 数字或 [min max])
+   - treasure: 是否包含宝藏附魔( 默认 false) "
   [levels & {:keys [treasure] :or {treasure false}}]
   {:function :enchant_with_levels
    :levels (if (vector? levels)
@@ -439,7 +439,7 @@
    :predicate predicate})
 
 (defn survives-explosion-condition
-  "生存爆炸条件（通常用于非爆炸破坏）"
+  "生存爆炸条件( 通常用于非爆炸破坏) "
   []
   {:condition :survives_explosion})
 
@@ -447,7 +447,7 @@
   "随机概率条件
 
    参数:
-   - chance: 概率（0.0-1.0）"
+   - chance: 概率( 0.0-1.0) "
   [chance]
   {:condition :random_chance
    :chance (float chance)})
@@ -462,14 +462,14 @@
 ;; ============================================================================
 
 (defn simple-block-loot
-  "创建简单方块战利品表（自掉落）
+  "创建简单方块战利品表( 自掉落)
 
    参数:
    - block: 方块
    - opts: 可选参数
-     - :requires-tool - 是否需要工具（默认 false）
-     - :fortune - 是否受时运影响（默认 false）
-     - :count - 掉落数量（[min max]）
+     - :requires-tool - 是否需要工具( 默认 false)
+     - :fortune - 是否受时运影响( 默认 false)
+     - :count - 掉落数量( [min max])
 
    示例:
    ```clojure
@@ -576,9 +576,9 @@
 
    参数:
    - recipe: 配方数据
-   - pretty?: 是否美化输出（默认 true）
+   - pretty?: 是否美化输出( 默认 true)
 
-   返回：JSON 字符串"
+   返回: JSON 字符串"
   [recipe & {:keys [pretty?] :or {pretty? true}}]
   (json/write-str (recipe->json recipe)
                   :indent (when pretty? 2)))

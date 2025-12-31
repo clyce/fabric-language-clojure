@@ -3,7 +3,7 @@
    此命名空间封装了 Architectury API 的 DeferredRegister 系统，
    提供简洁的 Clojure DSL 用于注册游戏内容。
 
-   用法示例：
+   用法示例:
    ```clojure
    (ns com.mymod.content
      (:require [com.fabriclj.registry :as reg])
@@ -56,7 +56,7 @@
 
    返回 DeferredRegister 实例
 
-   用法：
+   用法:
    ```clojure
    (def items (create-registry \"mymod\" :item))
    (def blocks (create-registry \"mymod\" :block))
@@ -79,12 +79,12 @@
   "向注册表注册一个条目
    参数:
    - registry: DeferredRegister 实例
-   - name: 注册名称（字符串）
+   - name: 注册名称( 字符串)
    - supplier: 返回注册对象的函数
 
    返回 RegistrySupplier
 
-   用法：
+   用法:
    ```clojure
    (def my-item
      (register items \"my_item\"
@@ -102,7 +102,7 @@
    参数:
    - registries: 一个或多个 DeferredRegister 实例
 
-   用法：
+   用法:
    ```clojure
    (register-all! items blocks entities)
    ```"
@@ -119,10 +119,10 @@
 
    参数:
    - items-registry: DeferredRegister 实例
-   - var-name: 变量名（符号）
+   - var-name: 变量名( 符号)
    - item-form: 返回 Item 实例的表达式
 
-   用法：
+   用法:
    ```clojure
    (defitem items my-sword
      (Item. (-> (Item$Properties.)
@@ -138,10 +138,10 @@
 
    参数:
    - blocks-registry: DeferredRegister 实例
-   - var-name: 变量名（符号）
+   - var-name: 变量名( 符号)
    - block-form: 返回 Block 实例的表达式
 
-   用法：
+   用法:
    ```clojure
    (defblock blocks my-ore
      (Block. (BlockBehaviour$Properties/of)))

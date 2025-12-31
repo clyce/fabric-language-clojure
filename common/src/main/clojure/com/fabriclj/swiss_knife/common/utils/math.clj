@@ -1,13 +1,13 @@
 (ns com.fabriclj.swiss-knife.common.utils.math
   "数学和随机工具
 
-   提供常用的数学计算和随机数生成功能：
-   - 随机数生成（整数、浮点数、概率）
+   提供常用的数学计算和随机数生成功能:
+   - 随机数生成( 整数、浮点数、概率)
    - 权重随机选择
    - 数学插值
    - 距离计算
    - 角度处理"
-  (:import [java.util Random]))
+  (:import (java.util Random)))
 
 (set! *warn-on-reflection* true)
 
@@ -23,8 +23,8 @@
   "生成随机整数 [min, max)
 
    参数:
-   - min: 最小值（包含）
-   - max: 最大值（不包含）
+   - min: 最小值( 包含)
+   - max: 最大值( 不包含)
 
    示例:
    ```clojure
@@ -38,8 +38,8 @@
   "生成随机浮点数 [min, max)
 
    参数:
-   - min: 最小值（包含）
-   - max: 最大值（不包含）
+   - min: 最小值( 包含)
+   - max: 最大值( 不包含)
 
    示例:
    ```clojure
@@ -53,9 +53,9 @@
   "随机概率判断
 
    参数:
-   - probability: 概率（0.0-1.0）
+   - probability: 概率( 0.0-1.0)
 
-   返回：boolean
+   返回: boolean
 
    示例:
    ```clojure
@@ -75,9 +75,9 @@
    参数:
    - weighted-map: 权重映射 {item weight ...}
 
-   返回：随机选中的 item
+   返回: 随机选中的 item
 
-   算法：使用轮盘赌算法（Roulette Wheel Selection）
+   算法: 使用轮盘赌算法( Roulette Wheel Selection)
 
    示例:
    ```clojure
@@ -108,14 +108,14 @@
 ;; ============================================================================
 
 (defn lerp
-  "线性插值（Linear Interpolation）
+  "线性插值( Linear Interpolation)
 
    参数:
    - a: 起始值
    - b: 结束值
-   - t: 插值参数（0.0-1.0）
+   - t: 插值参数( 0.0-1.0)
 
-   公式：a + t * (b - a)
+   公式: a + t * (b - a)
 
    示例:
    ```clojure
@@ -149,7 +149,7 @@
 ;; ============================================================================
 
 (defn distance-2d
-  "计算 2D 距离（忽略 Y 轴）
+  "计算 2D 距离( 忽略 Y 轴)
 
    用于计算水平距离
 
@@ -193,7 +193,7 @@
 
    示例:
    ```clojure
-   ;; 判断是否在范围内（无需开方）
+   ;; 判断是否在范围内( 无需开方)
    (< (distance-squared-3d x1 y1 z1 x2 y2 z2) (* radius radius))
    ```"
   [x1 y1 z1 x2 y2 z2]
@@ -211,7 +211,7 @@
    用于处理 Minecraft 的旋转角度
 
    参数:
-   - angle: 角度（度）
+   - angle: 角度( 度)
 
    示例:
    ```clojure
@@ -274,7 +274,7 @@
 
   ;; ========== 数学插值 ==========
 
-  ;; 4. 线性插值（平滑过渡）
+  ;; 4. 线性插值( 平滑过渡)
   (lerp 0 100 0.5)  ; => 50.0
   (lerp 10 20 0.25) ; => 12.5
 
@@ -284,13 +284,13 @@
 
   ;; ========== 距离计算 ==========
 
-  ;; 6. 2D 距离（水平距离）
+  ;; 6. 2D 距离( 水平距离)
   (distance-2d 0 0 3 4)  ; => 5.0
 
   ;; 7. 3D 距离
   (distance-3d 0 0 0 1 1 1)  ; => 1.732...
 
-  ;; 8. 性能优化：使用平方距离
+  ;; 8. 性能优化: 使用平方距离
   (def radius 10)
   (def radius-squared (* radius radius))
 

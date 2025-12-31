@@ -4,16 +4,16 @@
 
 ## 测试环境
 
-### 方式 1：使用 example 模块（推荐）
+### 方式 1: 使用 example 模块（推荐）
 
-项目包含一个完整的测试 mod：
+项目包含一个完整的测试 mod:
 
 ```bash
 # 启动测试客户端
 .\gradlew.bat :example:runClient
 
 # 查看日志确认加载成功
-# 应该看到：
+# 应该看到:
 # [fabric-language-clojure] Language support library initialized
 # [ExampleMod] Initializing...
 # [ExampleMod] Items registered!
@@ -22,14 +22,14 @@
 
 详细说明参见 [example/README.md](../example/README.md)
 
-### 方式 2：创建独立测试项目
+### 方式 2: 创建独立测试项目
 
-1. 先发布到本地 Maven：
+1. 先发布到本地 Maven:
    ```bash
    .\gradlew.bat publishToMavenLocal
    ```
 
-2. 创建新项目，在 `build.gradle` 中添加：
+2. 创建新项目，在 `build.gradle` 中添加:
    ```groovy
    repositories {
        mavenLocal()
@@ -116,7 +116,7 @@
 
 ### 启动时间
 
-测量 Clojure 运行时初始化时间：
+测量 Clojure 运行时初始化时间:
 
 ```clojure
 ;; 在 ClojureRuntime.java 中添加时间记录
@@ -126,11 +126,11 @@ long elapsed = System.currentTimeMillis() - start;
 LOGGER.info("Clojure runtime initialized in {}ms", elapsed);
 ```
 
-**预期值**：< 1000ms
+**预期值**: < 1000ms
 
 ### 运行时性能
 
-测试热路径中的 ClojureBridge 调用：
+测试热路径中的 ClojureBridge 调用:
 
 ```java
 long start = System.nanoTime();
@@ -141,24 +141,24 @@ long elapsed = System.nanoTime() - start;
 System.out.println("1000 calls: " + elapsed / 1000000.0 + "ms");
 ```
 
-**预期值**：< 10ms/1000 次调用
+**预期值**: < 10ms/1000 次调用
 
 ### 内存占用
 
-查看 Clojure 运行时内存占用：
+查看 Clojure 运行时内存占用:
 
 ```bash
 # 在游戏中按 F3 查看内存使用
 # 或使用 JVM 监控工具
 ```
 
-**预期值**：Clojure 运行时 < 50MB
+**预期值**: Clojure 运行时 < 50MB
 
 ## 兼容性测试
 
 ### Mod 兼容性
 
-测试与其他常见 mod 的兼容性：
+测试与其他常见 mod 的兼容性:
 
 - [ ] Fabric API
 - [ ] Architectury API
@@ -166,7 +166,7 @@ System.out.println("1000 calls: " + elapsed / 1000000.0 + "ms");
 
 ### Minecraft 版本
 
-测试不同的 Minecraft 版本：
+测试不同的 Minecraft 版本:
 
 - [ ] 1.20.1
 - [ ] 1.20.4
@@ -174,7 +174,7 @@ System.out.println("1000 calls: " + elapsed / 1000000.0 + "ms");
 
 ## 回归测试
 
-在修改代码后运行完整测试：
+在修改代码后运行完整测试:
 
 ```bash
 # 1. 清理构建
@@ -193,17 +193,17 @@ System.out.println("1000 calls: " + elapsed / 1000000.0 + "ms");
 
 ### 语言适配器在 Architectury 开发环境中无法使用
 
-**状态**：已知限制
+**状态**: 已知限制
 
-**影响**：无法在开发环境使用 `"adapter": "clojure"`
+**影响**: 无法在开发环境使用 `"adapter": "clojure"`
 
-**解决方案**：使用 Java 入口类 + `ClojureRuntime`
+**解决方案**: 使用 Java 入口类 + `ClojureRuntime`
 
-**测试**：在打包后的 JAR 中验证语言适配器功能
+**测试**: 在打包后的 JAR 中验证语言适配器功能
 
 ## 自动化测试（未来）
 
-计划添加的自动化测试：
+计划添加的自动化测试:
 
 - [ ] 单元测试（JUnit + Clojure test）
 - [ ] 集成测试（模拟游戏环境）
@@ -212,9 +212,9 @@ System.out.println("1000 calls: " + elapsed / 1000000.0 + "ms");
 
 ## 报告问题
 
-如果发现问题：
+如果发现问题:
 
-1. 收集信息：
+1. 收集信息:
    - 日志文件（`logs/latest.log`）
    - Minecraft 版本
    - fabric-language-clojure 版本

@@ -3,13 +3,11 @@
 
    封装 Architectury API 的网络系统，提供客户端-服务端通信功能。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [dev.architectury.networking NetworkManager NetworkManager$Side]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.network FriendlyByteBuf]
-           [net.minecraft.network.codec StreamCodec]
-           [net.minecraft.network.protocol.common.custom CustomPacketPayload]
-           [net.minecraft.server.level ServerPlayer]
-           [net.minecraft.world.entity.player Player]))
+  (:import (dev.architectury.networking NetworkManager NetworkManager$Side)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.network FriendlyByteBuf)
+           (net.minecraft.server.level ServerPlayer)
+           (net.minecraft.world.entity.player Player)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -99,11 +97,11 @@
   (.readNbt buf))
 
 ;; ============================================================================
-;; EDN 数据编解码（Clojure 特色）
+;; EDN 数据编解码( Clojure 特色)
 ;; ============================================================================
 
 (defn write-edn!
-  "将 Clojure 数据写入缓冲区（序列化为字符串）
+  "将 Clojure 数据写入缓冲区( 序列化为字符串)
 
    参数:
    - buf: FriendlyByteBuf
@@ -141,7 +139,7 @@
    - encoder: 编码函数 (fn [buf data] ...)
    - decoder: 解码函数 (fn [buf] -> data)
 
-   返回：数据包类型标识符
+   返回: 数据包类型标识符
 
    示例:
    ```clojure
@@ -160,7 +158,7 @@
     loc))
 
 (defn create-edn-packet-type
-  "创建基于 EDN 的数据包类型（简化版）
+  "创建基于 EDN 的数据包类型( 简化版)
 
    自动使用 EDN 序列化，无需手动编解码。
 
@@ -187,7 +185,7 @@
   "注册服务端数据包接收器
 
    参数:
-   - packet-type: 数据包类型（ResourceLocation）
+   - packet-type: 数据包类型( ResourceLocation)
    - handler: 处理函数 (fn [data ^ServerPlayer player] ...)
 
    示例:
@@ -209,16 +207,16 @@
                player (.getPlayer context)]
            (.queue context
                    (fn []
-                     (handler data player))))))))
+                     (handler data player)))))))))
 
 (defn register-client-receiver!
   "注册客户端数据包接收器
 
    参数:
-   - packet-type: 数据包类型（ResourceLocation）
+   - packet-type: 数据包类型( ResourceLocation)
    - handler: 处理函数 (fn [data ^Player player] ...)
 
-   注意：仅在客户端环境调用。
+   注意: 仅在客户端环境调用。
 
    示例:
    ```clojure
@@ -237,7 +235,7 @@
                player (.getPlayer context)]
            (.queue context
                    (fn []
-                     (handler data player))))))))
+                     (handler data player)))))))))
 
 ;; ============================================================================
 ;; 数据包发送
@@ -286,7 +284,7 @@
    - packet-type: 数据包类型
    - data: 要发送的数据"
   [^net.minecraft.server.MinecraftServer server ^ResourceLocation packet-type data]
-  (doseq [^ServerPlayer player (.getPlayerList (.players server))]
+  (doseq [^ServerPlayer player (.getPlayers (.getPlayerList server))]
     (send-to-player! player packet-type data)))
 
 (defn send-to-all-near!
@@ -312,7 +310,7 @@
 ;; ============================================================================
 
 (defmacro defpacket
-  "定义数据包类型（语法糖）
+  "定义数据包类型( 语法糖)
 
    示例:
    ```clojure
@@ -337,7 +335,7 @@
      (var ~name)))
 
 (defmacro defpacket-edn
-  "定义基于 EDN 的数据包（自动序列化）
+  "定义基于 EDN 的数据包( 自动序列化)
 
    示例:
    ```clojure
@@ -356,7 +354,7 @@
      (var ~name)))
 
 ;; ============================================================================
-;; 通用数据包系统（支持多 mod 命名空间隔离）
+;; 通用数据包系统( 支持多 mod 命名空间隔离)
 ;; ============================================================================
 
 ;; 存储每个 mod 的通用数据包系统
@@ -369,11 +367,11 @@
    允许通过字符串 ID 动态注册处理器，无需预定义数据包类型。
 
    参数:
-   - mod-id: Mod ID（用于创建唯一的数据包通道）
+   - mod-id: Mod ID( 用于创建唯一的数据包通道)
    - opts: 选项
-     - :channel-name - 通道名称（默认 \"swiss_knife_generic\"）
+     - :channel-name - 通道名称( 默认 \"swiss_knife_generic\")
 
-   注意：
+   注意:
    - 必须在 mod 初始化时调用一次！
    - 每个 mod 应该使用自己的 mod-id 创建独立的通道
    - 如果不调用此函数，将无法使用 register-generic-handler! 和 send-generic!
@@ -383,7 +381,7 @@
    ;; 在 mod 初始化时
    (init-generic-packet-system! \"mymod\")
 
-   ;; 自定义通道名（可选）
+   ;; 自定义通道名( 可选)
    (init-generic-packet-system! \"mymod\" :channel-name \"custom_packets\")
    ```"
   [mod-id & [opts]]
@@ -415,8 +413,8 @@
 
    参数:
    - mod-id: Mod ID
-   - handler-id: 处理器 ID（字符串或关键字）
-   - side: :server 或 :client（暂未使用，保留以支持未来的单端处理器）
+   - handler-id: 处理器 ID( 字符串或关键字)
+   - side: :server 或 :client( 暂未使用，保留以支持未来的单端处理器)
    - handler: 处理函数 (fn [data player] ...)
 
    示例:
@@ -442,7 +440,7 @@
    - mod-id: Mod ID
    - handler-id: 处理器 ID
    - data: 数据
-   - target: 发送目标（可选，ServerPlayer 实例）
+   - target: 发送目标( 可选，ServerPlayer 实例)
 
    示例:
    ```clojure
@@ -464,7 +462,7 @@
 (comment
   ;; 使用示例
 
-  ;; 1. 定义数据包类型（方式 1：EDN 自动序列化）
+  ;; 1. 定义数据包类型( 方式 1: EDN 自动序列化)
   (defpacket-edn chat-packet "mymod:chat"
     :server (fn [data player]
               (println (.getName player) "says:" (:message data)))
@@ -477,7 +475,7 @@
   ;; 服务端发送给玩家
   (send-to-player! player chat-packet {:message "Welcome!"})
 
-  ;; 2. 定义数据包类型（方式 2：手动编解码）
+  ;; 2. 定义数据包类型( 方式 2: 手动编解码)
   (defpacket position-packet "mymod:position"
     :encode (fn [buf data]
               (write-double! buf (:x data))

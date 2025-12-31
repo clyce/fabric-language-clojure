@@ -1,21 +1,21 @@
 (ns com.fabriclj.swiss-knife.common.data.datapack
   "数据包完整支持系统
 
-   扩展 recipes.clj，提供完整的数据包生成功能：
-   - 标签（Tags）
-   - 进度（Advancements）
-   - 战利品表（Loot Tables）
-   - 配方（Recipes）
-   - 世界生成（World Generation）
-   - 函数（Functions）
-   - 谓词（Predicates）
-   - 物品修饰器（Item Modifiers）"
+   扩展 recipes.clj，提供完整的数据包生成功能:
+   - 标签( Tags)
+   - 进度( Advancements)
+   - 战利品表( Loot Tables)
+   - 配方( Recipes)
+   - 世界生成( World Generation)
+   - 函数( Functions)
+   - 谓词( Predicates)
+   - 物品修饰器( Item Modifiers) "
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.common.gameplay.recipes :as recipes]
             [clojure.data.json :as json]
             [clojure.java.io :as io])
-  (:import [java.nio.file Paths Files]
-           [java.nio.file.attribute FileAttribute]))
+  (:import (java.nio.file Paths Files)
+           (java.nio.file.attribute FileAttribute)))
 
 (set! *warn-on-reflection* true)
 
@@ -59,11 +59,11 @@
   "创建标签数据
 
    参数:
-   - values: 标签值列表（字符串或标签引用）
+   - values: 标签值列表( 字符串或标签引用)
    - opts: 选项
-     - :replace? - 是否替换（默认 false）
+     - :replace? - 是否替换( 默认 false)
 
-   返回：标签数据映射
+   返回: 标签数据映射
 
    示例:
    ```clojure
@@ -84,7 +84,7 @@
    参数:
    - base-path: 数据包基础路径
    - namespace: 命名空间
-   - tag-type: 标签类型（:blocks/:items/:entity_types/:fluids）
+   - tag-type: 标签类型( :blocks/:items/:entity_types/:fluids)
    - tag-name: 标签名称
    - tag-data: 标签数据
 
@@ -105,18 +105,18 @@
     (core/log-info (str "Saved tag: " namespace ":" tag-name))))
 
 ;; ============================================================================
-;; 进度数据生成（完整版）
+;; 进度数据生成( 完整版)
 ;; ============================================================================
 
 (defn advancement-to-json
   "将进度数据映射转换为 JSON 格式
 
    参数:
-   - advancement-data: 进度数据（来自 advancements.clj）
+   - advancement-data: 进度数据( 来自 advancements.clj)
 
-   返回：可序列化的映射
+   返回: 可序列化的映射
 
-   注意：这是 advancements.clj 中 advancement-data 函数的补充"
+   注意: 这是 advancements.clj 中 advancement-data 函数的补充"
   [advancement-data]
   (let [data (cond-> {}
                (:parent advancement-data)
@@ -141,7 +141,7 @@
    参数:
    - base-path: 数据包基础路径
    - namespace: 命名空间
-   - advancement-name: 进度名称（可包含路径，如 \"story/mine_stone\"）
+   - advancement-name: 进度名称( 可包含路径，如 \"story/mine_stone\")
    - advancement-data: 进度数据
 
    示例:
@@ -160,16 +160,16 @@
     (core/log-info (str "Saved advancement: " namespace ":" advancement-name))))
 
 ;; ============================================================================
-;; 战利品表（扩展版）
+;; 战利品表( 扩展版)
 ;; ============================================================================
 
 (defn create-loot-pool
-  "创建战利品池（扩展版，支持更多选项）
+  "创建战利品池( 扩展版，支持更多选项)
 
    参数:
    - entries: 战利品条目列表
    - opts: 选项
-     - :rolls - 抽取次数（数字或范围 {:min :max}）
+     - :rolls - 抽取次数( 数字或范围 {:min :max})
      - :bonus-rolls - 额外抽取次数
      - :conditions - 条件列表
 
@@ -191,7 +191,7 @@
 (defn loot-condition
   "创建战利品条件
 
-   支持的条件类型：
+   支持的条件类型:
    - :killed-by-player - 被玩家击杀
    - :random-chance {:chance 0.5} - 随机概率
    - :entity-properties {:entity :this :predicate {...}} - 实体属性
@@ -234,7 +234,7 @@
 (defn loot-function
   "创建战利品函数
 
-   支持的函数类型：
+   支持的函数类型:
    - :set-count {:count n} - 设置数量
    - :set-nbt {:tag nbt-string} - 设置 NBT
    - :set-damage {:damage 0.5} - 设置耐久度
@@ -295,7 +295,7 @@
    参数:
    - base-path: 数据包基础路径
    - namespace: 命名空间
-   - loot-type: 战利品类型（:blocks/:entities/:chests）
+   - loot-type: 战利品类型( :blocks/:entities/:chests)
    - loot-name: 战利品表名称
    - loot-data: 战利品表数据
 
@@ -316,16 +316,16 @@
     (core/log-info (str "Saved loot table: " namespace ":" loot-name))))
 
 ;; ============================================================================
-;; 函数（Commands）
+;; 函数( Commands)
 ;; ============================================================================
 
 (defn create-function
   "创建MC函数
 
    参数:
-   - commands: 命令列表（字符串）
+   - commands: 命令列表( 字符串)
 
-   返回：命令字符串（每行一个命令）
+   返回: 命令字符串( 每行一个命令)
 
    示例:
    ```clojure
@@ -343,8 +343,8 @@
    参数:
    - base-path: 数据包基础路径
    - namespace: 命名空间
-   - function-name: 函数名称（可包含路径）
-   - function-data: 函数数据（命令列表或字符串）
+   - function-name: 函数名称( 可包含路径)
+   - function-data: 函数数据( 命令列表或字符串)
 
    示例:
    ```clojure
@@ -364,7 +364,7 @@
     (core/log-info (str "Saved function: " namespace ":" function-name))))
 
 ;; ============================================================================
-;; 谓词（Predicates）
+;; 谓词( Predicates)
 ;; ============================================================================
 
 (defn create-predicate
@@ -419,7 +419,7 @@
     (core/log-info (str "Saved predicate: " namespace ":" predicate-name))))
 
 ;; ============================================================================
-;; 物品修饰器（Item Modifiers）
+;; 物品修饰器( Item Modifiers)
 ;; ============================================================================
 
 (defn create-item-modifier
@@ -475,9 +475,9 @@
    - namespace: 命名空间
    - opts: 选项
      - :description - 数据包描述
-     - :pack-format - 数据包格式版本（默认 10）
+     - :pack-format - 数据包格式版本( 默认 10)
 
-   返回：数据包配置
+   返回: 数据包配置
 
    示例:
    ```clojure
@@ -633,15 +633,15 @@
 
   ;; ========== 进度 ==========
 
-  ;; 11. 保存进度（使用 advancements.clj 创建）
+  ;; 11. 保存进度( 使用 advancements.clj 创建)
   (save-advancement! "./datapacks/mymod"
                      "mymod"
                      "root"
-                     (mb/advancements/advancement-data "mymod:root"
-                       :display (mb/advancements/display-info
-                                  (ItemStack. Items/DIAMOND)
-                                  "My Mod"
-                                  "Begin your adventure"
-                                  :frame :task
-                                  :background "minecraft:textures/gui/advancements/backgrounds/adventure.png")
-                       :criteria {:auto {:trigger "minecraft:tick"}})))
+                     (advancements/advancement-data "mymod:root"
+                                                    :display (advancements/display-info
+                                                              (ItemStack. Items/DIAMOND)
+                                                              "My Mod"
+                                                              "Begin your adventure"
+                                                              :frame :task
+                                                              :background "minecraft:textures/gui/advancements/backgrounds/adventure.png")
+                                                    :criteria {:auto {:trigger "minecraft:tick"}})))

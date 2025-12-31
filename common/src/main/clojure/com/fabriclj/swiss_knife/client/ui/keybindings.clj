@@ -3,12 +3,12 @@
 
    封装 Architectury API 的按键绑定系统。
 
-   注意：此命名空间仅在客户端环境可用！"
+   注意: 此命名空间仅在客户端环境可用！"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.client.events.core :as events])
-  (:import [dev.architectury.registry.client.keymappings KeyMappingRegistry]
-           [net.minecraft.client KeyMapping]
-           [org.lwjgl.glfw GLFW]))
+  (:import (dev.architectury.registry.client.keymappings KeyMappingRegistry)
+           (net.minecraft.client KeyMapping)
+           (org.lwjgl.glfw GLFW)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -125,11 +125,11 @@
   "创建按键绑定
 
    参数:
-   - name: 按键名称（翻译键，如 \"key.mymod.action\"）
-   - key: 默认按键（GLFW 键码或关键字）
-   - category: 分类（字符串或关键字）
+   - name: 按键名称( 翻译键，如 \"key.mymod.action\")
+   - key: 默认按键( GLFW 键码或关键字)
+   - category: 分类( 字符串或关键字)
 
-   返回：KeyMapping
+   返回: KeyMapping
 
    示例:
    ```clojure
@@ -172,17 +172,17 @@
    参数:
    - keybinding: KeyMapping 实例
 
-   返回：boolean"
+   返回: boolean"
   [^KeyMapping keybinding]
   (.isDown keybinding))
 
 (defn consume-click!
-  "消费按键点击（标记为已处理）
+  "消费按键点击( 标记为已处理)
 
    参数:
    - keybinding: KeyMapping 实例
 
-   返回：是否有未处理的点击"
+   返回: 是否有未处理的点击"
   [^KeyMapping keybinding]
   (.consumeClick keybinding))
 
@@ -192,7 +192,7 @@
    参数:
    - keybinding: KeyMapping 实例
 
-   返回：本地化的按键名称"
+   返回: 本地化的按键名称"
   ^String [^KeyMapping keybinding]
   (.. keybinding getTranslatedKeyMessage getString))
 
@@ -206,13 +206,13 @@
   "定义并注册按键绑定
 
    参数:
-   - id: 按键标识符（关键字）
+   - id: 按键标识符( 关键字)
    - name: 翻译键
    - default-key: 默认按键
    - category: 分类
-   - handler: 处理函数（可选）
+   - handler: 处理函数( 可选)
 
-   返回：KeyMapping
+   返回: KeyMapping
 
    示例:
    ```clojure
@@ -244,9 +244,9 @@
   "获取已注册的按键绑定
 
    参数:
-   - id: 按键标识符（关键字）
+   - id: 按键标识符( 关键字)
 
-   返回：KeyMapping 或 nil"
+   返回: KeyMapping 或 nil"
   ^KeyMapping [id]
   (get @registered-keys id))
 
@@ -260,7 +260,7 @@
 ;; ============================================================================
 
 (defmacro defkeybinding
-  "定义按键绑定（语法糖）
+  "定义按键绑定( 语法糖)
 
    示例:
    ```clojure

@@ -1,10 +1,10 @@
 (ns com.fabriclj.swiss-knife.common.gameplay.conditional-recipes
   "瑞士军刀 - 条件配方支持
 
-   提供 Minecraft 1.19+ 的条件配方（Conditional Recipes）功能。
-   条件配方允许根据特定条件（如 mod 是否加载）动态启用或禁用配方。
+   提供 Minecraft 1.19+ 的条件配方( Conditional Recipes) 功能。
+   条件配方允许根据特定条件( 如 mod 是否加载) 动态启用或禁用配方。
 
-   使用示例：
+   使用示例:
    ```clojure
    (require '[com.fabriclj.swiss-knife.common.gameplay.conditional-recipes :as cond-recipes])
 
@@ -18,7 +18,7 @@
       :result \"minecraft:diamond_sword\"}
      (cond-recipes/mod-loaded-condition \"jei\"))
 
-   ;; 多个条件（AND）
+   ;; 多个条件( AND)
    (cond-recipes/conditional-recipe
      recipe-data
      (cond-recipes/all-conditions
@@ -38,12 +38,12 @@
 (defn mod-loaded-condition
   "创建 mod 加载条件
 
-   参数：
+   参数:
    - mod-id: mod ID 字符串
 
-   返回：条件数据
+   返回: 条件数据
 
-   示例：
+   示例:
    ```clojure
    (mod-loaded-condition \"jei\")
    ; => {:type \"forge:mod_loaded\" :modid \"jei\"}
@@ -53,14 +53,14 @@
    :modid mod-id})
 
 (defn not-condition
-  "创建否定条件（NOT）
+  "创建否定条件( NOT)
 
-   参数：
+   参数:
    - condition: 要否定的条件
 
-   返回：否定条件
+   返回: 否定条件
 
-   示例：
+   示例:
    ```clojure
    (not-condition (mod-loaded-condition \"jei\"))
    ; 仅当 JEI 未加载时
@@ -70,14 +70,14 @@
    :value condition})
 
 (defn all-conditions
-  "创建 AND 条件（所有条件都必须满足）
+  "创建 AND 条件( 所有条件都必须满足)
 
-   参数：
-   - conditions: 条件列表（可变参数）
+   参数:
+   - conditions: 条件列表( 可变参数)
 
-   返回：AND 条件
+   返回: AND 条件
 
-   示例：
+   示例:
    ```clojure
    (all-conditions
      (mod-loaded-condition \"jei\")
@@ -89,14 +89,14 @@
    :values (vec conditions)})
 
 (defn any-condition
-  "创建 OR 条件（至少一个条件满足）
+  "创建 OR 条件( 至少一个条件满足)
 
-   参数：
-   - conditions: 条件列表（可变参数）
+   参数:
+   - conditions: 条件列表( 可变参数)
 
-   返回：OR 条件
+   返回: OR 条件
 
-   示例：
+   示例:
    ```clojure
    (any-condition
      (mod-loaded-condition \"jei\")
@@ -110,12 +110,12 @@
 (defn item-exists-condition
   "创建物品存在条件
 
-   参数：
+   参数:
    - item-id: 物品 ID
 
-   返回：条件数据
+   返回: 条件数据
 
-   示例：
+   示例:
    ```clojure
    (item-exists-condition \"mymod:custom_item\")
    ```"
@@ -126,12 +126,12 @@
 (defn tag-empty-condition
   "创建标签为空条件
 
-   参数：
+   参数:
    - tag: 标签 ID
 
-   返回：条件数据
+   返回: 条件数据
 
-   示例：
+   示例:
    ```clojure
    (tag-empty-condition \"forge:ingots/copper\")
    ```"
@@ -146,13 +146,13 @@
 (defn conditional-recipe
   "创建条件配方
 
-   参数：
-   - recipe: 配方数据（map）
+   参数:
+   - recipe: 配方数据( map)
    - condition: 条件或条件列表
 
-   返回：带条件的配方数据
+   返回: 带条件的配方数据
 
-   示例：
+   示例:
    ```clojure
    (conditional-recipe
      {:type :crafting_shaped
@@ -172,14 +172,14 @@
 (defn conditional-recipe-with-fallback
   "创建带回退的条件配方
 
-   参数：
+   参数:
    - primary-recipe: 主配方
    - primary-condition: 主配方条件
    - fallback-recipe: 回退配方
 
-   返回：条件配方数据
+   返回: 条件配方数据
 
-   示例：
+   示例:
    ```clojure
    (conditional-recipe-with-fallback
      expensive-recipe
@@ -197,15 +197,15 @@
               :recipe fallback-recipe}]})
 
 (defn multi-conditional-recipe
-  "创建多条件配方（多个条件-配方对）
+  "创建多条件配方( 多个条件-配方对)
 
-   参数：
+   参数:
    - condition-recipe-pairs: 条件-配方对的向量
-     格式：[[condition1 recipe1] [condition2 recipe2] ...]
+     格式: [[condition1 recipe1] [condition2 recipe2] ...]
 
-   返回：条件配方数据
+   返回: 条件配方数据
 
-   示例：
+   示例:
    ```clojure
    (multi-conditional-recipe
      [[(mod-loaded-condition \"easy_mode\") easy-recipe]
@@ -235,13 +235,13 @@
 (defn save-conditional-recipe!
   "保存条件配方到文件
 
-   参数：
+   参数:
    - base-path: 基础路径
    - namespace: 命名空间
    - recipe-name: 配方名称
    - conditional-recipe-data: 条件配方数据
 
-   示例：
+   示例:
    ```clojure
    (save-conditional-recipe! \"./src/main/resources\" \"mymod\" \"diamond_sword_jei\"
      (conditional-recipe
@@ -266,13 +266,13 @@
 (defn when-mod-loaded
   "仅当指定 mod 加载时启用配方
 
-   参数：
+   参数:
    - mod-id: mod ID
    - recipe: 配方数据
 
-   返回：条件配方
+   返回: 条件配方
 
-   示例：
+   示例:
    ```clojure
    (when-mod-loaded \"jei\" my-recipe)
    ```"
@@ -282,13 +282,13 @@
 (defn when-mods-loaded
   "仅当所有指定 mod 都加载时启用配方
 
-   参数：
+   参数:
    - mod-ids: mod ID 列表
    - recipe: 配方数据
 
-   返回：条件配方
+   返回: 条件配方
 
-   示例：
+   示例:
    ```clojure
    (when-mods-loaded [\"jei\" \"nei\"] my-recipe)
    ```"
@@ -300,13 +300,13 @@
 (defn unless-mod-loaded
   "仅当指定 mod 未加载时启用配方
 
-   参数：
+   参数:
    - mod-id: mod ID
    - recipe: 配方数据
 
-   返回：条件配方
+   返回: 条件配方
 
-   示例：
+   示例:
    ```clojure
    (unless-mod-loaded \"jei\" my-recipe)
    ```"
@@ -361,7 +361,7 @@
       [[(mod-loaded-condition "easy_mode") easy-recipe]
        [(mod-loaded-condition "normal_mode") normal-recipe]
        [(mod-loaded-condition "hard_mode") hard-recipe]
-       [[] default-recipe]]))  ; 默认配方（无条件）
+       [[] default-recipe]]))  ; 默认配方( 无条件)
 
   ;; 5. 条件组合
   (save-conditional-recipe! "./src/main/resources" "mymod" "complex_recipe"

@@ -3,12 +3,13 @@
 
    提供方块标签、物品标签、实体标签的查询和创建。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.tags TagKey ItemTags BlockTags EntityTypeTags FluidTags]
-           [net.minecraft.core.registries Registries]
-           [net.minecraft.world.item ItemStack Item]
-           [net.minecraft.world.level.block Block BlockState]
-           [net.minecraft.world.entity EntityType]
-           [net.minecraft.resources ResourceLocation]))
+  (:import (net.minecraft.tags TagKey ItemTags BlockTags EntityTypeTags FluidTags)
+           (net.minecraft.core.registries Registries)
+           (net.minecraft.world.item ItemStack Item)
+           (net.minecraft.world.level.block Block BlockState)
+           (net.minecraft.world.entity EntityType)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.core.registries Registries)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)

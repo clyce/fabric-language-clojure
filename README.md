@@ -10,13 +10,13 @@ fabric-language-clojure 是一个 Fabric 语言支持模组，允许你使用 Cl
 
 ## 特性
 
-- **语言适配器**：在 `fabric.mod.json` 中使用 `"adapter": "clojure"` 声明 Clojure 入口点
-- **Clojure 运行时捆绑**：无需单独安装 Clojure，所有依赖都包含在 mod 中
-- **nREPL 支持**：内置 nREPL 服务器，支持运行时代码热替换
-- **核心 API 库**：`com.fabriclj` 提供最基础的 Minecraft API 封装
-- **高级工具库**：`Swiss Knife` 提供丰富的游戏功能封装和 DSL
-- **Mixin 桥接**：提供 `ClojureBridge` 工具类，方便从 Mixin 调用 Clojure 代码
-- **跨平台工具**：基于 Architectury API 的平台检测工具
+- **语言适配器**: 在 `fabric.mod.json` 中使用 `"adapter": "clojure"` 声明 Clojure 入口点
+- **Clojure 运行时捆绑**: 无需单独安装 Clojure，所有依赖都包含在 mod 中
+- **nREPL 支持**: 内置 nREPL 服务器，支持运行时代码热替换
+- **核心 API 库**: `com.fabriclj` 提供最基础的 Minecraft API 封装
+- **高级工具库**: `Swiss Knife` 提供丰富的游戏功能封装和 DSL
+- **Mixin 桥接**: 提供 `ClojureBridge` 工具类，方便从 Mixin 调用 Clojure 代码
+- **跨平台工具**: 基于 Architectury API 的平台检测工具
 
 ## 架构概览
 
@@ -55,7 +55,7 @@ fabric-language-clojure 是一个 Fabric 语言支持模组，允许你使用 Cl
 | **核心 API** | `com.fabriclj.*` | 语言支持、平台抽象、基础注册、nREPL | 所有 mod |
 | **高级工具库** | `com.fabriclj.swiss-knife.*` | 事件系统、游戏功能封装、客户端工具 | 需要丰富功能的 mod |
 
-详细文档：
+详细文档:
 - [fabriclj 核心 API](common/src/main/clojure/com/fabriclj/README.md)
 - [Swiss Knife 工具库](common/src/main/clojure/com/fabriclj/swiss-knife/README.md)
 
@@ -63,7 +63,7 @@ fabric-language-clojure 是一个 Fabric 语言支持模组，允许你使用 Cl
 
 ### 1. 添加依赖
 
-在你的 `build.gradle` 中添加：
+在你的 `build.gradle` 中添加:
 
 ```groovy
 dependencies {
@@ -73,7 +73,7 @@ dependencies {
 
 ### 2. 配置入口点
 
-**方式 A：使用 Java 入口类（推荐，兼容性最好）**
+**方式 A: 使用 Java 入口类（推荐，兼容性最好）**
 
 ```java
 // MyMod.java
@@ -99,9 +99,9 @@ public class MyMod implements ModInitializer {
 }
 ```
 
-**方式 B：使用 Clojure 适配器（纯 Fabric Loom 环境）**
+**方式 B: 使用 Clojure 适配器（纯 Fabric Loom 环境）**
 
-> ⚠️ 注意：语言适配器在 Architectury 开发环境中可能有兼容性问题
+> ⚠️ 注意: 语言适配器在 Architectury 开发环境中可能有兼容性问题
 
 ```json
 {
@@ -131,7 +131,7 @@ public class MyMod implements ModInitializer {
 
 ### 3. 编写 Clojure 代码
 
-#### 选项 A：使用最小 API（只用 fabriclj）
+#### 选项 A: 使用最小 API（只用 fabriclj）
 
 ```clojure
 ;; src/main/clojure/com/mymod/core.clj
@@ -157,7 +157,7 @@ public class MyMod implements ModInitializer {
   (println "[MyMod] Done!"))
 ```
 
-#### 选项 B：使用高级工具库（推荐）
+#### 选项 B: 使用高级工具库（推荐）
 
 ```clojure
 ;; src/main/clojure/com/mymod/core.clj
@@ -198,7 +198,7 @@ public class MyMod implements ModInitializer {
 
 ### 4. Mixin 支持
 
-Mixin 必须用 Java 编写，使用 `ClojureBridge` 调用 Clojure 代码：
+Mixin 必须用 Java 编写，使用 `ClojureBridge` 调用 Clojure 代码:
 
 ```java
 @Mixin(Player.class)
@@ -211,7 +211,7 @@ public class MyMixin {
 }
 ```
 
-对应的 Clojure 实现：
+对应的 Clojure 实现:
 
 ```clojure
 (ns com.mymod.hooks)
@@ -222,7 +222,7 @@ public class MyMixin {
 
 ## 入口点格式
 
-支持以下入口点格式：
+支持以下入口点格式:
 
 | 格式 | 示例 | 说明 |
 |------|------|------|
@@ -284,7 +284,7 @@ fabric-language-clojure/
 
 ## 与 fabric-language-kotlin 的对比
 
-本项目的设计参考了 [fabric-language-kotlin](https://github.com/FabricMC/fabric-language-kotlin)：
+本项目的设计参考了 [fabric-language-kotlin](https://github.com/FabricMC/fabric-language-kotlin):
 
 | 特性 | fabric-language-kotlin | fabric-language-clojure |
 |------|------------------------|-------------------------|

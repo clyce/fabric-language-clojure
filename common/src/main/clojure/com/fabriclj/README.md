@@ -42,7 +42,7 @@
 (lib/version)        ; => "1.0.0"
 ```
 
-**核心功能：**
+**核心功能: **
 - 平台检测（Fabric/Forge/NeoForge）
 - 开发模式检测
 - Mod 加载状态查询
@@ -76,11 +76,11 @@
   (reg/register-all! items blocks))
 ```
 
-**核心功能：**
+**核心功能: **
 - 创建 DeferredRegister
 - 注册游戏对象
 - 便捷宏（`defitem`, `defblock`）
-- 支持的注册表类型：`:item`, `:block`, `:entity`, `:block-entity`, `:menu`, `:recipe`, `:sound`, `:particle`, `:creative-tab`
+- 支持的注册表类型: `:item`, `:block`, `:entity`, `:block-entity`, `:menu`, `:recipe`, `:sound`, `:particle`, `:creative-tab`
 
 ### 3. `com.fabriclj.nrepl` - nREPL 服务
 
@@ -105,12 +105,12 @@
 (nrepl/get-port)         ; => 7888
 ```
 
-**核心功能：**
+**核心功能: **
 - 启动/停止 nREPL 服务器
 - 默认端口 7888，仅本地访问（127.0.0.1）
 - 服务器状态查询
 
-**连接方式：**
+**连接方式: **
 ```bash
 # Calva (VS Code)
 Ctrl+Shift+P -> "Calva: Connect to a running REPL" -> Generic -> localhost:7888
@@ -146,13 +146,13 @@ clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 (client/in-game?)  ; => true/false
 ```
 
-**核心功能：**
+**核心功能: **
 - 获取 Minecraft 客户端实例
 - 获取当前玩家（LocalPlayer）
 - 获取当前世界（ClientLevel）
 - 游戏状态检查
 
-**⚠️ 注意：** 仅在客户端环境调用！在服务端调用会崩溃。
+**⚠️ 注意: ** 仅在客户端环境调用！在服务端调用会崩溃。
 
 ## 🚀 快速开始
 
@@ -208,7 +208,7 @@ clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 
 ## 🔧 高级功能
 
-如果你需要更高级的功能，请使用 **[Swiss Knife](swiss-knife/README.md)** 工具库：
+如果你需要更高级的功能，请使用 **[Swiss Knife](swiss-knife/README.md)** 工具库:
 
 | fabriclj (基础层) | Swiss Knife (高级层) |
 |------------------|---------------------|
@@ -261,7 +261,7 @@ clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' \
 └──────────────────────────────────┘
 ```
 
-**好处：**
+**好处: **
 - fabriclj 保持极简和稳定，API 变动少
 - Swiss Knife 可以快速迭代和添加新功能
 - 用户可以选择只使用 fabriclj 的最小功能

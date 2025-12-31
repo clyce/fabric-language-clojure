@@ -1,19 +1,19 @@
 (ns com.fabriclj.swiss-knife.client.events.core
   "瑞士军刀 - 客户端事件
-   封装客户端专用事件（渲染、输入等）
-   注意：此命名空间仅在客户端环境可用！"
+   封装客户端专用事件( 渲染、输入等)
+   注意: 此命名空间仅在客户端环境可用！"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [dev.architectury.event EventResult]
-           [dev.architectury.event.events.client ClientGuiEvent
-            ClientLifecycleEvent
-            ClientPlayerEvent
-            ClientRawInputEvent
-            ClientScreenInputEvent
-            ClientTickEvent]
-           [net.minecraft.client Minecraft]
-           [net.minecraft.client.player LocalPlayer]
-           [net.minecraft.client.multiplayer ClientLevel]
-           [net.minecraft.client.gui.screens Screen]))
+  (:import (dev.architectury.event EventResult)
+           (dev.architectury.event.events.client ClientGuiEvent
+                                                 ClientLifecycleEvent
+                                                 ClientPlayerEvent
+                                                 ClientRawInputEvent
+                                                 ClientScreenInputEvent)
+           (dev.architectury.event.events.client ClientTickEvent)
+           (net.minecraft.client Minecraft)
+           (net.minecraft.client.player LocalPlayer)
+           (net.minecraft.client.multiplayer ClientLevel)
+           (net.minecraft.client.gui.screens Screen)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -54,11 +54,11 @@
 ;; ============================================================================
 
 (defn on-client-tick
-  "每个客户端tick 触发（20次/秒）
+  "每个客户端tick 触发( 20次/秒)
    参数:
    - handler: 函数 (fn [^Minecraft minecraft] ...)
 
-   注意：此函数每秒调用 20 次，避免执行耗时操作"
+   注意: 此函数每秒调用 20 次，避免执行耗时操作"
   [handler]
   (.register (ClientTickEvent/CLIENT_PRE)
              (reify java.util.function.Consumer
@@ -128,12 +128,15 @@
    参数说明:
    - button: 0=左键, 1=右键, 2=中键
    - action: 0=释放, 1=按下
-   - mods: 修饰键（Shift/Ctrl/Alt"
+   - mods: 修饰键( Shift/Ctrl/Alt"
   [handler]
   (.register (ClientRawInputEvent/MOUSE_CLICKED_PRE)
-             (reify dev.architectury.event.events.client.ClientRawInputEvent$MouseClicked
-               (click [_ minecraft button action mods]
-                 (handler minecraft button action mods)))))
+             (reify java.util.function.Consumer
+               (accept [_ click-context]
+                 (handler (.minecraft click-context)
+                          (.button click-context)
+                          (.action click-context)
+                          (.mods click-context))))))
 
 (defn on-mouse-scrolled
   "鼠标滚轮滚动时触发
@@ -142,12 +145,13 @@
    - handler: 函数 (fn [^Minecraft minecraft amount] ...) -> EventResult
 
    参数说明:
-   - amount: 滚动量（正数向上，负数向下）"
+   - amount: 滚动量( 正数向上，负数向下) "
   [handler]
   (.register (ClientRawInputEvent/MOUSE_SCROLLED)
-             (reify dev.architectury.event.events.client.ClientRawInputEvent$MouseScrolled
-               (scrolled [_ minecraft amount]
-                 (handler minecraft amount)))))
+             (reify java.util.function.Consumer
+               (accept [_ scroll-context]
+                 (handler (.minecraft scroll-context)
+                          (.amount scroll-context))))))
 
 (defn on-key-pressed
   "键盘按下时触发
@@ -162,9 +166,13 @@
    - mods: 修饰"
   [handler]
   (.register (ClientRawInputEvent/KEY_PRESSED)
-             (reify dev.architectury.event.events.client.ClientRawInputEvent$KeyPressed
-               (keyPressed [_ minecraft key scancode action mods]
-                 (handler minecraft key scancode action mods)))))
+             (reify java.util.function.Consumer
+               (accept [_ key-context]
+                 (handler (.minecraft key-context)
+                          (.key key-context)
+                          (.scancode key-context)
+                          (.action key-context)
+                          (.mods key-context))))))
 
 ;; ============================================================================
 ;; GUI 事件
@@ -177,9 +185,12 @@
    - handler: 函数 (fn [^Minecraft minecraft ^Screen screen add-widget remove-widget] ...) -> EventResult"
   [handler]
   (.register (ClientGuiEvent/INIT_PRE)
-             (reify dev.architectury.event.events.client.ClientGuiEvent$InitPre
-               (init [_ minecraft screen add-widget remove-widget]
-                 (handler minecraft screen add-widget remove-widget)))))
+             (reify java.util.function.Consumer
+               (accept [_ init-context]
+                 (handler (.minecraft init-context)
+                          (.screen init-context)
+                          (.addWidget init-context)
+                          (.removeWidget init-context))))))
 
 (defn on-screen-render-pre
   "屏幕渲染前触发
@@ -188,17 +199,25 @@
    - handler: 函数 (fn [^Screen screen ^GuiGraphics graphics mouse-x mouse-y delta] ...) -> EventResult"
   [handler]
   (.register (ClientGuiEvent/RENDER_PRE)
-             (reify dev.architectury.event.events.client.ClientGuiEvent$RenderPre
-               (render [_ screen graphics mouse-x mouse-y delta]
-                 (handler screen graphics mouse-x mouse-y delta)))))
+             (reify java.util.function.Consumer
+               (accept [_ render-context]
+                 (handler (.screen render-context)
+                          (.graphics render-context)
+                          (.mouseX render-context)
+                          (.mouseY render-context)
+                          (.delta render-context))))))
 
 (defn on-screen-render-post
   "屏幕渲染后触发"
   [handler]
   (.register (ClientGuiEvent/RENDER_POST)
-             (reify dev.architectury.event.events.client.ClientGuiEvent$RenderPost
-               (render [_ screen graphics mouse-x mouse-y delta]
-                 (handler screen graphics mouse-x mouse-y delta)))))
+             (reify java.util.function.Consumer
+               (accept [_ render-context]
+                 (handler (.screen render-context)
+                          (.graphics render-context)
+                          (.mouseX render-context)
+                          (.mouseY render-context)
+                          (.delta render-context))))))
 
 ;; ============================================================================
 ;; 辅助函数
@@ -210,18 +229,23 @@
   (EventResult/pass))
 
 (defn event-interrupt
-  "中断事件"
+  "中断事件
+
+   注意: EventResult/interrupt 只接受一个 boolean 参数。
+   如果需要返回值，请直接返回 InteractionResult 或使用其他事件 API。"
   ([]
    (EventResult/interrupt false))
   ([value]
-   (EventResult/interrupt true value)))
+   ;; EventResult/interrupt 只接受 boolean，不支持返回值
+   ;; 如果需要返回值，应该在事件处理中直接处理
+   (EventResult/interrupt true)))
 
 ;; ============================================================================
 ;; 便捷
 ;; ============================================================================
 
 (defmacro on-key
-  "注册特定按键事件（语法糖)
+  "注册特定按键事件( 语法糖)
 
    示例:
    ```clojure

@@ -3,12 +3,12 @@
 
    提供简化的命令注册和参数解析。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [com.mojang.brigadier CommandDispatcher]
-           [com.mojang.brigadier.arguments IntegerArgumentType StringArgumentType]
-           [com.mojang.brigadier.builder LiteralArgumentBuilder RequiredArgumentBuilder]
-           [com.mojang.brigadier.context CommandContext]
-           [net.minecraft.commands CommandSourceStack Commands]
-           [net.minecraft.network.chat Component]))
+  (:import (com.mojang.brigadier CommandDispatcher)
+           (com.mojang.brigadier.arguments IntegerArgumentType StringArgumentType)
+           (com.mojang.brigadier.builder LiteralArgumentBuilder RequiredArgumentBuilder)
+           (com.mojang.brigadier.context CommandContext)
+           (net.minecraft.commands CommandSourceStack Commands)
+           (net.minecraft.network.chat Component)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -23,7 +23,7 @@
    参数:
    - name: 命令名称
 
-   返回：LiteralArgumentBuilder"
+   返回: LiteralArgumentBuilder"
   ^LiteralArgumentBuilder [^String name]
   (Commands/literal name))
 
@@ -32,9 +32,9 @@
 
    参数:
    - name: 参数名称
-   - type: 参数类型（:int/:string 等）
+   - type: 参数类型( :int/:string 等)
 
-   返回：RequiredArgumentBuilder"
+   返回: RequiredArgumentBuilder"
   ^RequiredArgumentBuilder [^String name type]
   (let [arg-type (case type
                    :int (IntegerArgumentType/integer)
@@ -52,7 +52,7 @@
    - builder: 命令构建器
    - handler: 执行函数 (fn [^CommandContext context] -> int)
 
-   返回：builder"
+   返回: builder"
   [builder handler]
   (.executes builder
              (reify com.mojang.brigadier.Command
@@ -89,7 +89,7 @@
    参数:
    - context: CommandContext
    - message: 消息文本
-   - broadcast?: 是否广播（可选，默认 false）"
+   - broadcast?: 是否广播( 可选，默认 false) "
   ([context message]
    (send-feedback context message false))
   ([^CommandContext context message broadcast?]
@@ -141,7 +141,7 @@
    参数:
    - dispatcher: CommandDispatcher
 
-   注意：通常在服务器启动时由框架调用"
+   注意: 通常在服务器启动时由框架调用"
   [^CommandDispatcher dispatcher]
   (doseq [{:keys [name builder]} @commands]
     (.register dispatcher (builder))))
@@ -152,7 +152,7 @@
 
 
 (defmacro defcommand
-  "定义命令（语法糖）
+  "定义命令( 语法糖)
 
    示例:
    ```clojure
@@ -217,4 +217,5 @@
                             (.teleportTo player x y z)
                             (send-feedback context
                                            (str "Teleported to " x " " y " " z))
-                            1))))))))))
+                            1)))))))))))
+  )

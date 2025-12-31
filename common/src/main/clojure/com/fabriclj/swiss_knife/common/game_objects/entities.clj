@@ -3,14 +3,14 @@
 
    提供实体操作、生成、属性修改等功能。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.entity Entity EntityType LivingEntity Mob]
-           [net.minecraft.world.entity.player Player]
-           [net.minecraft.world.entity.ai.attributes Attributes]
-           [net.minecraft.world.level Level ServerLevelAccessor]
-           [net.minecraft.world.phys Vec3]
-           [net.minecraft.core BlockPos]
-           [net.minecraft.server.level ServerLevel]
-           [java.util UUID]))
+  (:import (net.minecraft.world.entity Entity EntityType LivingEntity Mob)
+           (net.minecraft.world.entity.player Player)
+           (net.minecraft.world.entity.ai.attributes Attributes)
+           (net.minecraft.world.level Level ServerLevelAccessor)
+           (net.minecraft.world.phys Vec3)
+           (net.minecraft.core BlockPos)
+           (net.minecraft.server.level ServerLevel)
+           (java.util UUID)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -22,7 +22,7 @@
 (defn get-entity-by-uuid
   "根据 UUID 获取实体
 
-   返回：Entity 或 nil"
+   返回: Entity 或 nil"
   [^ServerLevel level ^UUID uuid]
   (.getEntity level uuid))
 
@@ -33,7 +33,7 @@
    - level: Level
    - center: 中心坐标 (Vec3 或 Entity)
    - radius: 半径
-   - predicate: 过滤函数（可选）
+   - predicate: 过滤函数( 可选)
 
    示例:
    ```clojure
@@ -66,9 +66,9 @@
    参数:
    - level: Level
    - entity-or-pos: 实体或位置
-   - max-distance: 最大距离（可选）
+   - max-distance: 最大距离( 可选)
 
-   返回：Player 或 nil"
+   返回: Player 或 nil"
   ([^Level level entity-or-pos]
    (get-nearest-player level entity-or-pos -1.0))
   ([^Level level entity-or-pos max-distance]
@@ -128,14 +128,14 @@
 (defn get-position
   "获取实体位置
 
-   返回：Vec3"
+   返回: Vec3"
   ^Vec3 [^Entity entity]
   (.position entity))
 
 (defn get-block-pos
   "获取实体所在方块位置
 
-   返回：BlockPos"
+   返回: BlockPos"
   ^BlockPos [^Entity entity]
   (.blockPosition entity))
 
@@ -157,7 +157,7 @@
    - entity: Entity
    - x, y, z: 坐标
 
-   返回：是否成功"
+   返回: 是否成功"
   ([^Entity entity ^Vec3 pos]
    (teleport! entity (.x pos) (.y pos) (.z pos)))
   ([^Entity entity x y z]
@@ -166,7 +166,7 @@
 (defn get-velocity
   "获取实体速度
 
-   返回：Vec3"
+   返回: Vec3"
   ^Vec3 [^Entity entity]
   (.getDeltaMovement entity))
 
@@ -193,7 +193,7 @@
 (defn get-look-angle
   "获取实体视角
 
-   返回：{:yaw 偏航角 :pitch 俯仰角}"
+   返回: {:yaw 偏航角 :pitch 俯仰角}"
   [^Entity entity]
   {:yaw (.getYRot entity)
    :pitch (.getXRot entity)})
@@ -215,9 +215,9 @@
    - level: ServerLevel
    - entity-type: EntityType 或关键字 (如 :minecraft:zombie)
    - x, y, z: 坐标
-   - nbt: NBT 数据（可选）
+   - nbt: NBT 数据( 可选)
 
-   返回：生成的实体或 nil
+   返回: 生成的实体或 nil
 
    示例:
    ```clojure
@@ -237,14 +237,14 @@
        entity))))
 
 (defn spawn-mob!
-  "生成生物（带自然生成设置）
+  "生成生物( 带自然生成设置)
 
    参数:
    - level: ServerLevel
    - entity-type: EntityType 或关键字
    - pos: BlockPos 或 Vec3
 
-   返回：生成的生物或 nil"
+   返回: 生成的生物或 nil"
   [^ServerLevel level entity-type pos]
   (let [^EntityType type (if (instance? EntityType entity-type)
                            entity-type
@@ -270,8 +270,8 @@
    参数:
    - entity: LivingEntity
    - effect: MobEffect 或关键字
-   - duration: 持续时间（tick）
-   - amplifier: 等级（0 = I, 1 = II, ...）
+   - duration: 持续时间( tick)
+   - amplifier: 等级( 0 = I, 1 = II, ...)
    - show-particles?: 是否显示粒子
 
    示例:
@@ -320,7 +320,7 @@
 (defn get-custom-name
   "获取实体自定义名称
 
-   返回：Component 或 nil"
+   返回: Component 或 nil"
   [^Entity entity]
   (when (.hasCustomName entity)
     (.getCustomName entity)))
@@ -331,7 +331,7 @@
    参数:
    - entity: Entity
    - name: 名称字符串或 Component
-   - visible?: 是否总是显示（可选）"
+   - visible?: 是否总是显示( 可选) "
   ([^Entity entity name]
    (set-custom-name! entity name true))
   ([^Entity entity name visible?]
@@ -351,7 +351,7 @@
 
    参数:
    - entity: Entity
-   - seconds: 燃烧时间（秒）"
+   - seconds: 燃烧时间( 秒) "
   [^Entity entity seconds]
   (.setSecondsOnFire entity seconds))
 
@@ -372,14 +372,14 @@
 (defn get-passengers
   "获取实体的所有乘客
 
-   返回：Entity 列表"
+   返回: Entity 列表"
   [^Entity entity]
   (into [] (.getPassengers entity)))
 
 (defn add-passenger!
   "添加乘客
 
-   返回：是否成功"
+   返回: 是否成功"
   [^Entity entity ^Entity passenger]
   (.startRiding passenger entity))
 

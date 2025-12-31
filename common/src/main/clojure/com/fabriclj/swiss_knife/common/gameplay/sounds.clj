@@ -4,12 +4,12 @@
    提供音效播放、注册和控制功能。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.registry :as reg])
-  (:import [net.minecraft.sounds SoundEvent SoundSource]
-           [net.minecraft.world.entity Entity]
-           [net.minecraft.world.entity.player Player]
-           [net.minecraft.world.level Level]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.core BlockPos]))
+  (:import (net.minecraft.sounds SoundEvent SoundSource)
+           (net.minecraft.world.entity Entity)
+           (net.minecraft.world.entity.player Player)
+           (net.minecraft.world.level Level)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.core BlockPos)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -37,7 +37,7 @@
    参数:
    - source: 关键字或 SoundSource
 
-   返回：SoundSource"
+   返回: SoundSource"
   ^SoundSource [source]
   (if (keyword? source)
     (get sound-sources source SoundSource/MASTER)
@@ -53,7 +53,7 @@
    参数:
    - id: ResourceLocation 或字符串
 
-   返回：SoundEvent
+   返回: SoundEvent
 
    示例:
    ```clojure
@@ -70,9 +70,9 @@
    - registry: 音效注册表
    - id: 音效 ID
    - opts: 可选参数
-     - :fixed-range - 固定范围（距离）
+     - :fixed-range - 固定范围( 距离)
 
-   返回：RegistrySupplier
+   返回: RegistrySupplier
 
    示例:
    ```clojure
@@ -106,12 +106,12 @@
 
    参数:
    - level: Level
-   - pos: 位置（Vec3、BlockPos 或向量 [x y z]）
-   - sound: SoundEvent 或关键字（如 :minecraft:entity.player.hurt）
+   - pos: 位置( Vec3、BlockPos 或向量 [x y z])
+   - sound: SoundEvent 或关键字( 如 :minecraft:entity.player.hurt)
    - opts: 可选参数
-     - :source - 音效源（默认 :master）
-     - :volume - 音量（默认 1.0）
-     - :pitch - 音调（默认 1.0）
+     - :source - 音效源( 默认 :master)
+     - :volume - 音量( 默认 1.0)
+     - :pitch - 音调( 默认 1.0)
      - :seed - 随机种子
 
    示例:
@@ -142,13 +142,13 @@
     (.playSound level nil x y z sound-event source-type volume pitch seed)))
 
 (defn play-sound-to-player!
-  "向玩家播放音效（仅该玩家听到）
+  "向玩家播放音效( 仅该玩家听到)
 
    参数:
    - player: Player
    - pos: 位置
    - sound: SoundEvent 或关键字
-   - opts: 可选参数（同 play-sound!）
+   - opts: 可选参数( 同 play-sound!)
 
    示例:
    ```clojure
@@ -195,7 +195,7 @@
 ;; ============================================================================
 
 (defn play-sound-sequence!
-  "播放音效序列（延迟播放）
+  "播放音效序列( 延迟播放)
 
    参数:
    - level: Level
@@ -254,7 +254,7 @@
    参数:
    - level: Level
    - pos: 位置
-   - sound-key: 音效关键字（来自 common-sounds）
+   - sound-key: 音效关键字( 来自 common-sounds)
    - opts: 可选参数
 
    示例:
@@ -328,7 +328,7 @@
 ;; ============================================================================
 
 (defmacro defsound
-  "定义音效（语法糖）
+  "定义音效( 语法糖)
 
    示例:
    ```clojure

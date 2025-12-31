@@ -1,20 +1,20 @@
 (ns com.fabriclj.swiss-knife.common.builders.macros
   "瑞士军刀 - DSL 增强模块
 
-   **模块定位**：编译时宏，提供声明式语法糖
-   
-   **与 builders 模块的关系**：
+   **模块定位**: 编译时宏，提供声明式语法糖
+
+   **与 builders 模块的关系**:
    - `dsl.clj` - 编译时宏展开，适合静态配置，代码简洁
    - `builders.clj` - 运行时链式API，适合动态构建，组合灵活
-   
-   **使用场景**：
+
+   **使用场景**:
    ```clojure
    ;; 使用 DSL 宏 - 静态配置，代码简洁
    (defitem+ items magic-wand \"magic_wand\"
      :stack-size 1
      :durability 500
      :rarity :rare)
-   
+
    ;; 使用 Builders - 动态构建，运行时决定
    (let [rarity (if premium? :epic :rare)
          props (-> (builders/item-properties)
@@ -22,23 +22,23 @@
                    (builders/with-durability 500)
                    (builders/with-rarity rarity))]
      (Item. props))
-   
+
    ;; 不要在宏中使用运行时值
    (defitem+ items my-item \"my_item\"
      :rarity (if premium? :epic :rare))  ; 编译错误！
    ```
-   
-   **提示**：如果需要条件逻辑或动态配置，请使用 `builders` 模块。"
+
+   **提示**: 如果需要条件逻辑或动态配置，请使用 `builders` 模块。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.common.registry.core :as registry]
             [com.fabriclj.swiss-knife.common.events.core :as events])
-  (:import [net.minecraft.world.item Item Item$Properties BlockItem]
-           [net.minecraft.world.level.block Block Block$Properties]
-           [net.minecraft.world.level.block.state BlockBehaviour BlockBehaviour$Properties]
-           [net.minecraft.world.food FoodProperties]
-           [net.minecraft.world.item.context UseOnContext]
-           [net.minecraft.world.InteractionResult]
-           [net.minecraft.world.entity.player Player]))
+  (:import (net.minecraft.world.item Item Item$Properties BlockItem)
+           (net.minecraft.world.level.block Block Block$Properties)
+           (net.minecraft.world.level.block.state BlockBehaviour BlockBehaviour$Properties)
+           (net.minecraft.world.food FoodProperties)
+           (net.minecraft.world.item.context UseOnContext)
+           (net.minecraft.world InteractionResult)
+           (net.minecraft.world.entity.player Player)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -54,15 +54,15 @@
 
    参数:
    - registry: 注册表
-   - name: 物品名称（符号）
-   - id: 物品 ID（字符串）
+   - name: 物品名称( 符号)
+   - id: 物品 ID( 字符串)
    - options: 配置选项
 
    选项:
    - :stack-size - 堆叠数量
    - :durability - 耐久度
    - :as-food - 食物属性 {:nutrition N :saturation S :meat? bool}
-   - :as-fuel - 燃料燃烧时间（tick）
+   - :as-fuel - 燃料燃烧时间( tick)
    - :rarity - 稀有度 (:common/:uncommon/:rare/:epic)
    - :fireproof? - 是否防火
    - :on-use - 右键使用 (fn [level player hand] -> InteractionResult)
@@ -111,7 +111,7 @@
                                            (.nutrition ~nutrition)
                                            (.saturationModifier ~(float saturation))
                                            ~@(when meat?
-                                               [`.meat`])
+                                               ['(.meat)])
                                            .build)]
                        (.food props# food-props#))]))
 
@@ -131,7 +131,7 @@
                         (~on-inventory-tick stack# level# entity# slot# selected?#))]))))))))
 
 (defmacro deftool+
-  "定义工具类物品（剑/镐/斧/铲/锄）
+  "定义工具类物品( 剑/镐/斧/铲/锄)
 
    参数:
    - registry: 注册表
@@ -207,7 +207,7 @@
                        (~on-attack stack# target# attacker#))]))))))))
 
 (defmacro defweapon+
-  "定义武器类物品（剑的别名，语义更清晰）
+  "定义武器类物品( 剑的别名，语义更清晰)
 
    用法同 deftool+，但 tool-type 固定为 :sword
 
@@ -230,9 +230,9 @@
    - armor-type: 护甲类型 (:helmet/:chestplate/:leggings/:boots)
    - material: 护甲材质 (:leather/:chainmail/:iron/:gold/:diamond/:netherite)
    - options: 其他选项
-     - :defense - 防御值（可选，默认使用材质默认值）
-     - :toughness - 护甲韧性（可选）
-     - :knockback-resistance - 击退抗性（可选）
+     - :defense - 防御值( 可选，默认使用材质默认值)
+     - :toughness - 护甲韧性( 可选)
+     - :knockback-resistance - 击退抗性( 可选)
      - :rarity - 稀有度
 
    示例:
@@ -291,9 +291,9 @@
    - :strength - 硬度和抗性 [hardness resistance]
    - :sound - 音效类型 (:stone/:wood/:metal/:glass)
    - :light-level - 光照等级 (0-15)
-   - :requires-tool? - 是否需要正确工具才能掉落（见上方说明）
-   - :no-drops? - 是否不掉落（例如基岩）
-   - :block-item? - 是否创建物品形式（默认 true）
+   - :requires-tool? - 是否需要正确工具才能掉落( 见上方说明)
+   - :no-drops? - 是否不掉落( 例如基岩)
+   - :block-item? - 是否创建物品形式( 默认 true)
    - :on-use - 右键交互 (fn [state level pos player hand hit] -> InteractionResult)
    - :on-break - 破坏时 (fn [state level pos player] -> nil)
 

@@ -3,11 +3,11 @@
 
    提供玩家数据、世界数据的保存和加载功能。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.nbt CompoundTag ListTag Tag]
+  (:import (net.minecraft.nbt CompoundTag ListTag Tag)
            [net.minecraft.world.entity.player Player]
-           [net.minecraft.server.level ServerPlayer]
-           [net.minecraft.world.level.saveddata SavedData]
-           [java.util UUID]))
+           (net.minecraft.server.level ServerPlayer)
+           (net.minecraft.world.level.saveddata SavedData)
+           (java.util UUID)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -19,7 +19,7 @@
 (defn nbt->clj
   "将 NBT 转换为 Clojure 数据
 
-   支持：CompoundTag -> Map, ListTag -> Vector"
+   支持: CompoundTag -> Map, ListTag -> Vector"
   [^Tag nbt]
   (cond
     (instance? CompoundTag nbt)
@@ -47,7 +47,7 @@
 (defn clj->nbt
   "将 Clojure 数据转换为 NBT
 
-   支持：Map -> CompoundTag, Vector -> ListTag"
+   支持: Map -> CompoundTag, Vector -> ListTag"
   ^CompoundTag [data]
   (let [tag (CompoundTag.)]
     (doseq [[k v] data]
@@ -96,7 +96,7 @@
 
    参数:
    - mod-id: Mod ID
-   - key-name: 键名称（可选，默认 \"data\"）
+   - key-name: 键名称( 可选，默认 \"data\")
 
    示例:
    ```clojure
@@ -113,9 +113,9 @@
 
    参数:
    - player: Player
-   - data-key: 数据键（可选，默认使用内部键）
+   - data-key: 数据键( 可选，默认使用内部键)
 
-   返回：Clojure Map
+   返回: Clojure Map
 
    示例:
    ```clojure
@@ -139,7 +139,7 @@
    参数:
    - player: Player
    - data: Clojure Map
-   - data-key: 数据键（可选）
+   - data-key: 数据键( 可选)
 
    示例:
    ```clojure
@@ -157,12 +157,12 @@
      (.put persistent-data data-key nbt))))
 
 (defn update-player-data!
-  "更新玩家数据（使用函数）
+  "更新玩家数据( 使用函数)
 
    参数:
    - player: Player
    - f: 更新函数 (fn [old-data] -> new-data)
-   - data-key: 数据键（可选）
+   - data-key: 数据键( 可选)
 
    示例:
    ```clojure
@@ -182,8 +182,8 @@
    参数:
    - player: Player
    - key: 字段关键字
-   - default: 默认值（可选）
-   - data-key: 数据键（可选）"
+   - default: 默认值( 可选)
+   - data-key: 数据键( 可选) "
   ([player key]
    (get-player-value player key nil))
   ([player key default]
@@ -198,7 +198,7 @@
    - player: Player
    - key: 字段关键字
    - value: 字段值
-   - data-key: 数据键（可选）"
+   - data-key: 数据键( 可选) "
   ([player key value]
    (set-player-value! player key value default-data-key))
   ([player key value data-key]
@@ -217,9 +217,9 @@
 
    参数:
    - id: 数据 ID
-   - initial-data: 初始数据（可选）
+   - initial-data: 初始数据( 可选)
 
-   返回：数据原子"
+   返回: 数据原子"
   ([id]
    (create-world-data id {}))
   ([id initial-data]
@@ -265,13 +265,13 @@
 
 ;; Response to clyce: 是的，完全支持持久化。
 ;;
-;; 玩家数据通过 Minecraft 的 PersistentData NBT 系统自动持久化：
-;; - 数据保存在玩家的 .dat 文件中（world/playerdata/UUID.dat）
+;; 玩家数据通过 Minecraft 的 PersistentData NBT 系统自动持久化:
+;; - 数据保存在玩家的 .dat 文件中( world/playerdata/UUID.dat)
 ;; - 当玩家登出时自动保存
 ;; - 当玩家登入时自动加载
 ;; - 跨服务器重启保持数据
 ;;
-;; 世界数据目前使用内存存储（atom），需要额外实现持久化。
+;; 世界数据目前使用内存存储( atom) ，需要额外实现持久化。
 ;; 可以通过 Minecraft 的 SavedData 系统实现，或使用自定义序列化方案。
 ;; 建议上层 mod 根据需求选择持久化策略。
 
@@ -280,10 +280,9 @@
 ;; ============================================================================
 
 (defprotocol WorldDataPersistence
-  "世界数据持久化协议
-
-  (save-world-data [this id data] \"保存数据\")
-  (load-world-data [this id] \"加载数据\")")
+  "世界数据持久化协议"
+  (save-world-data [this id data] "保存数据")
+  (load-world-data [this id] "加载数据"))
 
 (defrecord MemoryPersistence []
   WorldDataPersistence
@@ -310,7 +309,7 @@
 
    参数:
    - strategy: 持久化策略实例
-     - (->MemoryPersistence) - 仅内存（默认）
+     - (->MemoryPersistence) - 仅内存( 默认)
      - (->NBTPersistence server-level data-dir) - NBT 文件持久化
 
    示例:
@@ -323,18 +322,18 @@
   (reset! default-persistence strategy))
 
 (defn create-world-data
-  "创建世界数据存储（现支持持久化）
+  "创建世界数据存储( 现支持持久化)
 
    参数:
    - id: 数据 ID
-   - initial-data: 初始数据（可选）
-   - persistence: 持久化策略（可选，默认使用全局策略）
+   - initial-data: 初始数据( 可选)
+   - persistence: 持久化策略( 可选，默认使用全局策略)
 
-   返回：数据原子
+   返回: 数据原子
 
    示例:
    ```clojure
-   ;; 使用默认策略（内存）
+   ;; 使用默认策略( 内存)
    (create-world-data \"my-data\" {:counter 0})
 
    ;; 使用自定义持久化
@@ -353,14 +352,14 @@
      data)))
 
 (defn set-world-data!
-  "设置世界数据（自动持久化）"
+  "设置世界数据( 自动持久化) "
   [id data]
   (when-let [store (get @world-data-store id)]
     (reset! (:data store) data)
     (save-world-data (:persistence store @default-persistence) id data)))
 
 (defn update-world-data!
-  "更新世界数据（自动持久化）"
+  "更新世界数据( 自动持久化) "
   [id f]
   (when-let [store (get @world-data-store id)]
     (let [new-data (swap! (:data store) f)
@@ -371,7 +370,7 @@
   "强制保存世界数据到持久化存储
 
    参数:
-   - id: 数据 ID（nil 表示保存所有）"
+   - id: 数据 ID( nil 表示保存所有) "
   ([]
    (doseq [[id store] @world-data-store]
      (force-save-world-data! id)))
@@ -409,7 +408,7 @@
 
   ;; ========== 世界数据持久化 ==========
 
-  ;; 5. 使用默认策略（内存）
+  ;; 5. 使用默认策略( 内存)
   (create-world-data "server-stats" {:player-count 0})
   (update-world-data! "server-stats" #(update % :player-count inc))
 

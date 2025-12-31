@@ -1,19 +1,19 @@
 (ns com.fabriclj.swiss-knife.common.world.regions
   "方块区域操作工具
 
-   提供对多个方块进行批量操作的功能，包括：
+   提供对多个方块进行批量操作的功能，包括:
    - 区域填充
    - 方块替换
-   - 几何形状生成（球体、圆柱等）
+   - 几何形状生成( 球体、圆柱等)
    - 区域扫描
 
-   注意：大区域操作可能导致性能问题，建议分批执行。"
+   注意: 大区域操作可能导致性能问题，建议分批执行。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.level Level]
-           [net.minecraft.core BlockPos]
-           [net.minecraft.world.level.block Block]
-           [net.minecraft.world.level.block.state BlockState]
-           [net.minecraft.world.phys Vec3]))
+  (:import (net.minecraft.world.level Level)
+           (net.minecraft.core BlockPos)
+           (net.minecraft.world.level.block Block)
+           (net.minecraft.world.level.block.state BlockState)
+           (net.minecraft.world.phys Vec3)))
 
 (set! *warn-on-reflection* true)
 
@@ -30,7 +30,7 @@
    - BlockPos - 直接返回
    - Vec3 - 转换为 BlockPos
 
-   返回：BlockPos
+   返回: BlockPos
 
    示例:
    ```clojure
@@ -58,11 +58,11 @@
 
    参数:
    - level: Level
-   - from-pos: 起始位置（任意支持的格式）
-   - to-pos: 结束位置（任意支持的格式）
-   - block: 方块（Block 或 BlockState）
+   - from-pos: 起始位置( 任意支持的格式)
+   - to-pos: 结束位置( 任意支持的格式)
+   - block: 方块( Block 或 BlockState)
 
-   性能提示：
+   性能提示:
    - 区域 >10000 方块会有明显延迟
    - 考虑使用 fill-blocks-async! 进行异步填充
 
@@ -99,8 +99,8 @@
    - level: Level
    - from-pos: 起始位置
    - to-pos: 结束位置
-   - old-block: 要替换的方块（Block、BlockState 或资源定位符）
-   - new-block: 新方块（Block 或 BlockState）
+   - old-block: 要替换的方块( Block、BlockState 或资源定位符)
+   - new-block: 新方块( Block 或 BlockState)
 
    示例:
    ```clojure
@@ -139,7 +139,7 @@
    - to-pos: 结束位置
    - pred: 谓词函数 (fn [pos state] -> boolean)
 
-   返回：满足条件的 [pos state] 列表
+   返回: 满足条件的 [pos state] 列表
 
    示例:
    ```clojure
@@ -187,7 +187,7 @@
    - radius: 半径
    - block: 方块
    - opts: 选项
-     - :hollow? - 是否空心（默认 false）
+     - :hollow? - 是否空心( 默认 false)
 
    示例:
    ```clojure
@@ -227,7 +227,7 @@
    - height: 高度
    - block: 方块
    - opts: 选项
-     - :hollow? - 是否空心（默认 false）
+     - :hollow? - 是否空心( 默认 false)
      - :axis - 轴向 (:y/:x/:z，默认 :y)
 
    示例:
@@ -238,7 +238,7 @@
    ;; 空心圆柱
    (fill-cylinder level [100 64 200] 3 10 Blocks/GLASS :hollow? true)
 
-   ;; 水平圆柱（沿 X 轴）
+   ;; 水平圆柱( 沿 X 轴)
    (fill-cylinder level [100 64 200] 3 10 Blocks/STONE :axis :x)
    ```"
   [^Level level center radius height block & {:keys [hollow? axis] :or {hollow? false axis :y}}]
@@ -289,8 +289,8 @@
    - height: 高度
    - block: 方块
    - opts: 选项
-     - :hollow? - 是否空心（默认 false）
-     - :inverted? - 是否倒置（默认 false）
+     - :hollow? - 是否空心( 默认 false)
+     - :inverted? - 是否倒置( 默认 false)
 
    示例:
    ```clojure
@@ -332,11 +332,11 @@
    - level: Level
    - from-pos: 起始位置
    - to-pos: 结束位置
-   - block-type: 方块类型（Block 或资源定位符，可选）
+   - block-type: 方块类型( Block 或资源定位符，可选)
 
-   返回：
-   - 如果指定 block-type：该类型方块的数量
-   - 如果不指定：{Block -> count} 映射
+   返回:
+   - 如果指定 block-type: 该类型方块的数量
+   - 如果不指定: {Block -> count} 映射
 
    示例:
    ```clojure
@@ -434,13 +434,13 @@
 
   ;; ========== 复杂示例 ==========
 
-  ;; 8. 创建空心立方体（填充外壳）
+  ;; 8. 创建空心立方体( 填充外壳)
   (let [size 10
         pos [100 64 200]]
     ;; 底面和顶面
     (fill-blocks! level pos [(+ (first pos) size) (second pos) (+ (nth pos 2) size)] Blocks/STONE)
     (fill-blocks! level [100 (+ 64 size) 200] [(+ 100 size) (+ 64 size) (+ 200 size)] Blocks/STONE)
-    ;; 四面墙（挖空内部）
+    ;; 四面墙( 挖空内部)
     (replace-blocks! level [(inc (first pos)) (inc (second pos)) (inc (nth pos 2))]
                      [(+ (first pos) size -1) (+ (second pos) size -1) (+ (nth pos 2) size -1)]
                      Blocks/STONE Blocks/AIR))
@@ -449,7 +449,7 @@
   (doseq [floor (range 0 50 5)]
     (fill-cylinder level [100 (+ 64 floor) 200] 5 5 Blocks/STONE_BRICKS :hollow? true))
 
-  ;; 10. 创建迷宫（简化版）
+  ;; 10. 创建迷宫( 简化版)
   (fill-blocks! level [0 64 0] [50 64 50] Blocks/STONE)  ; 底座
   (doseq [x (range 0 50 3)
           z (range 0 50 3)]

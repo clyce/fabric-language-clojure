@@ -1,6 +1,6 @@
 # Clojure Minecraft Mod 开发最佳实践
 
-> 综合指南：性能优化、代码组织、常见陷阱及解决方案
+> 综合指南: 性能优化、代码组织、常见陷阱及解决方案
 
 ---
 
@@ -35,16 +35,16 @@
 ;; Reflection warning, com/mymod/core.clj:10:1 - call to method getHealth...
 ```
 
-**为什么重要：** 反射调用比直接方法调用慢 10-100 倍。
+**为什么重要: ** 反射调用比直接方法调用慢 10-100 倍。
 
 ### ✅ 2. 使用类型提示
 
 ```clojure
-;; ❌ 不好：会产生反射
+;; ❌ 不好: 会产生反射
 (defn get-health [entity]
   (.getHealth entity))
 
-;; ✅ 好：使用类型提示
+;; ✅ 好: 使用类型提示
 (defn get-health [^LivingEntity entity]
   (.getHealth entity))
 
@@ -53,7 +53,7 @@
   (.getPlayerByName server name))
 ```
 
-**关键类型提示：**
+**关键类型提示: **
 ```clojure
 ^MinecraftServer, ^Player, ^ServerPlayer, ^LivingEntity
 ^Level, ^ClientLevel, ^ServerLevel
@@ -64,20 +64,20 @@
 ### ✅ 3. 避免高频事件中的性能陷阱
 
 ```clojure
-;; ❌ 不好：每 tick 创建临时对象
+;; ❌ 不好: 每 tick 创建临时对象
 (events/on-server-tick
   (fn [server]
     (doseq [player (players/get-all-players server)]
       (let [pos {:x 1 :y 2 :z 3}]  ; 每 tick 创建新 map
         (process-player player pos)))))
 
-;; ✅ 好：复用对象，使用类型提示
+;; ✅ 好: 复用对象，使用类型提示
 (events/on-server-tick
   (fn [^MinecraftServer server]
     (doseq [^ServerPlayer player (.getPlayerList (.getPlayerManager server))]
       (.teleportTo player 1.0 2.0 3.0))))  ; 直接调用 Java 方法
 
-;; ✅ 更好：只在需要时执行
+;; ✅ 更好: 只在需要时执行
 (events/on-server-tick
   (fn [^MinecraftServer server]
     (when (zero? (mod (.getTickCount server) 20))  ; 每秒执行一次
@@ -87,13 +87,13 @@
 ### ✅ 4. 使用原始类型避免装箱
 
 ```clojure
-;; ❌ 不好：大量装箱操作
+;; ❌ 不好: 大量装箱操作
 (defn calculate-distance [x1 y1 z1 x2 y2 z2]
   (Math/sqrt (+ (* (- x2 x1) (- x2 x1))
                 (* (- y2 y1) (- y2 y1))
                 (* (- z2 z1) (- z2 z1)))))
 
-;; ✅ 好：使用原始类型
+;; ✅ 好: 使用原始类型
 (defn calculate-distance ^double [^double x1 ^double y1 ^double z1
                                    ^double x2 ^double y2 ^double z2]
   (Math/sqrt (+ (* (- x2 x1) (- x2 x1))
@@ -131,7 +131,7 @@
 | 注册系统 | 100% | 100% | 100% |
 | 启动时间 | 3s | 5s | 4-5s |
 
-**结论：** 正确使用类型提示后，性能差异 <5%，完全可以忽略。
+**结论: ** 正确使用类型提示后，性能差异 <5%，完全可以忽略。
 
 ---
 
@@ -234,18 +234,18 @@ com.mymod/
 ### ✅ 1. Clojure 标准命名
 
 ```clojure
-;; 函数和变量：kebab-case
+;; 函数和变量: kebab-case
 (defn get-player-health [player] ...)
 (def magic-gem-power 10)
 
-;; 常量：kebab-case（不使用 SCREAMING_CASE）
+;; 常量: kebab-case（不使用 SCREAMING_CASE）
 (def max-players 100)
 (def default-config {:enabled true})
 
-;; 命名空间：kebab-case
+;; 命名空间: kebab-case
 (ns com.mymod.magic-system)
 
-;; Protocols 和 Records：PascalCase
+;; Protocols 和 Records: PascalCase
 (defprotocol MagicCaster
   (cast-spell [this spell]))
 
@@ -255,21 +255,21 @@ com.mymod/
 ### ✅ 2. 函数命名约定
 
 ```clojure
-;; 谓词函数：? 后缀
+;; 谓词函数: ? 后缀
 (defn enabled? [feature] ...)
 (defn has-permission? [player] ...)
 (defn in-game? [] ...)
 
-;; 副作用函数：! 后缀
+;; 副作用函数: ! 后缀
 (defn teleport! [player pos] ...)
 (defn give-item! [player item] ...)
 (defn save-config! [] ...)
 
-;; 转换函数：-> 前缀
+;; 转换函数: -> 前缀
 (defn ->resource-location [obj] ...)
 (defn ->vec3 [pos] ...)
 
-;; 解构函数：<- 前缀（可选）
+;; 解构函数: <- 前缀（可选）
 (defn <-nbt [compound-tag] ...)
 ```
 
@@ -406,12 +406,12 @@ com.mymod/
 ### ⚠️ 3. 避免在服务端加载客户端类
 
 ```clojure
-;; ❌ 不好：会在服务端崩溃
+;; ❌ 不好: 会在服务端崩溃
 (ns com.mymod.core
   (:require [com.mymod.client :as client])  ; 客户端命名空间
   (:import [net.minecraft.client Minecraft]))  ; 客户端类
 
-;; ✅ 好：延迟加载
+;; ✅ 好: 延迟加载
 (defn setup-client-features []
   (when (mb/client-side?)
     (require '[com.mymod.client :as client])
@@ -527,13 +527,13 @@ com.mymod/
 ### ✅ 3. 避免在事件中阻塞
 
 ```clojure
-;; ❌ 不好：阻塞 Tick 事件
+;; ❌ 不好: 阻塞 Tick 事件
 (events/on-server-tick
   (fn [server]
     (Thread/sleep 1000)  ; 会冻结游戏！
     (do-something)))
 
-;; ✅ 好：使用异步或调度
+;; ✅ 好: 使用异步或调度
 (require '[com.fabriclj.swiss-knife.common.utils.time :as time])
 
 (events/on-server-tick
@@ -567,12 +567,12 @@ com.mymod/
 ### ✅ 2. 数据包大小优化
 
 ```clojure
-;; ❌ 不好：发送大量数据
+;; ❌ 不好: 发送大量数据
 (net/send-to-player! player packet
   {:all-players (map player-data (get-all-players))
    :world-data (get-full-world-data)})  ; 可能几 MB
 
-;; ✅ 好：只发送必要数据
+;; ✅ 好: 只发送必要数据
 (net/send-to-player! player packet
   {:player-count (count (get-all-players))
    :time (get-world-time)})  ; 几十字节
@@ -581,19 +581,19 @@ com.mymod/
 ### ✅ 3. 避免高频同步
 
 ```clojure
-;; ❌ 不好：每 tick 同步
+;; ❌ 不好: 每 tick 同步
 (events/on-server-tick
   (fn [server]
     (doseq [player (get-all-players)]
       (sync-data-to-client player))))  ; 会卡服务器
 
-;; ✅ 好：按需同步
+;; ✅ 好: 按需同步
 (events/on-server-tick
   (fn [server]
     (when (zero? (mod (.getTickCount server) 20))  ; 每秒一次
       (sync-data-to-clients))))
 
-;; ✅ 更好：事件驱动同步
+;; ✅ 更好: 事件驱动同步
 (events/on-player-join
   (fn [player]
     (sync-initial-data player)))  ; 只在加入时同步
@@ -624,12 +624,12 @@ com.mymod/
 ### ✅ 2. 友好的错误消息
 
 ```clojure
-;; ❌ 不好：模糊的错误
+;; ❌ 不好: 模糊的错误
 (defn get-item [id]
   (or (core/get-item id)
       (throw (Exception. "Item not found"))))
 
-;; ✅ 好：详细的错误信息
+;; ✅ 好: 详细的错误信息
 (defn get-item [id]
   (or (core/get-item id)
       (throw (IllegalArgumentException.
@@ -660,45 +660,45 @@ com.mymod/
 
 ## 常见陷阱
 
-### 🔴 陷阱 1：在错误的线程执行代码
+### 🔴 陷阱 1: 在错误的线程执行代码
 
 ```clojure
-;; ❌ 不好：在异步线程修改世界
+;; ❌ 不好: 在异步线程修改世界
 (future
   (set-block! level pos Blocks/STONE))  ; 会崩溃！
 
-;; ✅ 好：使用 defer 或 schedule-task
+;; ✅ 好: 使用 defer 或 schedule-task
 (require '[com.fabriclj.swiss-knife.common.utils.time :as time])
 
 (time/schedule-task 1
   #(set-block! level pos Blocks/STONE))  ; 在主线程执行
 ```
 
-### 🔴 陷阱 2：忘记注册表初始化
+### 🔴 陷阱 2: 忘记注册表初始化
 
 ```clojure
-;; ❌ 不好：忘记调用 register-all!
+;; ❌ 不好: 忘记调用 register-all!
 (def items (reg/create-registry "mymod" :item))
 (reg/defitem items my-item ...)
 
 (defn init []
   (println "Done"))  ; 物品不会被注册！
 
-;; ✅ 好：始终调用 register-all!
+;; ✅ 好: 始终调用 register-all!
 (defn init []
   (reg/register-all! items blocks entities)
   (println "Done"))
 ```
 
-### 🔴 陷阱 3：在客户端访问服务端对象
+### 🔴 陷阱 3: 在客户端访问服务端对象
 
 ```clojure
-;; ❌ 不好：客户端访问 ServerPlayer
+;; ❌ 不好: 客户端访问 ServerPlayer
 (defn client-function []
   (let [players (players/get-all-players server)]  ; server 在客户端是 nil
     ...))
 
-;; ✅ 好：使用正确的客户端 API
+;; ✅ 好: 使用正确的客户端 API
 (require '[com.fabriclj.swiss-knife.client.platform.core :as client])
 
 (defn client-function []
@@ -706,29 +706,29 @@ com.mymod/
     ...))
 ```
 
-### 🔴 陷阱 4：配置文件路径冲突
+### 🔴 陷阱 4: 配置文件路径冲突
 
 ```clojure
-;; ❌ 不好：多个功能使用同一个配置文件
+;; ❌ 不好: 多个功能使用同一个配置文件
 (config/register-config! "mymod" "default" {...})  ; gameplay 配置
 (config/register-config! "mymod" "default" {...})  ; rendering 配置（会覆盖！）
 
-;; ✅ 好：使用不同的配置 ID 或文件名
+;; ✅ 好: 使用不同的配置 ID 或文件名
 (config/register-config! "mymod" "gameplay" {...} :file-name "gameplay.edn")
 (config/register-config! "mymod" "rendering" {...} :file-name "rendering.edn")
 ```
 
-### 🔴 陷阱 5：忘记初始化 lifecycle
+### 🔴 陷阱 5: 忘记初始化 lifecycle
 
 ```clojure
-;; ❌ 不好：手动初始化各个系统
+;; ❌ 不好: 手动初始化各个系统
 (defn init []
   (net/init-generic-packet-system! "mymod")
   (config-sync/register-config-sync-packets! "mymod")
   ;; 容易忘记某个系统...
   )
 
-;; ✅ 好：使用 lifecycle 统一管理
+;; ✅ 好: 使用 lifecycle 统一管理
 (defn init []
   (lifecycle/init-common! "mymod"
     {:enable-generic-packets? true
@@ -746,7 +746,7 @@ com.mymod/
 (when (mb/development?)
   (nrepl/start-server!))
 
-;; 连接后可以在 REPL 中：
+;; 连接后可以在 REPL 中:
 ;; 1. 查看当前状态
 (def server (mb/get-server))
 (players/get-all-players server)
@@ -802,7 +802,7 @@ com.mymod/
 (defn teleport-player
   "传送玩家到指定位置
 
-   参数：
+   参数:
    - player: ServerPlayer 实例
    - pos: 位置向量 [x y z] 或 Vec3
    - opts: 可选参数
@@ -810,15 +810,15 @@ com.mymod/
      - :pitch - 视角俯仰角度（默认保持不变）
      - :dimension - 目标维度（默认当前维度）
 
-   返回：boolean（是否成功）
+   返回: boolean（是否成功）
 
-   示例：
+   示例:
    ```clojure
    (teleport-player player [100 64 200])
    (teleport-player player [100 64 200] {:yaw 90.0 :pitch 0.0})
    ```
 
-   注意：跨维度传送需要指定 :dimension 选项"
+   注意: 跨维度传送需要指定 :dimension 选项"
   [player pos & {:as opts}]
   ...)
 ```
@@ -846,15 +846,15 @@ com.mymod/
 ### ✅ 3. 代码分层
 
 ```clojure
-;; 底层：直接 Java 互操作（私有）
+;; 底层: 直接 Java 互操作（私有）
 (defn- ^Vec3 create-vec3 [x y z]
   (Vec3. x y z))
 
-;; 中层：基础封装（公开）
+;; 中层: 基础封装（公开）
 (defn teleport-vec3! [^Player player ^Vec3 pos]
   (.teleportTo player (.x pos) (.y pos) (.z pos)))
 
-;; 高层：便捷 API（公开，推荐使用）
+;; 高层: 便捷 API（公开，推荐使用）
 (defn teleport! [player pos & opts]
   (let [vec3 (parse-position pos)]
     (teleport-vec3! player vec3)))
@@ -897,7 +897,7 @@ com.mymod/
 ### ✅ 1. 避免内存泄漏
 
 ```clojure
-;; ❌ 不好：无限增长的集合
+;; ❌ 不好: 无限增长的集合
 (defonce player-data (atom {}))
 
 (events/on-player-join
@@ -905,12 +905,12 @@ com.mymod/
     (swap! player-data assoc player {:join-time (System/currentTimeMillis)})))
 ;; 玩家离开后数据仍然存在！
 
-;; ✅ 好：清理离开的玩家
+;; ✅ 好: 清理离开的玩家
 (events/on-player-quit
   (fn [player]
     (swap! player-data dissoc player)))
 
-;; ✅ 更好：使用 WeakHashMap
+;; ✅ 更好: 使用 WeakHashMap
 (import '[java.util WeakHashMap])
 (defonce player-data (atom (WeakHashMap.)))
 ;; 玩家对象被 GC 时自动清理
@@ -971,7 +971,7 @@ com.mymod/
 ### ✅ 3. 版本控制
 
 ```
-.gitignore 应包含：
+.gitignore 应包含:
 ─────────────────
 build/
 .gradle/
@@ -1125,13 +1125,13 @@ mymod/
 
 ---
 
-## 完整示例：遵循所有最佳实践
+## 完整示例: 遵循所有最佳实践
 
 ```clojure
 (ns com.mymod.core
   "My Awesome Mod - 主入口模块
 
-   功能：
+   功能:
    - 魔法系统
    - 传送系统
    - 自定义物品"
@@ -1305,4 +1305,4 @@ mymod/
 
 ---
 
-**记住：先让它工作，再让它快。Clojure 提供的开发效率远超微小的性能差异。** 🎉
+**记住: 先让它工作，再让它快。Clojure 提供的开发效率远超微小的性能差异。** 🎉

@@ -5,11 +5,10 @@
    基于 Architectury API 的 DeferredRegister。"
   (:require [com.fabriclj.registry :as base-reg]
             [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.item Item Item$Properties CreativeModeTab$ItemDisplayParameters]
-           [net.minecraft.world.level.block Block Block$Properties]
-           [net.minecraft.world.level.block.state BlockBehaviour$Properties]
-           [net.minecraft.core.component DataComponents]
-           [net.minecraft.network.chat Component]))
+  (:import (net.minecraft.world.item Item Item$Properties)
+           (net.minecraft.world.level.block Block)
+           (net.minecraft.world.level.block.state BlockBehaviour$Properties)
+           (net.minecraft.network.chat Component)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -30,7 +29,7 @@
   "创建物品属性构建器
 
    支持的选项:
-   - :stack-size n - 最大堆叠数量（默认 64）
+   - :stack-size n - 最大堆叠数量( 默认 64)
    - :durability n - 耐久度
    - :fire-resistant true - 抗火
    - :rarity :common/:uncommon/:rare/:epic - 稀有度
@@ -76,13 +75,12 @@
   "创建方块属性构建器
 
    支持的选项:
-   - :copy-from block - 从现有方块复制属性
    - :strength hardness resistance - 硬度和爆炸抗性
    - :no-collision true - 无碰撞箱
    - :no-occlusion true - 不遮挡
    - :friction f - 摩擦系数
    - :light-level fn - 光照等级函数
-   - :sound-type type - 音效类型 (:wood/:stone/:metal/:grass/:gravel 等）
+   - :sound-type type - 音效类型 (:wood/:stone/:metal/:grass/:gravel 等)
    - :requires-correct-tool true - 需要正确工具
    - :drops-nothing true - 不掉落物品
 
@@ -94,12 +92,10 @@
      :requires-correct-tool true
      :light-level (constantly 15))
    ```"
-  [& {:keys [copy-from strength no-collision no-occlusion friction
+  [& {:keys [strength no-collision no-occlusion friction
              light-level sound-type requires-correct-tool drops-nothing]}]
   (let [^BlockBehaviour$Properties props
-        (if copy-from
-          (BlockBehaviour$Properties/ofFullCopy copy-from)
-          (BlockBehaviour$Properties/of))]
+        (BlockBehaviour$Properties/of)]
     (when strength
       (let [[hardness resistance] (if (sequential? strength)
                                     strength
@@ -144,7 +140,7 @@
 
    参数:
    - registry: 物品注册表
-   - name: 物品名称（符号）
+   - name: 物品名称( 符号)
    - item-or-props: Item 实例或 Item$Properties
 
    示例:
@@ -167,7 +163,7 @@
 
    参数:
    - registry: 方块注册表
-   - name: 方块名称（符号）
+   - name: 方块名称( 符号)
    - block-or-props: Block 实例或 Block$Properties
 
    示例:
@@ -191,9 +187,9 @@
    参数:
    - block-registry: 方块注册表
    - item-registry: 物品注册表
-   - name: 名称（符号）
+   - name: 名称( 符号)
    - block-props: 方块属性
-   - item-props: 物品属性（可选）
+   - item-props: 物品属性( 可选)
 
    返回: {:block block-var :item item-var}
 
@@ -248,7 +244,7 @@
         (map (fn [[name item-fn]]
                [(keyword name)
                 (register registry name item-fn)])
-             items-map))))
+             items-map)))
 
 (defn register-blocks
   "批量注册方块
@@ -261,7 +257,7 @@
         (map (fn [[name block-fn]]
                [(keyword name)
                 (register registry name block-fn)])
-             blocks-map))))
+             blocks-map)))
 
 ;; ============================================================================
 ;; 注册表查询
@@ -270,10 +266,10 @@
 (defonce ^:private registries (atom {}))
 
 (defn track-registry!
-  "跟踪注册表（用于后续查询）
+  "跟踪注册表( 用于后续查询)
 
    参数:
-   - key: 注册表标识符（关键字）
+   - key: 注册表标识符( 关键字)
    - registry: DeferredRegister 实例
 
    示例:
@@ -316,10 +312,10 @@
      ~binding-name))
 
 (defn simple-item
-  "创建简单物品（无特殊功能）
+  "创建简单物品( 无特殊功能)
 
    参数:
-   - opts: 物品属性选项（传递给 item-properties）
+   - opts: 物品属性选项( 传递给 item-properties)
 
    示例:
    ```clojure
@@ -329,10 +325,10 @@
   (Item. (apply item-properties opts)))
 
 (defn simple-block
-  "创建简单方块（无特殊功能）
+  "创建简单方块( 无特殊功能)
 
    参数:
-   - opts: 方块属性选项（传递给 block-properties）
+   - opts: 方块属性选项( 传递给 block-properties)
 
    示例:
    ```clojure
@@ -351,7 +347,7 @@
    参数:
    - registry: 注册表
    - registry-type: :item 或 :block
-   - edn-data: EDN 数据（映射）
+   - edn-data: EDN 数据( 映射)
 
    EDN 格式示例:
    ```clojure
@@ -372,7 +368,7 @@
                     :item (simple-item props)
                     :block (simple-block props)
                     (throw (IllegalArgumentException.
-                            (str "Unknown registry type: " registry-type))))))))
+                            (str "Unknown registry type: " registry-type)))))))))
 
 (comment
   ;; 使用示例

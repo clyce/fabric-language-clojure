@@ -22,7 +22,7 @@
 
 ### 1. 项目结构
 
-创建以下目录结构：
+创建以下目录结构:
 
 ```
 mymod/
@@ -122,7 +122,7 @@ processResources {
 
 ### 4. 编写入口点
 
-**core.clj** - 主入口：
+**core.clj** - 主入口:
 
 ```clojure
 (ns com.mymod.core
@@ -141,7 +141,7 @@ processResources {
   (println "[MyMod] Done!"))
 ```
 
-**client.clj** - 客户端入口：
+**client.clj** - 客户端入口:
 
 ```clojure
 (ns com.mymod.client)
@@ -162,7 +162,7 @@ processResources {
 ./gradlew runClient
 ```
 
-启动成功后，你会在控制台看到：
+启动成功后，你会在控制台看到:
 
 ```
 [fabric-language-clojure] Core initialized (v1.0.0)
@@ -183,7 +183,7 @@ processResources {
 
 ## 注册游戏内容
 
-使用 `com.fabriclj.registry` 命名空间：
+使用 `com.fabriclj.registry` 命名空间:
 
 ```clojure
 (ns com.mymod.content
@@ -205,7 +205,7 @@ processResources {
 
 ## 添加 Mixin
 
-Mixin 必须用 Java 编写：
+Mixin 必须用 Java 编写:
 
 ```java
 // src/main/java/com/mymod/mixin/MyMixin.java
@@ -228,7 +228,7 @@ public class MyMixin {
 }
 ```
 
-对应的 Clojure 钩子：
+对应的 Clojure 钩子:
 
 ```clojure
 ;; src/main/clojure/com/mymod/hooks.clj
@@ -248,7 +248,7 @@ public class MyMixin {
 
 ## 使用 Swiss Knife 工具库（推荐）
 
-如果你想使用更丰富的功能，推荐使用 Swiss Knife 工具库：
+如果你想使用更丰富的功能，推荐使用 Swiss Knife 工具库:
 
 ```clojure
 (ns com.mymod.core
@@ -274,12 +274,12 @@ public class MyMixin {
   (lifecycle/init-common! "mymod"
     {:enable-generic-packets? true
      :enable-config-sync? true})
-  
+
   ;; 注册事件
   (events/on-player-join
     (fn [player]
       (mb/log-info "Player joined:" (.getName player))))
-  
+
   (when (mb/development?)
     (nrepl/start-server!)))
 ```
@@ -296,13 +296,13 @@ public class MyMixin {
   ;; 生成物品模型
   (models/generate-simple-items! "./src/main/resources" "mymod"
     ["ruby" "sapphire" "emerald"])
-  
+
   ;; 生成方块模型和状态
   (models/generate-simple-blocks! "./src/main/resources" "mymod"
     ["ruby_ore" "sapphire_ore"])
   (bs/generate-simple-blockstates! "./src/main/resources" "mymod"
     ["ruby_ore" "sapphire_ore"])
-  
+
   ;; 生成语言文件
   (lang/create-complete-lang-file! "./src/main/resources" "mymod" "en_us"
     ["ruby" "sapphire" "emerald"]

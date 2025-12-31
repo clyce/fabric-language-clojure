@@ -5,12 +5,12 @@
    支持将背包附加到实体、方块或物品上。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.common.game-objects.items :as items])
-  (:import [net.minecraft.world Container SimpleContainer]
-           [net.minecraft.world.item ItemStack]
-           [net.minecraft.world.entity.player Player]
-           [net.minecraft.nbt CompoundTag ListTag]
-           [net.minecraft.core Direction]
-           [net.minecraft.core.component DataComponents]))
+  (:import (net.minecraft.world Container SimpleContainer)
+           (net.minecraft.world.item ItemStack)
+           (net.minecraft.world.entity.player Player)
+           (net.minecraft.nbt CompoundTag ListTag)
+           (net.minecraft.core Direction)
+           (net.minecraft.core.component DataComponents)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -23,12 +23,12 @@
   "创建自定义背包容器
 
    参数:
-   - size: 容器大小（槽位数量）
+   - size: 容器大小( 槽位数量)
    - opts: 可选参数
-     - :max-stack-size - 最大堆叠数（默认 64）
+     - :max-stack-size - 最大堆叠数( 默认 64)
      - :on-change - 内容改变回调 (fn [container] ...)
 
-   返回：SimpleContainer
+   返回: SimpleContainer
 
    示例:
    ```clojure
@@ -58,9 +58,9 @@
 
    参数:
    - inventory: Container
-   - slot: 槽位索引（从 0 开始）
+   - slot: 槽位索引( 从 0 开始)
 
-   返回：ItemStack"
+   返回: ItemStack"
   ^ItemStack [^Container inventory slot]
   (.getItem inventory slot))
 
@@ -100,7 +100,7 @@
    - inventory: Container
    - predicate: 查找条件 (fn [^ItemStack stack] -> boolean)
 
-   返回：{:slot 槽位索引 :stack ItemStack} 或 nil
+   返回: {:slot 槽位索引 :stack ItemStack} 或 nil
 
    示例:
    ```clojure
@@ -120,7 +120,7 @@
 (defn find-all-items
   "查找背包中所有匹配的物品
 
-   返回：[{:slot 槽位 :stack ItemStack}] 列表"
+   返回: [{:slot 槽位 :stack ItemStack}] 列表"
   [^Container inventory predicate]
   (let [size (.getContainerSize inventory)
         results (atom [])]
@@ -137,7 +137,7 @@
    - inventory: Container
    - item: Item 或物品 ID
 
-   返回：总数量
+   返回: 总数量
 
    示例:
    ```clojure
@@ -162,9 +162,9 @@
 
    参数:
    - inventory: Container
-   - item-stack: 要添加的物品（可选）
+   - item-stack: 要添加的物品( 可选)
 
-   返回：boolean"
+   返回: boolean"
   ([^Container inventory]
    (let [size (.getContainerSize inventory)]
      (loop [i 0]
@@ -198,7 +198,7 @@
    - inventory: Container
    - item-stack: ItemStack
 
-   返回：剩余未添加的物品（如果背包满了）
+   返回: 剩余未添加的物品( 如果背包满了)
 
    示例:
    ```clojure
@@ -237,7 +237,7 @@
    - item: Item 或物品 ID
    - count: 数量
 
-   返回：实际移除的数量
+   返回: 实际移除的数量
 
    示例:
    ```clojure
@@ -271,7 +271,7 @@
    参数:
    - inventory: Container
 
-   返回：CompoundTag
+   返回: CompoundTag
 
    示例:
    ```clojure
@@ -317,7 +317,7 @@
           (.setItem inventory slot stack))))))
 
 ;; ============================================================================
-;; 物品栈背包（背包物品）
+;; 物品栈背包( 背包物品)
 ;; ============================================================================
 
 (defn attach-inventory-to-item!
@@ -343,7 +343,7 @@
    - item-stack: ItemStack
    - size: 背包大小
 
-   返回：Container
+   返回: Container
 
    示例:
    ```clojure
@@ -356,7 +356,7 @@
     inventory))
 
 ;; ============================================================================
-;; 侧面访问（用于漏斗等）
+;; 侧面访问( 用于漏斗等)
 ;; ============================================================================
 
 (defn create-sided-inventory
@@ -370,7 +370,7 @@
       :north [...]
       ...}
 
-   返回：带侧面访问的 Container
+   返回: 带侧面访问的 Container
 
    示例:
    ```clojure
@@ -483,10 +483,11 @@
   (add-item! backpack-inv (items/item-stack :minecraft:diamond 10))
   (attach-inventory-to-item! backpack-item backpack-inv)
 
-  ;; 7. 侧面访问（用于自动化）
+  ;; 7. 侧面访问( 用于自动化)
   (def sided-inv
     (create-sided-inventory my-inventory
                             {:up [0 1 2]      ; 输入槽位
                              :down [3 4 5]    ; 输出槽位
                              :north []        ; 不允许访问
                              :south []}))
+  )

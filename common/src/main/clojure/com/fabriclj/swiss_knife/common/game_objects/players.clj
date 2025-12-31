@@ -1,15 +1,15 @@
 (ns com.fabriclj.swiss-knife.common.game-objects.players
   "瑞士军刀 - 玩家工具模块
 
-   **模块定位**：专注于玩家相关的操作和查询
+   **模块定位**: 专注于玩家相关的操作和查询
 
-   **核心功能**：
-   - 玩家查询（按名称、UUID）
+   **核心功能**:
+   - 玩家查询( 按名称、UUID)
    - 玩家传送
    - 玩家物品操作
    - 玩家状态查询
 
-   **使用示例**：
+   **使用示例**:
    ```clojure
    (require '[com.fabriclj.swiss-knife.common.game-objects.players :as players])
 
@@ -27,12 +27,12 @@
    (players/remove-item! player Items/DIAMOND 1)
    ```"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.entity.player Player]
-           [net.minecraft.world.item ItemStack Item]
-           [net.minecraft.world.phys Vec3]
-           [net.minecraft.server MinecraftServer]
-           [net.minecraft.server.level ServerPlayer ServerLevel]
-           [java.util UUID]))
+  (:import (net.minecraft.world.entity.player Player)
+           (net.minecraft.world.item ItemStack Item)
+           (net.minecraft.world.phys Vec3)
+           (net.minecraft.server MinecraftServer)
+           (net.minecraft.server.level ServerPlayer ServerLevel)
+           (java.util UUID)))
 
 (set! *warn-on-reflection* true)
 
@@ -45,9 +45,9 @@
 
    参数:
    - server: MinecraftServer
-   - name: 玩家名称（字符串）
+   - name: 玩家名称( 字符串)
 
-   返回：ServerPlayer 或 nil
+   返回: ServerPlayer 或 nil
 
    示例:
    ```clojure
@@ -64,7 +64,7 @@
    - server: MinecraftServer
    - uuid: UUID 对象或字符串
 
-   返回：ServerPlayer 或 nil
+   返回: ServerPlayer 或 nil
 
    示例:
    ```clojure
@@ -84,7 +84,7 @@
    参数:
    - server: MinecraftServer
 
-   返回：ServerPlayer 列表
+   返回: ServerPlayer 列表
 
    示例:
    ```clojure
@@ -101,7 +101,7 @@
    - server: MinecraftServer
    - name-or-uuid: 玩家名称或 UUID
 
-   返回：boolean
+   返回: boolean
 
    示例:
    ```clojure
@@ -123,14 +123,14 @@
 
    参数:
    - player: ServerPlayer
-   - pos: 位置，支持多种格式：
+   - pos: 位置，支持多种格式:
      - [x y z] - 向量
      - {:x x :y y :z z} - Map
      - Vec3 对象
-   - opts: 可选参数（可选）
-     - :dimension - 维度 ResourceKey（跨维度传送）
-     - :yaw - 偏航角（默认保持当前）
-     - :pitch - 俯仰角（默认保持当前）
+   - opts: 可选参数( 可选)
+     - :dimension - 维度 ResourceKey( 跨维度传送)
+     - :yaw - 偏航角( 默认保持当前)
+     - :pitch - 俯仰角( 默认保持当前)
 
    示例:
    ```clojure
@@ -140,7 +140,7 @@
    ;; 传送并设置朝向
    (teleport! player [100 64 200] {:yaw 90.0 :pitch 0.0})
 
-   ;; 跨维度传送（需要 dimension）
+   ;; 跨维度传送( 需要 dimension)
    (teleport! player [0 64 0] {:dimension Level/NETHER})
    ```"
   ([player pos]
@@ -183,16 +183,16 @@
 (defn get-main-hand-item
   "获取玩家主手物品
 
-   参数：
+   参数:
    - player: Player 实例
 
-   返回：ItemStack（可能为空）
+   返回: ItemStack( 可能为空)
 
-   示例：
+   示例:
    ```clojure
    (let [main-hand (get-main-hand-item player)]
      (when-not (.isEmpty main-hand)
-       (println \"主手：\" (.getDescriptionId (.getItem main-hand)))))
+       (println \"主手: \" (.getDescriptionId (.getItem main-hand)))))
    ```"
   ^ItemStack [^Player player]
   (.getMainHandItem player))
@@ -200,23 +200,23 @@
 (defn get-off-hand-item
   "获取玩家副手物品
 
-   参数：
+   参数:
    - player: Player 实例
 
-   返回：ItemStack（可能为空）"
+   返回: ItemStack( 可能为空) "
   ^ItemStack [^Player player]
   (.getOffhandItem player))
 
 (defn get-item-in-hand
   "获取玩家指定手持物品
 
-   参数：
+   参数:
    - player: Player 实例
-   - hand: InteractionHand（:main-hand 或 :off-hand）
+   - hand: InteractionHand( :main-hand 或 :off-hand)
 
-   返回：ItemStack
+   返回: ItemStack
 
-   示例：
+   示例:
    ```clojure
    (get-item-in-hand player :main-hand)
    (get-item-in-hand player :off-hand)
@@ -231,14 +231,14 @@
 (defn holding-item?
   "检查玩家是否手持指定物品
 
-   参数：
+   参数:
    - player: Player 实例
    - item: Item 或资源定位符
-   - hand: 可选，:main-hand（默认）、:off-hand 或 :either
+   - hand: 可选，:main-hand( 默认) 、:off-hand 或 :either
 
-   返回：boolean
+   返回: boolean
 
-   示例：
+   示例:
    ```clojure
    (holding-item? player Items/DIAMOND_SWORD)
    (holding-item? player Items/SHIELD :off-hand)
@@ -263,11 +263,11 @@
 (defn set-main-hand-item!
   "设置玩家主手物品
 
-   参数：
+   参数:
    - player: Player 实例
    - stack: ItemStack
 
-   示例：
+   示例:
    ```clojure
    (set-main-hand-item! player (ItemStack. Items/DIAMOND_SWORD))
    ```"
@@ -277,7 +277,7 @@
 (defn set-off-hand-item!
   "设置玩家副手物品
 
-   参数：
+   参数:
    - player: Player 实例
    - stack: ItemStack"
   [^Player player ^ItemStack stack]
@@ -293,9 +293,9 @@
    参数:
    - player: Player
    - item: Item 或 ResourceLocation 或 关键字
-   - count: 数量（可选，默认 1）
+   - count: 数量( 可选，默认 1)
 
-   返回：boolean（是否成功）
+   返回: boolean( 是否成功)
 
    示例:
    ```clojure
@@ -318,9 +318,9 @@
    参数:
    - player: Player
    - item: Item 或 ResourceLocation 或 关键字
-   - count: 最小数量（可选，默认 1）
+   - count: 最小数量( 可选，默认 1)
 
-   返回：boolean
+   返回: boolean
 
    示例:
    ```clojure
@@ -348,9 +348,9 @@
    参数:
    - player: Player
    - item: Item 或 ResourceLocation 或 关键字
-   - count: 数量（可选，默认 1）
+   - count: 数量( 可选，默认 1)
 
-   返回：实际移除的数量
+   返回: 实际移除的数量
 
    示例:
    ```clojure
@@ -375,7 +375,7 @@
    - player: Player
    - item: Item 或 ResourceLocation 或 关键字
 
-   返回：int
+   返回: int
 
    示例:
    ```clojure
@@ -405,7 +405,7 @@
    参数:
    - player: Player
 
-   返回：int"
+   返回: int"
   ^long [^Player player]
   (.experienceLevel player))
 
@@ -415,7 +415,7 @@
    参数:
    - player: Player
 
-   返回：float"
+   返回: float"
   ^double [^Player player]
   (.getHealth player))
 
@@ -425,7 +425,7 @@
    参数:
    - player: Player
 
-   返回：int"
+   返回: int"
   ^long [^Player player]
   (.getFoodData (.getFoodLevel player)))
 
@@ -435,7 +435,7 @@
    参数:
    - player: Player
 
-   返回：boolean"
+   返回: boolean"
   [^Player player]
   (.isCreative (.getAbilities player)))
 
@@ -445,7 +445,7 @@
    参数:
    - player: Player
 
-   返回：boolean"
+   返回: boolean"
   [^Player player]
   (.flying (.getAbilities player)))
 

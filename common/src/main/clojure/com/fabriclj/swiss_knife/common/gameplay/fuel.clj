@@ -3,9 +3,9 @@
 
    封装物品燃料值注册，用于熔炉等方块。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [dev.architectury.registry FuelRegistry]
-           [net.minecraft.world.item Item ItemStack]
-           [net.minecraft.world.level.block Block]))
+  (:import (dev.architectury.registry FuelRegistry)
+           (net.minecraft.world.item Item ItemStack)
+           (net.minecraft.world.level.block Block)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -19,11 +19,11 @@
 
    参数:
    - item: Item、Block、ItemStack、ResourceLocation 或 Keyword
-   - burn-time: 燃烧时间（tick）
+   - burn-time: 燃烧时间( tick)
 
-   说明：
+   说明:
    - 200 tick = 10 秒 = 可以烧炼 1 个物品
-   - 常见燃料：煤炭 1600 tick，木板 300 tick，木棍 100 tick
+   - 常见燃料: 煤炭 1600 tick，木板 300 tick，木棍 100 tick
 
    示例:
    ```clojure
@@ -67,7 +67,7 @@
 ;; ============================================================================
 
 (def fuel-values
-  "常见燃料的燃烧时间（参考值）"
+  "常见燃料的燃烧时间( 参考值) "
   {:stick 100              ; 木棍
    :planks 300             ; 木板
    :sapling 100            ; 树苗
@@ -84,9 +84,9 @@
   "根据燃烧时间计算可烧炼物品数量
 
    参数:
-   - burn-time: 燃烧时间（tick）
+   - burn-time: 燃烧时间( tick)
 
-   返回：可烧炼物品数量"
+   返回: 可烧炼物品数量"
   [burn-time]
   (/ burn-time 200.0))
 
@@ -96,7 +96,7 @@
    参数:
    - item-count: 物品数量
 
-   返回：所需燃烧时间（tick）"
+   返回: 所需燃烧时间( tick) "
   [item-count]
   (* item-count 200))
 
@@ -105,7 +105,7 @@
 ;; ============================================================================
 
 (defmacro deffuel
-  "定义燃料（语法糖）
+  "定义燃料( 语法糖)
 
    示例:
    ```clojure

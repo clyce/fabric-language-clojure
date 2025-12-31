@@ -17,7 +17,7 @@
 
 ## 架构概述
 
-fabric-language-clojure 采用分层架构：
+fabric-language-clojure 采用分层架构:
 
 ```
 ┌────────────────────────────────────────────────────────────┐
@@ -54,7 +54,7 @@ fabric-language-clojure 采用分层架构：
 
 ### 正常开发流程（90% 的情况）
 
-在日常开发中，修改代码后只需要简单构建即可：
+在日常开发中，修改代码后只需要简单构建即可:
 
 ```powershell
 # 构建整个项目
@@ -65,13 +65,13 @@ fabric-language-clojure 采用分层架构：
 .\gradlew.bat :example:build -x checkClojure -x compileClojure
 ```
 
-**何时使用**：
+**何时使用**:
 - 修改 Clojure 代码（`.clj` 文件）
 - 修改 Java 代码（`.java` 文件）
 - 修改资源文件（`fabric.mod.json`、mixins 配置等）
 - 更新依赖版本（`gradle.properties`）
 
-**不需要**：
+**不需要**:
 - ❌ 清理缓存
 - ❌ 停止 Gradle Daemon
 - ❌ 关闭 IDE
@@ -79,7 +79,7 @@ fabric-language-clojure 采用分层架构：
 
 ### 需要清理缓存的情况（少见）
 
-只有在以下**特殊情况**下才需要清理：
+只有在以下**特殊情况**下才需要清理:
 
 #### 1. 大规模重命名（包名、项目名）
 
@@ -93,7 +93,7 @@ Remove-Item -Recurse -Force "$env:USERPROFILE\.gradle\caches\fabric-loom"
 .\gradlew.bat build -x checkClojure -x compileClojure
 ```
 
-**何时需要**：
+**何时需要**:
 - ✅ 包名从 `com.arclojure` 改为 `com.fabriclj`
 - ✅ 项目名从 `arclojure` 改为 `fabric-language-clojure`
 - ✅ 模组 ID 变化
@@ -107,7 +107,7 @@ Remove-Item -Recurse -Force .gradle
 .\gradlew.bat --refresh-dependencies build -x checkClojure -x compileClojure
 ```
 
-**何时需要**：
+**何时需要**:
 - ✅ 修改 `settings.gradle` 中的项目包含（`include`）
 - ✅ 修改 `enabled_platforms` 配置
 - ✅ 更改 Shadow JAR 的 `relocate` 规则
@@ -121,59 +121,59 @@ Remove-Item -Recurse -Force "$env:USERPROFILE\.gradle\caches\fabric-loom"
 .\gradlew.bat build -x checkClojure -x compileClojure
 ```
 
-**何时需要**：
+**何时需要**:
 - ✅ 看到 `Failed to setup mappings` 错误
 - ✅ Minecraft 版本切换后映射错误
 - ✅ 构建被异常中断（Ctrl+C、断电等）
 
 ### Cursor IDE 文件锁问题
 
-**问题表现**：
+**问题表现**:
 ```
 java.nio.file.FileSystemException: mappings.jar: 另一个程序正在使用此文件
 ```
 
-**原因**：Cursor 的 Java Language Server 会索引 Gradle 缓存中的 JAR 文件。
+**原因**: Cursor 的 Java Language Server 会索引 Gradle 缓存中的 JAR 文件。
 
-**解决方案（按推荐顺序）**：
+**解决方案（按推荐顺序）**:
 
-#### 方案 1：使用独立终端（推荐）
+#### 方案 1: 使用独立终端（推荐）
 - 不要在 Cursor 的集成终端中运行构建
 - 使用 Windows PowerShell 或 CMD 独立窗口
 - 这样 Cursor 的 Java 进程不会锁定文件
 
-#### 方案 2：暂时禁用 Java 扩展
+#### 方案 2: 暂时禁用 Java 扩展
 1. 在 Cursor 中按 `Ctrl+Shift+X`
 2. 搜索"Java"
 3. 禁用"Language Support for Java(TM) by Red Hat"
 4. 运行构建
 5. 构建完成后重新启用
 
-#### 方案 3：完全退出 Cursor
+#### 方案 3: 完全退出 Cursor
 - 右键任务栏的 Cursor 图标 → 退出（不是关闭窗口）
 - 运行构建
 - 重新打开 Cursor
 
-**最佳实践**：在开发期间，使用方案 1（独立终端）来避免这个问题。
+**最佳实践**: 在开发期间，使用方案 1（独立终端）来避免这个问题。
 
 ### example 模块的依赖问题
 
-**问题表现**：
+**问题表现**:
 ```
 Failed to read metadata from fabric-language-clojure-fabric-1.0.0-dev.jar
 NoSuchFileException
 ```
 
-**原因**：`example` 项目依赖 `fabric` 模块的输出 JAR。在执行 `clean` 后，JAR 不存在。
+**原因**: `example` 项目依赖 `fabric` 模块的输出 JAR。在执行 `clean` 后，JAR 不存在。
 
-**解决方案**：
+**解决方案**:
 
 ```powershell
-# 方案 1：不要同时 clean 所有模块
+# 方案 1: 不要同时 clean 所有模块
 .\gradlew.bat :fabric:clean :fabric:build -x checkClojure -x compileClojure
 .\gradlew.bat :example:build -x checkClojure -x compileClojure
 
-# 方案 2：临时注释掉 example（如果需要完全清理）
+# 方案 2: 临时注释掉 example（如果需要完全清理）
 # 1. 编辑 settings.gradle，注释掉 include 'example'
 # 2. 构建基础模块
 .\gradlew.bat build -x checkClojure -x compileClojure
@@ -184,7 +184,7 @@ NoSuchFileException
 .\gradlew.bat :example:build -x checkClojure -x compileClojure
 ```
 
-**最佳实践**：避免对多项目同时执行 `clean`，除非真的需要完全重建。
+**最佳实践**: 避免对多项目同时执行 `clean`，除非真的需要完全重建。
 
 ### 快速参考表
 
@@ -201,7 +201,7 @@ NoSuchFileException
 
 ### 多项目构建顺序
 
-本项目使用 Architectury 多项目结构：
+本项目使用 Architectury 多项目结构:
 
 ```
 fabric-language-clojure/
@@ -210,9 +210,9 @@ fabric-language-clojure/
 └── example/    ← 示例 mod（依赖 fabric）
 ```
 
-**依赖关系**：`example` → `fabric` → `common`
+**依赖关系**: `example` → `fabric` → `common`
 
-**构建顺序**（Gradle 自动处理）：
+**构建顺序**（Gradle 自动处理）:
 1. `common` 先编译
 2. `fabric` 依赖 `common` 的输出
 3. `example` 依赖 `fabric` 的输出
@@ -363,7 +363,7 @@ private void modifyHealth(CallbackInfoReturnable<Float> cir) {
 (def blocks (reg/create-registry "mymod" :block))
 ```
 
-支持的注册表类型：
+支持的注册表类型:
 - `:item` - 物品
 - `:block` - 方块
 - `:entity` - 实体
@@ -413,12 +413,12 @@ private void modifyHealth(CallbackInfoReturnable<Float> cir) {
 
 ### 连接方式
 
-**VS Code + Calva：**
+**VS Code + Calva: **
 1. `Ctrl+Shift+P` → `Calva: Connect to a running REPL`
 2. 选择 `Generic`
 3. 输入 `localhost:7888`
 
-**命令行：**
+**命令行: **
 ```bash
 lein repl :connect 7888
 # 或
@@ -461,14 +461,14 @@ com.mymod/
 
 ### 类型提示
 
-始终为 Java 互操作添加类型提示：
+始终为 Java 互操作添加类型提示:
 
 ```clojure
-;; ❌ 慢：产生反射调用
+;; ❌ 慢: 产生反射调用
 (defn get-name [player]
   (.getName player))
 
-;; ✅ 快：无反射
+;; ✅ 快: 无反射
 (defn get-name [^Player player]
   (.getName player))
 
@@ -505,15 +505,15 @@ com.mymod/
 
 ### 热路径优化
 
-识别频繁调用的代码（tick、render 等）：
+识别频繁调用的代码（tick、render 等）:
 
 ```clojure
-;; ❌ 慢：每次创建序列
+;; ❌ 慢: 每次创建序列
 (defn process-entities [entities]
   (doseq [e (filter alive? entities)]
     (update-entity e)))
 
-;; ✅ 快：使用 reduce
+;; ✅ 快: 使用 reduce
 (defn process-entities [entities]
   (reduce (fn [_ e]
             (when (alive? e)
@@ -524,11 +524,11 @@ com.mymod/
 ### 避免装箱
 
 ```clojure
-;; ❌ 慢：装箱开销
+;; ❌ 慢: 装箱开销
 (defn calculate [base mult]
   (* base mult))
 
-;; ✅ 快：原生类型
+;; ✅ 快: 原生类型
 (defn calculate ^double [^double base ^double mult]
   (* base mult))
 ```

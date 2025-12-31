@@ -3,13 +3,13 @@
 
    提供方块操作、方块状态管理、方块实体交互等功能。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.level Level]
-           [net.minecraft.world.level.block Block Blocks]
-           [net.minecraft.world.level.block.state BlockState]
-           [net.minecraft.world.level.block.state.properties Property]
-           [net.minecraft.core BlockPos Direction]
-           [net.minecraft.world.entity.player Player]
-           [net.minecraft.world.phys BlockHitResult]))
+  (:import (net.minecraft.world.level Level)
+           (net.minecraft.world.level.block Block Blocks)
+           (net.minecraft.world.level.block.state BlockState)
+           (net.minecraft.world.level.block.state.properties Property)
+           (net.minecraft.core BlockPos Direction)
+           (net.minecraft.world.entity.player Player)
+           (net.minecraft.world.phys BlockHitResult)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -90,7 +90,7 @@
    参数:
    - pos: 方块位置
    - direction: 方向 (:north/:south/:east/:west/:up/:down)
-   - distance: 距离（可选，默认 1）"
+   - distance: 距离( 可选，默认 1) "
   (^BlockPos [^BlockPos pos direction]
    (pos-relative pos direction 1))
   (^BlockPos [^BlockPos pos direction distance]
@@ -130,11 +130,11 @@
 
    参数:
    - level: Level
-   - pos: 方块位置（BlockPos、向量 [x y z] 或映射）
+   - pos: 方块位置( BlockPos、向量 [x y z] 或映射)
 
-   返回：Block 对象
+   返回: Block 对象
 
-   注意：这是获取世界中某个位置的方块。如果要从注册表获取方块定义，请使用 core/get-block-by-id
+   注意: 这是获取世界中某个位置的方块。如果要从注册表获取方块定义，请使用 core/get-block-by-id
 
    示例:
    ```clojure
@@ -144,7 +144,7 @@
   ^Block [^Level level pos]
   (.getBlock (get-block-state level pos)))
 
-;; 向后兼容的别名（已弃用，请使用 get-block-at）
+;; 向后兼容的别名( 已弃用，请使用 get-block-at)
 (def get-block get-block-at)
 
 (defn is-air?
@@ -185,7 +185,7 @@
    - level: Level
    - pos: 方块位置
    - state: BlockState 或 Block
-   - flags: 更新标志（可选，默认 3）
+   - flags: 更新标志( 可选，默认 3)
 
    标志说明:
    - 1: 发送更新给客户端
@@ -215,24 +215,24 @@
      (.setBlock level block-pos block-state flags))))
 
 (defn remove-block!
-  "移除方块（设置为空气）
+  "移除方块( 设置为空气)
 
    参数:
    - level: Level
    - pos: 方块位置
-   - do-drops?: 是否掉落物品（默认 true）"
+   - do-drops?: 是否掉落物品( 默认 true) "
   ([^Level level ^BlockPos pos]
    (remove-block! level pos true))
   ([^Level level ^BlockPos pos do-drops?]
    (.destroyBlock level pos do-drops?)))
 
 (defn break-block!
-  "破坏方块（模拟玩家破坏，会掉落物品）
+  "破坏方块( 模拟玩家破坏，会掉落物品)
 
    参数:
    - level: Level
    - pos: 方块位置
-   - player: 玩家（可选）"
+   - player: 玩家( 可选) "
   ([^Level level ^BlockPos pos]
    (.destroyBlock level pos true))
   ([^Level level ^BlockPos pos ^Player player]
@@ -247,7 +247,7 @@
 
    参数:
    - state: BlockState
-   - property: 属性名（关键字或字符串）或 Property 对象
+   - property: 属性名( 关键字或字符串) 或 Property 对象
 
    示例:
    ```clojure
@@ -267,7 +267,7 @@
 (defn set-property-value
   "设置方块状态属性
 
-   返回新的 BlockState（不修改原状态）
+   返回新的 BlockState( 不修改原状态)
 
    示例:
    ```clojure
@@ -289,7 +289,7 @@
 (defn list-properties
   "列出方块状态的所有属性
 
-   返回：属性名列表"
+   返回: 属性名列表"
   [^BlockState state]
   (map #(.getName ^Property %) (.getProperties state)))
 
@@ -313,7 +313,7 @@
   (.isSolidRender state nil nil))
 
 (defn get-destroy-speed
-  "获取方块破坏速度（硬度）"
+  "获取方块破坏速度( 硬度) "
   [^BlockState state]
   (.getDestroySpeed state nil nil))
 
@@ -334,14 +334,14 @@
 (defn get-block-entity
   "获取位置的方块实体
 
-   返回：BlockEntity 或 nil"
+   返回: BlockEntity 或 nil"
   [^Level level ^BlockPos pos]
   (.getBlockEntity level pos))
 
 (defn get-block-entity-data
   "获取方块实体的 NBT 数据
 
-   返回：CompoundTag 或 nil"
+   返回: CompoundTag 或 nil"
   [^Level level ^BlockPos pos]
   (when-let [be (get-block-entity level pos)]
     (.saveWithFullMetadata be (.registryAccess level))))
@@ -375,7 +375,7 @@
 (defn get-neighbors
   "获取所有邻居方块位置
 
-   返回：6 个方向的方块位置列表"
+   返回: 6 个方向的方块位置列表"
   [^BlockPos pos]
   [(pos-relative pos :north)
    (pos-relative pos :south)
@@ -408,4 +408,5 @@
   ;; 区域操作请使用 common.world.regions 模块
   ;; (require '[com.fabriclj.swiss-knife.common.world.regions :as regions])
   ;; (regions/fill-blocks! level [0 60 0] [10 70 10] Blocks/STONE)
-  ;; (regions/scan-blocks level [0 60 0] [10 70 10] pred-fn))
+  ;; (regions/scan-blocks level [0 60 0] [10 70 10] pred-fn)
+  )

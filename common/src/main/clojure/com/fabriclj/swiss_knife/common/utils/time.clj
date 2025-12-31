@@ -1,13 +1,13 @@
 (ns com.fabriclj.swiss-knife.common.utils.time
   "时间和计时工具
 
-   提供 Minecraft Tick 系统的时间转换和任务调度功能：
+   提供 Minecraft Tick 系统的时间转换和任务调度功能:
    - Tick 与时间单位转换
    - 延迟任务调度
    - 任务管理
 
-   注意：Minecraft 的 Tick 速率是 20 ticks/秒"
-  (:import [java.util UUID]))
+   注意: Minecraft 的 Tick 速率是 20 ticks/秒"
+  (:import (java.util UUID)))
 
 (set! *warn-on-reflection* true)
 
@@ -70,22 +70,22 @@
   (atom []))
 
 (defn schedule-task
-  "延迟执行任务（需要在游戏循环中调用 tick-scheduled-tasks）
+  "延迟执行任务( 需要在游戏循环中调用 tick-scheduled-tasks)
 
    参数:
    - delay-ticks: 延迟 Tick 数
    - task: 任务函数
 
-   返回：任务 ID（用于取消）
+   返回: 任务 ID( 用于取消)
 
-   注意：
+   注意:
    - 此函数仅调度任务，不自动执行
-   - 必须在游戏循环（如 on-server-tick）中调用 tick-scheduled-tasks
-   - 延迟基于实际时间而非游戏 Tick（避免暂停/lag 影响）
+   - 必须在游戏循环( 如 on-server-tick) 中调用 tick-scheduled-tasks
+   - 延迟基于实际时间而非游戏 Tick( 避免暂停/lag 影响)
 
    示例:
    ```clojure
-   ;; 延迟 100 ticks（5秒）执行
+   ;; 延迟 100 ticks( 5秒) 执行
    (def task-id (schedule-task 100 #(println \"Task executed!\")))
 
    ;; 在游戏循环中执行
@@ -120,9 +120,9 @@
 (defn tick-scheduled-tasks
   "执行到期的计划任务
 
-   应在游戏循环中调用（如 on-server-tick 事件）
+   应在游戏循环中调用( 如 on-server-tick 事件)
 
-   功能：
+   功能:
    - 检查所有计划任务
    - 执行到期的任务
    - 捕获任务执行中的异常
@@ -166,7 +166,7 @@
 (defn get-pending-tasks-count
   "获取待执行任务数量
 
-   返回：待执行任务数
+   返回: 待执行任务数
 
    示例:
    ```clojure
@@ -191,7 +191,7 @@
 
   ;; ========== 任务调度 ==========
 
-  ;; 2. 设置游戏循环（必须先执行）
+  ;; 2. 设置游戏循环( 必须先执行)
   (require '[com.fabriclj.swiss-knife.common.events.core :as events])
 
   (events/on-server-tick

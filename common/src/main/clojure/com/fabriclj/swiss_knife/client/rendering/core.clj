@@ -2,14 +2,14 @@
   "瑞士军刀 - 渲染工具模块
    提供渲染相关的便捷函数
 
-   注意：此命名空间仅在客户端环境可用！"
+   注意: 此命名空间仅在客户端环境可用！"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.client.gui GuiGraphics]
-           [net.minecraft.client.renderer.texture TextureAtlasSprite]
-           [net.minecraft.resources ResourceLocation]
-           [net.minecraft.world.item ItemStack]
-           [com.mojang.blaze3d.systems RenderSystem]
-           [com.mojang.blaze3d.vertex PoseStack]))
+  (:import (net.minecraft.client.gui GuiGraphics)
+           (net.minecraft.client.renderer.texture TextureAtlasSprite)
+           (net.minecraft.resources ResourceLocation)
+           (net.minecraft.world.item ItemStack)
+           (com.mojang.blaze3d.systems RenderSystem)
+           (com.mojang.blaze3d.vertex PoseStack)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -57,7 +57,7 @@
   (.scale (.last pose-stack) x y z))
 
 (defn rotate!
-  "旋转渲染矩阵（度数）"
+  "旋转渲染矩阵( 度数) "
   [^PoseStack pose-stack angle axis]
   (let [radians (Math/toRadians angle)]
     (case axis
@@ -73,10 +73,10 @@
   "绘制字符串
    参数:
    - graphics: GuiGraphics
-   - text: 文本（字符串�?Component�?
+   - text: 文本( 字符串�?Component�?
    - x, y: 坐标
-   - color: 颜色（整数，�?0xFFFFFF 为白色）
-   - shadow?: 是否绘制阴影（可选，默认 true�?
+   - color: 颜色( 整数，�?0xFFFFFF 为白色)
+   - shadow?: 是否绘制阴影( 可选，默认 true�?
 
    示例:
    ```clojure
@@ -113,7 +113,7 @@
    - graphics: GuiGraphics
    - x1, y1: 左上角坐标
    - x2, y2: 右下角坐标
-   - color: 颜色（整数，0xAARRGGBB 格式）
+   - color: 颜色( 整数，0xAARRGGBB 格式)
 
    示例:
    ```clojure
@@ -154,13 +154,13 @@
   (.renderItem graphics item-stack x y))
 
 (defn draw-item-with-count
-  "绘制物品图标（带数量)
+  "绘制物品图标( 带数量)
 
    参数:
    - graphics: GuiGraphics
    - item-stack: ItemStack
    - x, y: 坐标
-   - count-text: 数量文本（可选）"
+   - count-text: 数量文本( 可选) "
   ([^GuiGraphics graphics ^ItemStack item-stack x y]
    (.renderItem graphics item-stack x y)
    (.renderItemDecorations graphics
@@ -202,9 +202,9 @@
   "创建 RGBA 颜色
    参数:
    - r, g, b: 0-255
-   - a: 0-255（可选，默认 255）
+   - a: 0-255( 可选，默认 255)
 
-   返回：整数颜色
+   返回: 整数颜色
 
    示例:
    ```clojure
@@ -221,7 +221,7 @@
     (bit-and b 0xFF))))
 
 (defn rgb
-  "创建 RGB 颜色值（完全不透明）
+  "创建 RGB 颜色值( 完全不透明)
    示例:
    ```clojure
    (rgb 255 0 0)  ; 红色
@@ -232,7 +232,7 @@
 (defn hex-color
   "创建十六进制颜色
    参数:
-   - hex: 十六进制字符串（\"#FF0000\" | \"FF0000\"）
+   - hex: 十六进制字符串( \"#FF0000\" | \"FF0000\")
 
    示例:
    ```clojure
@@ -265,7 +265,7 @@
 ;; ============================================================================
 
 (defn enable-blend!
-  "启用混合（透明度）"
+  "启用混合( 透明度) "
   []
   (RenderSystem/enableBlend))
 
@@ -275,7 +275,7 @@
   (RenderSystem/disableBlend))
 
 (defn set-shader-color!
-  "设置着色器颜色（RGBA）.0-1.0"
+  "设置着色器颜色( RGBA) .0-1.0"
   [r g b a]
   (RenderSystem/setShaderColor r g b a))
 

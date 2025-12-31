@@ -1,45 +1,45 @@
 (ns com.fabriclj.swiss-knife.common.ui.containers
   "瑞士军刀 - 容器菜单/GUI 系统模块
 
-   ⚠️ 职责说明：
-   本模块专注于 GUI 层（AbstractContainerMenu），处理玩家与容器的交互界面。
-   
-   **与其他模块的关系**：
-   - `common.inventories` - 数据层（Container），存储物品数据
-   - `common.containers` - GUI层（AbstractContainerMenu），处理界面交互
-   - `client.screens` - 全屏菜单（Screen），不涉及容器同步
-   
-   **使用场景**：
-   - 自定义方块GUI（如箱子、工作台、熔炉）
+   ⚠️ 职责说明:
+   本模块专注于 GUI 层( AbstractContainerMenu) ，处理玩家与容器的交互界面。
+
+   **与其他模块的关系**:
+   - `common.inventories` - 数据层( Container) ，存储物品数据
+   - `common.containers` - GUI层( AbstractContainerMenu) ，处理界面交互
+   - `client.screens` - 全屏菜单( Screen) ，不涉及容器同步
+
+   **使用场景**:
+   - 自定义方块GUI( 如箱子、工作台、熔炉)
    - 需要服务端-客户端同步的容器界面
    - 玩家可以与之交互的物品栏界面
-   
+
    **基础容器操作请使用 `common.inventories`**"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.common.ui.inventories :as inv]
             [com.fabriclj.registry :as reg])
-  (:import [net.minecraft.world.inventory AbstractContainerMenu MenuType Slot]
-           [net.minecraft.world.entity.player Player Inventory]
-           [net.minecraft.world.item ItemStack]
-           [net.minecraft.world Container SimpleContainer]
-           [net.minecraft.core BlockPos]
-           [net.minecraft.network FriendlyByteBuf]))
+  (:import (net.minecraft.world.inventory AbstractContainerMenu MenuType Slot)
+           (net.minecraft.world.entity.player Player Inventory)
+           (net.minecraft.world.item ItemStack)
+           (net.minecraft.world Container SimpleContainer)
+           (net.minecraft.core BlockPos)
+           (net.minecraft.network FriendlyByteBuf)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
 
 ;; ============================================================================
-;; 容器操作（向后兼容，推荐使用 inventories 模块）
+;; 容器操作( 向后兼容，推荐使用 inventories 模块)
 ;; ============================================================================
 
-;; ⚠️ 注意：基础容器操作已移至 common.inventories
+;; ⚠️ 注意: 基础容器操作已移至 common.inventories
 ;; 这里保留向后兼容的别名
 
 (defn create-container
   "创建简单容器
 
-   ⚠️ 推荐使用：`inventories/create-inventory`
-   
+   ⚠️ 推荐使用: `inventories/create-inventory`
+
    此函数保留用于向后兼容。"
   ^SimpleContainer [size]
   (inv/create-inventory size))
@@ -47,28 +47,28 @@
 (defn container-size
   "获取容器大小
 
-   ⚠️ 推荐使用：`inventories/inventory-size`"
+   ⚠️ 推荐使用: `inventories/inventory-size`"
   [^Container container]
   (inv/inventory-size container))
 
 (defn get-item-in-slot
   "获取槽位中的物品
 
-   ⚠️ 推荐使用：`inventories/get-slot`"
+   ⚠️ 推荐使用: `inventories/get-slot`"
   ^ItemStack [^Container container slot]
   (inv/get-slot container slot))
 
 (defn set-item-in-slot!
   "设置槽位中的物品
 
-   ⚠️ 推荐使用：`inventories/set-slot!`"
+   ⚠️ 推荐使用: `inventories/set-slot!`"
   [^Container container slot ^ItemStack item-stack]
   (inv/set-slot! container slot item-stack))
 
 (defn clear-container!
   "清空容器
 
-   ⚠️ 推荐使用：`inventories/clear-inventory!`"
+   ⚠️ 推荐使用: `inventories/clear-inventory!`"
   [^Container container]
   (inv/clear-inventory! container))
 
@@ -82,7 +82,7 @@
    参数:
    - factory: 菜单工厂函数 (fn [sync-id player-inventory] -> AbstractContainerMenu)
 
-   返回：MenuType
+   返回: MenuType
 
    示例:
    ```clojure
@@ -105,7 +105,7 @@
    - id: 菜单 ID
    - factory: 菜单工厂函数
 
-   返回：RegistrySupplier
+   返回: RegistrySupplier
 
    示例:
    ```clojure
@@ -135,13 +135,13 @@
    - player-inventory: 玩家背包
    - container: 容器
    - opts: 可选参数
-     - :container-rows - 容器行数（默认 3）
-     - :container-cols - 容器列数（默认 9）
-     - :add-player-inventory? - 是否添加玩家背包（默认 true）
-     - :add-player-hotbar? - 是否添加玩家快捷栏（默认 true）
-     - :quick-move-fn - 快速移动函数（Shift+点击）
+     - :container-rows - 容器行数( 默认 3)
+     - :container-cols - 容器列数( 默认 9)
+     - :add-player-inventory? - 是否添加玩家背包( 默认 true)
+     - :add-player-hotbar? - 是否添加玩家快捷栏( 默认 true)
+     - :quick-move-fn - 快速移动函数( Shift+点击)
 
-   返回：AbstractContainerMenu
+   返回: AbstractContainerMenu
 
    示例:
    ```clojure
@@ -180,19 +180,19 @@
    - slot-index: 槽位索引
    - x, y: 屏幕位置
 
-   返回：Slot"
+   返回: Slot"
   ^Slot [^AbstractContainerMenu menu ^Container container slot-index x y]
   (.addSlot menu (Slot. container slot-index x y)))
 
 (defn add-container-slots!
-  "批量添加容器槽位（网格布局）
+  "批量添加容器槽位( 网格布局)
 
    参数:
    - menu: AbstractContainerMenu
    - container: Container
    - start-x, start-y: 起始位置
    - rows, cols: 行数和列数
-   - slot-spacing: 槽位间距（默认 18）
+   - slot-spacing: 槽位间距( 默认 18)
 
    示例:
    ```clojure
@@ -210,7 +210,7 @@
        (add-slot! menu container slot-index x y)))))
 
 (defn add-player-inventory-slots!
-  "添加玩家背包槽位（标准 3x9 布局）
+  "添加玩家背包槽位( 标准 3x9 布局)
 
    参数:
    - menu: AbstractContainerMenu
@@ -225,7 +225,7 @@
       (add-slot! menu player-inventory slot-index x y))))
 
 (defn add-player-hotbar-slots!
-  "添加玩家快捷栏槽位（标准 1x9 布局）
+  "添加玩家快捷栏槽位( 标准 1x9 布局)
 
    参数:
    - menu: AbstractContainerMenu
@@ -254,7 +254,7 @@
   "创建标准布局的容器菜单
 
    参数:
-   - layout: 布局类型（关键字，如 :chest-small）
+   - layout: 布局类型( 关键字，如 :chest-small)
    - menu-type: MenuType
    - sync-id: 同步 ID
    - player-inventory: 玩家背包
@@ -275,7 +275,7 @@
 ;; ============================================================================
 
 (defmacro defmenu
-  "定义自定义菜单类型（语法糖）
+  "定义自定义菜单类型( 语法糖)
 
    示例:
    ```clojure

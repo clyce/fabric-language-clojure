@@ -12,9 +12,9 @@
    本模块采用一体化设计，包含数据采集和渲染逻辑。
 
    **函数分类**
-   - 数据层：`show-*` 函数（如 `show-ai-path!`）注册要显示的数据
-   - 渲染层：`render-*` 函数（如 `render-ai-path`）执行实际渲染
-   - 管理层：状态管理、清除、启用/禁用
+   - 数据层: `show-*` 函数( 如 `show-ai-path!`) 注册要显示的数据
+   - 渲染层: `render-*` 函数( 如 `render-ai-path`) 执行实际渲染
+   - 管理层: 状态管理、清除、启用/禁用
 
    **使用模式**
    ```clojure
@@ -27,30 +27,30 @@
        (debug-render/render-all-debug-data pose-stack buffers)))
    ```
 
-   **未来改进方向**（可选）
+   **未来改进方向**( 可选)
    - 数据层独立为 common 模块，支持服务端调试
    - 渲染层保持在 client 模块
    - 添加数据快照和回放功能
 
-   ⚠️ 注意：此模块仅在客户端可用"
+   ⚠️ 注意: 此模块仅在客户端可用"
   (:require [com.fabriclj.swiss-knife.client.rendering.core :as render]
             [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [com.mojang.blaze3d.vertex PoseStack VertexConsumer]
-           [net.minecraft.client Minecraft]
-           [net.minecraft.client.renderer MultiBufferSource RenderType]
-           [net.minecraft.world.entity Mob Entity]
-           [net.minecraft.world.entity.ai.navigation PathNavigation]
-           [net.minecraft.world.level.pathfinder Path Node]
-           [net.minecraft.world.phys Vec3 AABB]
-           [net.minecraft.core BlockPos]
-           [net.minecraft.world.phys.shapes VoxelShape]
-           [org.joml Matrix4f]
-           [java.awt Color]))
+  (:import (com.mojang.blaze3d.vertex PoseStack VertexConsumer)
+           (net.minecraft.client Minecraft)
+           (net.minecraft.client.renderer MultiBufferSource RenderType)
+           (net.minecraft.world.entity Mob Entity)
+           (net.minecraft.world.entity.ai.navigation PathNavigation)
+           (net.minecraft.world.level.pathfinder Path Node)
+           (net.minecraft.world.phys Vec3 AABB)
+           (net.minecraft.core BlockPos)
+           (net.minecraft.world.phys.shapes VoxelShape)
+           (org.joml Matrix4f)
+           (java.awt Color)))
 
 (set! *warn-on-reflection* true)
 
 ;; ============================================================================
-;; 调试渲染状态管理（数据层）
+;; 调试渲染状态管理( 数据层)
 ;; ============================================================================
 ;;
 ;; 这部分负责存储需要可视化的数据。
@@ -74,7 +74,7 @@
            :area-renders {}}))
 
 ;; ============================================================================
-;; 颜色工具（辅助函数）
+;; 颜色工具( 辅助函数)
 ;; ============================================================================
 
 (defn ->color
@@ -109,7 +109,7 @@
      :a (/ (.getAlpha c) 255.0)}))
 
 ;; ============================================================================
-;; 基础渲染工具（渲染层 - 底层）
+;; 基础渲染工具( 渲染层 - 底层)
 ;; ============================================================================
 ;;
 ;; 提供基础的几何图形渲染函数。
@@ -124,7 +124,7 @@
    - from: 起点 Vec3 或 [x y z]
    - to: 终点 Vec3 或 [x y z]
    - color: 颜色
-   - width: 线宽（默认 2.0）"
+   - width: 线宽( 默认 2.0) "
   [^PoseStack pose-stack ^MultiBufferSource buffer-source from to color & {:keys [width]
                                                                            :or {width 2.0}}]
   (let [^Vec3 from-vec (if (vector? from)
@@ -161,14 +161,14 @@
     (.endVertex buffer)))
 
 (defn render-point
-  "渲染一个点（小方块）
+  "渲染一个点( 小方块)
 
    参数:
    - pose-stack: PoseStack
    - buffer-source: MultiBufferSource
    - pos: 位置 Vec3 或 [x y z]
    - color: 颜色
-   - size: 大小（默认 0.2）"
+   - size: 大小( 默认 0.2) "
   [^PoseStack pose-stack ^MultiBufferSource buffer-source pos color & {:keys [size]
                                                                        :or {size 0.2}}]
   (let [^Vec3 pos-vec (if (vector? pos)
@@ -180,7 +180,7 @@
         x (.x pos-vec)
         y (.y pos-vec)
         z (.z pos-vec)]
-    ;; 渲染一个小立方体（6条边）
+    ;; 渲染一个小立方体( 6条边)
     (render-line pose-stack buffer-source
                  [(- x half-size) (- y half-size) (- z half-size)]
                  [(+ x half-size) (- y half-size) (- z half-size)]
@@ -209,8 +209,8 @@
    - entity: Mob 实体
    - opts: 可选参数
      - :colors - 颜色配置 {:start :line :end :waypoint}
-     - :duration - 显示持续时间（tick，默认 100）
-     - :show-waypoints? - 是否显示路径点（默认 true）
+     - :duration - 显示持续时间( tick，默认 100)
+     - :show-waypoints? - 是否显示路径点( 默认 true)
 
    示例:
    ```clojure
@@ -241,7 +241,7 @@
         (swap! debug-render-state assoc-in [:path-renders entity-id] render-data)))))
 
 (defn- render-path
-  "内部：渲染路径"
+  "内部: 渲染路径"
   [^PoseStack pose-stack ^MultiBufferSource buffer-source render-data]
   (let [{:keys [nodes colors show-waypoints?]} render-data
         start-color (:start colors)
@@ -280,21 +280,21 @@
                       :size 0.3)))))
 
 ;; ============================================================================
-;; 导航目标可视化（数据注册 + 渲染）
+;; 导航目标可视化( 数据注册 + 渲染)
 ;; ============================================================================
 ;;
 ;; show-navigation-goal! - 注册导航目标数据
 ;; 内部渲染逻辑 - 渲染导航目标标记
 
 (defn show-navigation-goal!
-  "显示导航目标（从实体到目标的直线）
+  "显示导航目标( 从实体到目标的直线)
 
    参数:
    - entity: Mob 实体
    - target-pos: 目标位置 BlockPos 或 [x y z]
    - opts: 可选参数
      - :colors - 颜色配置 {:start :line :end}
-     - :duration - 显示持续时间（tick，默认 100）
+     - :duration - 显示持续时间( tick，默认 100)
 
    示例:
    ```clojure
@@ -324,7 +324,7 @@
     (swap! debug-render-state assoc-in [:navigation-renders entity-id] render-data)))
 
 (defn- render-navigation-goal
-  "内部：渲染导航目标"
+  "内部: 渲染导航目标"
   [^PoseStack pose-stack ^MultiBufferSource buffer-source render-data]
   (let [{:keys [start-pos target-pos colors]} render-data
         start-color (:start colors)
@@ -350,9 +350,9 @@
    参数:
    - entity: Mob 实体
    - opts: 可选参数
-     - :duration - 显示持续时间（tick，默认 100）
-     - :show-goals? - 显示目标列表（默认 true）
-     - :show-target? - 显示攻击目标（默认 true）
+     - :duration - 显示持续时间( tick，默认 100)
+     - :show-goals? - 显示目标列表( 默认 true)
+     - :show-target? - 显示攻击目标( 默认 true)
 
    示例:
    ```clojure
@@ -386,7 +386,7 @@
     (swap! debug-render-state assoc-in [:ai-debug-renders entity-id] render-data)))
 
 (defn- render-ai-debug
-  "内部：渲染 AI 状态（文本显示）"
+  "内部: 渲染 AI 状态( 文本显示) "
   [^PoseStack pose-stack ^MultiBufferSource buffer-source render-data]
   (let [{:keys [^Mob entity goals target show-goals? show-target?]} render-data
         entity-pos (.position entity)
@@ -397,7 +397,7 @@
     (let [name (.getName entity)
           health (.getHealth entity)
           max-health (.getMaxHealth entity)]
-      ;; TODO: 实现文本渲染（需要额外的渲染支持）
+      ;; TODO: 实现文本渲染( 需要额外的渲染支持)
       )
 
     ;; 渲染目标连线
@@ -409,7 +409,7 @@
                    :width 2.0))))
 
 ;; ============================================================================
-;; 碰撞箱可视化（数据注册 + 渲染）
+;; 碰撞箱可视化( 数据注册 + 渲染)
 ;; ============================================================================
 ;;
 ;; show-bounding-box! - 注册碰撞箱数据
@@ -421,8 +421,8 @@
    参数:
    - entity: 实体
    - opts: 可选参数
-     - :color - 颜色（默认 :green）
-     - :duration - 显示持续时间（tick，默认 100）
+     - :color - 颜色( 默认 :green)
+     - :duration - 显示持续时间( tick，默认 100)
 
    示例:
    ```clojure
@@ -440,7 +440,7 @@
     (swap! debug-render-state assoc-in [:bbox-renders entity-id] render-data)))
 
 (defn- render-bounding-box
-  "内部：渲染碰撞箱"
+  "内部: 渲染碰撞箱"
   [^PoseStack pose-stack ^MultiBufferSource buffer-source render-data]
   (let [{:keys [^Entity entity color]} render-data
         ^AABB bbox (.getBoundingBox entity)
@@ -475,15 +475,15 @@
 ;; ============================================================================
 
 (defn show-area!
-  "显示一个区域（立方体）
+  "显示一个区域( 立方体)
 
    参数:
    - id: 区域唯一标识
    - from-pos: 起点位置 [x y z]
    - to-pos: 终点位置 [x y z]
    - opts: 可选参数
-     - :color - 颜色（默认 :yellow）
-     - :duration - 显示持续时间（tick，默认 100，0 表示永久）
+     - :color - 颜色( 默认 :yellow)
+     - :duration - 显示持续时间( tick，默认 100，0 表示永久)
 
    示例:
    ```clojure
@@ -509,13 +509,13 @@
   (swap! debug-render-state update :area-renders dissoc id))
 
 (defn- render-area
-  "内部：渲染区域"
+  "内部: 渲染区域"
   [^PoseStack pose-stack ^MultiBufferSource buffer-source render-data]
   (let [{:keys [from-pos to-pos color]} render-data
         [min-x min-y min-z] from-pos
         [max-x max-y max-z] to-pos]
 
-    ;; 渲染立方体边框（与碰撞箱类似）
+    ;; 渲染立方体边框( 与碰撞箱类似)
     (render-line pose-stack buffer-source [min-x min-y min-z] [max-x min-y min-z] color)
     (render-line pose-stack buffer-source [max-x min-y min-z] [max-x min-y max-z] color)
     (render-line pose-stack buffer-source [max-x min-y max-z] [min-x min-y max-z] color)

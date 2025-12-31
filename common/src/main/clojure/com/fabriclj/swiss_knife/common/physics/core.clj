@@ -3,11 +3,11 @@
 
    提供射线追踪、碰撞检测、速度计算等物理相关功能。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
-  (:import [net.minecraft.world.level Level ClipContext ClipContext$Block ClipContext$Fluid]
-           [net.minecraft.world.phys Vec3 AABB BlockHitResult EntityHitResult HitResult$Type]
-           [net.minecraft.world.entity Entity LivingEntity]
-           [net.minecraft.core BlockPos Direction]
-           [net.minecraft.world.level.block Blocks]))
+  (:import (net.minecraft.world.level Level ClipContext ClipContext$Block ClipContext$Fluid)
+           (net.minecraft.world.phys Vec3 AABB BlockHitResult EntityHitResult HitResult$Type)
+           (net.minecraft.world.entity Entity LivingEntity)
+           (net.minecraft.core BlockPos Direction)
+           (net.minecraft.world.level.block Blocks)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -94,14 +94,14 @@
 
    参数:
    - level: Level
-   - start: 起始位置（Vec3 或向量）
-   - end: 结束位置（Vec3 或向量）
+   - start: 起始位置( Vec3 或向量)
+   - end: 结束位置( Vec3 或向量)
    - opts: 可选参数
      - :block-mode - 方块模式 (:collider/:outline/:visual)
      - :fluid-mode - 流体模式 (:none/:source-only/:any)
-     - :entity - 实体（用于视角）
+     - :entity - 实体( 用于视角)
 
-   返回：HitResult
+   返回: HitResult
 
    示例:
    ```clojure
@@ -131,18 +131,18 @@
     (.clip level context)))
 
 (defn raycast-all
-  "射线追踪所有命中（穿透式）
+  "射线追踪所有命中( 穿透式)
 
    参数:
    - level: Level
    - start: 起始位置
    - end: 结束位置
    - opts: 可选参数
-     - :max-hits - 最大命中数（默认 -1 表示所有）
+     - :max-hits - 最大命中数( 默认 -1 表示所有)
      - :predicate - 过滤函数 (fn [hit] -> boolean)
      - 其他参数同 raycast
 
-   返回：HitResult 列表
+   返回: HitResult 列表
 
    示例:
    ```clojure
@@ -172,7 +172,7 @@
             @hits))))))
 
 (defn raycast-first
-  "射线追踪第一个符合条件的命中（快捷函数）
+  "射线追踪第一个符合条件的命中( 快捷函数)
 
    参数:
    - level: Level
@@ -182,7 +182,7 @@
      - :predicate - 过滤函数 (fn [hit] -> boolean)
      - 其他参数同 raycast
 
-   返回：第一个符合条件的 HitResult 或 nil
+   返回: 第一个符合条件的 HitResult 或 nil
 
    示例:
    ```clojure
@@ -199,7 +199,7 @@
 (defn raycast-block
   "射线追踪方块
 
-   返回：BlockHitResult 或 nil"
+   返回: BlockHitResult 或 nil"
   [level start end & [opts]]
   (let [result (raycast level start end opts)]
     (when (= (.getType result) HitResult$Type/BLOCK)
@@ -216,7 +216,7 @@
      - :predicate - 过滤函数 (fn [entity] -> boolean)
      - :expand - 碰撞箱扩展量
 
-   返回：{:entity Entity :hit-vec Vec3} 或 nil
+   返回: {:entity Entity :hit-vec Vec3} 或 nil
 
    示例:
    ```clojure
@@ -252,9 +252,9 @@
 
    参数:
    - entity: Entity
-   - distance: 距离（可选，默认 1.0）
+   - distance: 距离( 可选，默认 1.0)
 
-   返回：Vec3"
+   返回: Vec3"
   (^Vec3 [^Entity entity]
    (get-look-vector entity 1.0))
   (^Vec3 [^Entity entity distance]
@@ -266,7 +266,7 @@
    参数:
    - entity: Entity
    - distance: 最大距离
-   - opts: 可选参数（同 raycast）
+   - opts: 可选参数( 同 raycast)
 
    示例:
    ```clojure
@@ -283,7 +283,7 @@
 ;; ============================================================================
 
 (defn aabb
-  "创建 AABB（碰撞箱）
+  "创建 AABB( 碰撞箱)
 
    参数:
    - min-x, min-y, min-z, max-x, max-y, max-z: 坐标
@@ -336,7 +336,7 @@
    参数:
    - level: Level
    - aabb: AABB
-   - predicate: 过滤函数（可选）
+   - predicate: 过滤函数( 可选)
 
    示例:
    ```clojure
@@ -355,9 +355,9 @@
    参数:
    - level: Level
    - aabb: AABB
-   - predicate: 过滤函数（可选） (fn [pos state] -> boolean)
+   - predicate: 过滤函数( 可选)  (fn [pos state] -> boolean)
 
-   返回：[{:pos BlockPos :state BlockState}] 列表
+   返回: [{:pos BlockPos :state BlockState}] 列表
 
    示例:
    ```clojure
@@ -414,7 +414,7 @@
 
    参数:
    - entity: Entity
-   - target: 目标位置（Vec3 或向量）
+   - target: 目标位置( Vec3 或向量)
    - force: 推力强度
 
    示例:
@@ -439,7 +439,7 @@
    参数:
    - entity: Entity
    - strength: 击退强度
-   - x, z: 击退方向（水平）
+   - x, z: 击退方向( 水平)
 
    示例:
    ```clojure
@@ -462,15 +462,15 @@
 ;; ============================================================================
 
 (defn calculate-projectile-velocity
-  "计算抛射物速度（抛物线运动）
+  "计算抛射物速度( 抛物线运动)
 
    参数:
    - start: 起始位置
    - target: 目标位置
-   - time: 飞行时间（tick）
-   - gravity: 重力加速度（默认 0.03）
+   - time: 飞行时间( tick)
+   - gravity: 重力加速度( 默认 0.03)
 
-   返回：Vec3
+   返回: Vec3
 
    示例:
    ```clojure
@@ -497,10 +497,10 @@
    参数:
    - start: 起始位置
    - velocity: 初始速度
-   - gravity: 重力加速度（默认 0.03）
-   - max-time: 最大时间（默认 100 tick）
+   - gravity: 重力加速度( 默认 0.03)
+   - max-time: 最大时间( 默认 100 tick)
 
-   返回：Vec3"
+   返回: Vec3"
   [start velocity & [gravity max-time]]
   (let [gravity (or gravity 0.03)
         max-time (or max-time 100)
@@ -534,9 +534,9 @@
    参数:
    - level: Level
    - x, z: 水平坐标
-   - start-y: 起始高度（默认 256）
+   - start-y: 起始高度( 默认 256)
 
-   返回：y 坐标"
+   返回: y 坐标"
   ([^Level level x z]
    (get-ground-level level x z 256))
   ([^Level level x z start-y]
@@ -555,7 +555,7 @@
    - radius: 半径
    - count: 位置数量
 
-   返回：Vec3 列表
+   返回: Vec3 列表
 
    示例:
    ```clojure

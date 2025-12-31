@@ -1,13 +1,13 @@
 (ns com.fabriclj.core
   "fabric-language-clojure 核心命名空间
-   此命名空间是语言支持库的核心，提供：
+   此命名空间是语言支持库的核心，提供:
    - 模组元数据访问
    - 平台检测工具
    - 常用工具函数
 
    用户 mod 可以依赖此命名空间获取通用功能。"
-  (:import [dev.architectury.platform Platform]
-           [com.fabriclj ModMain]))
+  (:import (dev.architectury.platform Platform)
+           (com.fabriclj ModMain)))
 
 ;; 启用反射警告，避免性能问题
 (set! *warn-on-reflection* true)
@@ -21,7 +21,7 @@
   ModMain/MOD_ID)
 
 (def ^:private lib-version
-  "语言库版本（延迟加载）"
+  "语言库版本( 延迟加载) "
   (delay
     (try
       (.getVersion (Platform/getMod mod-id))
@@ -53,7 +53,7 @@
 
 #_(defn neoforge?
   "检查当前是否运行在 NeoForge 加载器上
-   注意：NeoForge 支持取决于 Architectury API 版本
+   注意: NeoForge 支持取决于 Architectury API 版本
    当前实现总是返回 false"
   []
   false)

@@ -2,41 +2,34 @@
   "世界生成系统
 
    提供 Minecraft 世界生成的 Clojure 友好接口。
-   核心功能：
+   核心功能:
    - 矿石生成配置
    - 树木和植被生成
    - 结构放置
    - 生物群系修改
    - 特征和放置器"
   (:require [clojure.string :as str])
-  (:import [net.minecraft.world.level.levelgen.feature Feature
+  (:import (net.minecraft.world.level.levelgen.feature Feature
             ConfiguredFeature
-            FeaturePlaceContext]
-           [net.minecraft.world.level.levelgen.feature.configurations OreConfiguration
-            TreeConfiguration
-            RandomPatchConfiguration]
-           [net.minecraft.world.level.levelgen.placement PlacedFeature
-            PlacementModifier
-            PlacementContext]
-           [net.minecraft.world.level.levelgen.structure Structure
-            StructurePiece
-            StructureType]
-           [net.minecraft.world.level.block Block Blocks]
-           [net.minecraft.world.level.block.state BlockState]
-           [net.minecraft.core BlockPos Registry Holder]
-           [net.minecraft.resources ResourceLocation ResourceKey]
-           [net.minecraft.world.level Level]
-           [net.minecraft.world.level.biome Biome BiomeGenerationSettings]
-           [net.minecraft.world.level.levelgen HeightmapType]
-           [net.minecraft.world.level.levelgen.placement HeightRangePlacement
+            FeaturePlaceContext)
+           (net.minecraft.world.level.levelgen.feature.configurations OreConfiguration
+            TreeConfiguration RandomPatchConfiguration)
+           (net.minecraft.world.level.levelgen.placement PlacedFeature PlacementModifier PlacementContext)
+           (net.minecraft.world.level.levelgen.structure Structure StructurePiece StructureType)
+           (net.minecraft.world.level.block Block Blocks)
+           (net.minecraft.world.level.block.state BlockState)
+           (net.minecraft.core BlockPos Registry Holder)
+           (net.minecraft.resources ResourceLocation ResourceKey)
+           (net.minecraft.world.level Level)
+           (net.minecraft.world.level.biome Biome BiomeGenerationSettings)
+           (net.minecraft.world.level.levelgen HeightmapType)
+           (net.minecraft.world.level.levelgen.placement HeightRangePlacement
             CountPlacement
-            RarityFilter
-            BiomeFilter
-            InSquarePlacement]
-           [net.minecraft.world.level.levelgen.feature.stateproviders BlockStateProvider]
-           [net.minecraft.data.worldgen.placement PlacementUtils]
-           [net.minecraft.world.level.levelgen.blockpredicates BlockPredicate]
-           [net.minecraft.world.level.levelgen VerticalAnchor]))
+            RarityFilter BiomeFilter InSquarePlacement)
+           (net.minecraft.world.level.levelgen.feature.stateproviders BlockStateProvider)
+           (net.minecraft.data.worldgen.placement PlacementUtils)
+           (net.minecraft.world.level.levelgen.blockpredicates BlockPredicate)
+           (net.minecraft.world.level.levelgen VerticalAnchor)))
 
 (set! *warn-on-reflection* true)
 
@@ -89,33 +82,33 @@
 (defn ore-configuration
   "创建矿石配置
 
-   生成算法：
+   生成算法:
    Minecraft 的矿石生成使用椭球算法。每次尝试生成时，会在目标位置创建一个椭球形矿脉，矿脉中的每个方块都有 discard-chance 的概率被丢弃，从而形成不规则的矿脉形状。
 
    参数详解:
-   - targets: 矿石目标列表（ore-target 的结果）
-     定义在哪些方块（如石头、深板岩）上生成什么矿石
-   - size: 矿脉大小（方块数量，通常 3-17）
+   - targets: 矿石目标列表( ore-target 的结果)
+     定义在哪些方块( 如石头、深板岩) 上生成什么矿石
+   - size: 矿脉大小( 方块数量，通常 3-17)
      决定矿脉中可能包含的最大方块数。实际数量受 discard-chance 影响
-   - discard-chance: 丢弃概率（0.0-1.0，默认 0.0）
+   - discard-chance: 丢弃概率( 0.0-1.0，默认 0.0)
      每个方块被丢弃的概率。0.0 = 规则矿脉，0.5 = 约一半方块被丢弃
-     原版通常使用 0.0（规则）或 0.1（略微不规则）
+     原版通常使用 0.0( 规则) 或 0.1( 略微不规则)
 
    工作原理:
    1. 在指定高度范围内随机选择一个位置
-   2. 创建一个椭球形区域（大小由 size 决定）
+   2. 创建一个椭球形区域( 大小由 size 决定)
    3. 对区域内每个方块，检查是否匹配 targets 中的目标方块
    4. 如果匹配，按 (1 - discard-chance) 的概率替换为矿石
 
    示例:
    ```clojure
-   ;; 规则的煤矿脉（大而密集）
+   ;; 规则的煤矿脉( 大而密集)
    (ore-configuration
      [(ore-target Blocks/STONE Blocks/COAL_ORE)]
      17  ; 大矿脉
      0.0) ; 规则形状
 
-   ;; 不规则的钻石矿脉（小而稀疏）
+   ;; 不规则的钻石矿脉( 小而稀疏)
    (ore-configuration
      [(ore-target Blocks/STONE Blocks/DIAMOND_ORE)
       (ore-target Blocks/DEEPSLATE Blocks/DEEPSLATE_DIAMOND_ORE)]
@@ -133,7 +126,7 @@
   "均匀高度分布
 
    参数:
-   - min-height: 最小高度（可以是整数或 :bottom/:top）
+   - min-height: 最小高度( 可以是整数或 :bottom/:top)
    - max-height: 最大高度
 
    示例:
@@ -157,7 +150,7 @@
      (VerticalAnchor/absolute (int max-height)))))
 
 (defn triangle-height
-  "三角形高度分布（中间密集）
+  "三角形高度分布( 中间密集)
 
    参数:
    - min-height: 最小高度
@@ -173,7 +166,7 @@
    (VerticalAnchor/absolute (int max-height))))
 
 (defn absolute-height
-  "绝对高度（固定在某个高度）
+  "绝对高度( 固定在某个高度)
 
    参数:
    - height: 高度值
@@ -186,14 +179,14 @@
   (VerticalAnchor/absolute (int height)))
 
 ;; ============================================================================
-;; 放置修饰器（Placement Modifiers）
+;; 放置修饰器( Placement Modifiers)
 ;; ============================================================================
 
 (defn count-placement
-  "数量放置修饰器（每区块放置次数）
+  "数量放置修饰器( 每区块放置次数)
 
    参数:
-   - count: 次数（整数）
+   - count: 次数( 整数)
 
    示例:
    ```clojure
@@ -203,10 +196,10 @@
   (CountPlacement/of (int count)))
 
 (defn rarity-filter
-  "稀有度过滤（每 N 个区块一次）
+  "稀有度过滤( 每 N 个区块一次)
 
    参数:
-   - chance: 稀有度（整数，值越大越稀有）
+   - chance: 稀有度( 整数，值越大越稀有)
 
    示例:
    ```clojure
@@ -221,15 +214,15 @@
   (InSquarePlacement/spread))
 
 (defn biome-filter-placement
-  "生物群系过滤（仅在特定生物群系生成）"
+  "生物群系过滤( 仅在特定生物群系生成) "
   []
   (BiomeFilter/biome))
 
 (defn heightmap-placement
-  "基于高度图放置（地表/海底/等）
+  "基于高度图放置( 地表/海底/等)
 
    参数:
-   - type: 高度图类型（:motion_blocking/:ocean_floor/:world_surface 等）
+   - type: 高度图类型( :motion_blocking/:ocean_floor/:world_surface 等)
 
    示例:
    ```clojure
@@ -246,25 +239,25 @@
      HeightmapType/WORLD_SURFACE)))
 
 ;; ============================================================================
-;; 特征创建（简化接口）
+;; 特征创建( 简化接口)
 ;; ============================================================================
 
 (defn create-ore-feature-data
-  "创建矿石特征数据（用于数据生成）
+  "创建矿石特征数据( 用于数据生成)
 
    参数:
    - id: 特征 ID
    - ore-block: 矿石方块
-   - target-blocks: 目标方块列表（可以是方块或 {:block block :ore ore} 映射）
+   - target-blocks: 目标方块列表( 可以是方块或 {:block block :ore ore} 映射)
    - size: 矿脉大小
    - count: 每区块数量
    - height-range: 高度范围 [min max] 或高度放置修饰器
    - opts: 可选参数
      - :discard-chance - 丢弃概率
-     - :rarity - 稀有度（会替代 count）
+     - :rarity - 稀有度( 会替代 count)
      - :triangle - 是否使用三角分布
 
-   返回：特征数据映射
+   返回: 特征数据映射
 
    示例:
    ```clojure
@@ -366,7 +359,7 @@
   "创建生物群系修改数据
 
    参数:
-   - biomes: 目标生物群系列表（ResourceLocation 或关键字）
+   - biomes: 目标生物群系列表( ResourceLocation 或关键字)
    - modifications: 修改列表
      - [:add-feature decoration-step feature] - 添加特征
      - [:add-spawn entity-type weight min-group max-group] - 添加生物生成
@@ -393,12 +386,12 @@
    参数:
    - id: 结构 ID
    - structure-nbt: NBT 结构文件路径
-   - spawn-overrides: 生成覆盖（可选）
+   - spawn-overrides: 生成覆盖( 可选)
    - opts: 可选参数
      - :biomes - 生成的生物群系
      - :spacing - 结构间距
      - :separation - 结构分离
-     - :salt - 盐值（用于随机生成）
+     - :salt - 盐值( 用于随机生成)
 
    示例:
    ```clojure
@@ -515,7 +508,7 @@
 
    参数:
    - id: 特征 ID
-   - ore-type: 矿石类型（:coal/:iron/:diamond 等）
+   - ore-type: 矿石类型( :coal/:iron/:diamond 等)
    - ore-block: 矿石方块
    - targets: 目标方块列表
 
@@ -543,15 +536,15 @@
 ;; ============================================================================
 
 (defn find-surface-pos
-  "查找表面位置（从上往下搜索第一个固体方块）
+  "查找表面位置( 从上往下搜索第一个固体方块)
 
    参数:
    - level: Level
    - x: X 坐标
    - z: Z 坐标
-   - max-y: 最大 Y（默认 256）
+   - max-y: 最大 Y( 默认 256)
 
-   返回：BlockPos 或 nil"
+   返回: BlockPos 或 nil"
   [^Level level x z & {:keys [max-y] :or {max-y 256}}]
   (loop [y max-y]
     (if (< y -64)
@@ -568,10 +561,10 @@
 
    参数:
    - level: Level
-   - pos: 位置（树干底部）
+   - pos: 位置( 树干底部)
    - height: 树高
 
-   返回：boolean"
+   返回: boolean"
   [^Level level ^BlockPos pos height]
   (let [ground-pos (.below pos)
         ground-state (.getBlockState level ground-pos)]
@@ -588,17 +581,17 @@
              (range height)))))
 
 (defn place-simple-tree!
-  "放置简单树木（直树干 + 球形树叶）
+  "放置简单树木( 直树干 + 球形树叶)
 
    参数:
    - level: Level
-   - pos: 位置（树干底部）
+   - pos: 位置( 树干底部)
    - trunk-block: 树干方块
    - leaves-block: 树叶方块
    - height: 树高
-   - leaves-radius: 树叶半径（默认 2）
+   - leaves-radius: 树叶半径( 默认 2)
 
-   返回：是否成功放置"
+   返回: 是否成功放置"
   [^Level level ^BlockPos pos trunk-block leaves-block height & {:keys [leaves-radius]
                                                                  :or {leaves-radius 2}}]
   (when (can-place-tree? level pos height)

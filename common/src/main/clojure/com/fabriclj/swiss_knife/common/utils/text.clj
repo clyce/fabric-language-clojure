@@ -1,14 +1,14 @@
 (ns com.fabriclj.swiss-knife.common.utils.text
   "文本和翻译工具
 
-   提供 Minecraft Component 系统的 Clojure 封装，包括：
+   提供 Minecraft Component 系统的 Clojure 封装，包括:
    - 翻译文本
-   - 样式文本（颜色、格式）
-   - 交互文本（点击、悬停）
+   - 样式文本( 颜色、格式)
+   - 交互文本( 点击、悬停)
    - 文本组合"
-  (:import [net.minecraft.network.chat Component TextColor Style
-            ClickEvent HoverEvent
-            MutableComponent]))
+  (:import (net.minecraft.network.chat
+              Component TextColor Style
+              ClickEvent HoverEvent MutableComponent)))
 
 (set! *warn-on-reflection* true)
 
@@ -21,9 +21,9 @@
 
    参数:
    - key: 翻译键
-   - args: 翻译参数（可选）
+   - args: 翻译参数( 可选)
 
-   返回：Component
+   返回: Component
 
    示例:
    ```clojure
@@ -41,7 +41,7 @@
    参数:
    - text: 文本内容
 
-   返回：Component
+   返回: Component
 
    示例:
    ```clojure
@@ -59,7 +59,7 @@
 
    参数:
    - text: 文本内容
-   - color: 颜色（关键字或 RGB 整数）
+   - color: 颜色( 关键字或 RGB 整数)
      关键字: :black/:dark_blue/:dark_green/:dark_aqua/:dark_red
              :dark_purple/:gold/:gray/:dark_gray/:blue/:green
              :aqua/:red/:light_purple/:yellow/:white
@@ -185,7 +185,7 @@
 
    参数:
    - text: 文本内容
-   - hover: 悬停内容（Component 或字符串）
+   - hover: 悬停内容( Component 或字符串)
 
    示例:
    ```clojure
