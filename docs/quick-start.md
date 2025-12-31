@@ -246,8 +246,77 @@ public class MyMixin {
 
 构建产物位于 `build/libs/` 目录。
 
+## 使用 Swiss Knife 工具库（推荐）
+
+如果你想使用更丰富的功能，推荐使用 Swiss Knife 工具库：
+
+```clojure
+(ns com.mymod.core
+  (:require [com.fabriclj.nrepl :as nrepl]
+            [com.fabriclj.swiss-knife :as mb]
+            [com.fabriclj.swiss-knife.common.lifecycle :as lifecycle]
+            [com.fabriclj.swiss-knife.common.registry.core :as reg]
+            [com.fabriclj.swiss-knife.common.events.core :as events]
+            [com.fabriclj.swiss-knife.common.config.core :as config]
+            [com.fabriclj.swiss-knife.common.config.validators :as v]))
+
+;; 配置系统（带验证）
+(config/register-config! "mymod" "default"
+  {:spawn-rate 0.5
+   :difficulty :normal}
+  :validator (v/all-of
+               (v/has-keys? :spawn-rate :difficulty)
+               (v/validate-key :spawn-rate (v/probability?))
+               (v/validate-key :difficulty (v/one-of? :easy :normal :hard))))
+
+;; 统一初始化
+(defn init []
+  (lifecycle/init-common! "mymod"
+    {:enable-generic-packets? true
+     :enable-config-sync? true})
+  
+  ;; 注册事件
+  (events/on-player-join
+    (fn [player]
+      (mb/log-info "Player joined:" (.getName player))))
+  
+  (when (mb/development?)
+    (nrepl/start-server!)))
+```
+
+### 使用 DataGen 自动生成资源
+
+```clojure
+(ns com.mymod.datagen
+  (:require [com.fabriclj.swiss-knife.common.datagen.models :as models]
+            [com.fabriclj.swiss-knife.common.datagen.blockstates :as bs]
+            [com.fabriclj.swiss-knife.common.datagen.lang :as lang]))
+
+(defn generate-assets []
+  ;; 生成物品模型
+  (models/generate-simple-items! "./src/main/resources" "mymod"
+    ["ruby" "sapphire" "emerald"])
+  
+  ;; 生成方块模型和状态
+  (models/generate-simple-blocks! "./src/main/resources" "mymod"
+    ["ruby_ore" "sapphire_ore"])
+  (bs/generate-simple-blockstates! "./src/main/resources" "mymod"
+    ["ruby_ore" "sapphire_ore"])
+  
+  ;; 生成语言文件
+  (lang/create-complete-lang-file! "./src/main/resources" "mymod" "en_us"
+    ["ruby" "sapphire" "emerald"]
+    ["ruby_ore" "sapphire_ore"]
+    {"mymod.welcome" "Welcome!"}))
+
+;; 在 nREPL 中运行
+(generate-assets)
+```
+
 ## 下一步
 
-- 阅读 [开发者指南](dev-guide.md) 了解最佳实践
+- 阅读 [开发者指南](dev-guide.md) 了解深入开发
+- 查看 [最佳实践](best-practices.md) 学习性能优化和代码规范
 - 查看 [调试指南](debug-guide.md) 学习 REPL 调试技巧
-- 参考 [examples/](../examples/) 目录的示例代码
+- 参考 [example 项目](../example/README.md) 查看完整的功能示例
+- 阅读 [Swiss Knife 文档](../common/src/main/clojure/com/fabriclj/swiss-knife/README.md) 了解所有可用功能

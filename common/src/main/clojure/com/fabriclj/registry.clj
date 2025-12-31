@@ -1,6 +1,5 @@
 (ns com.fabriclj.registry
   "fabric-language-clojure 注册表工具
-
    此命名空间封装了 Architectury API 的 DeferredRegister 系统，
    提供简洁的 Clojure DSL 用于注册游戏内容。
 
@@ -50,7 +49,6 @@
 
 (defn create-registry
   "创建延迟注册表
-
    参数:
    - mod-id: 模组 ID
    - registry-type: 注册表类型关键字或 ResourceKey
@@ -69,8 +67,8 @@
                        registry-type)]
     (when (nil? registry-key)
       (throw (IllegalArgumentException.
-               (str "Unknown registry type: " registry-type
-                    ". Supported types: " (keys registry-types)))))
+              (str "Unknown registry type: " registry-type
+        ". Supported types: " (keys registry-types)))))
     (DeferredRegister/create mod-id registry-key)))
 
 ;; ============================================================================
@@ -79,7 +77,6 @@
 
 (defn register
   "向注册表注册一个条目
-
    参数:
    - registry: DeferredRegister 实例
    - name: 注册名称（字符串）
@@ -100,7 +97,6 @@
 
 (defn register-all!
   "执行注册表的注册
-
    必须在 mod 初始化阶段调用此函数。
 
    参数:

@@ -1,6 +1,5 @@
 (ns com.fabriclj.nrepl
   "fabric-language-clojure nREPL 服务管理
-
    此命名空间提供嵌入式 nREPL 服务器，允许在游戏运行时
    通过 REPL 进行实时代码修改和调试。
 
@@ -68,7 +67,7 @@
        (let [server (nrepl/start-server :port port :bind bind)]
          (reset! server-atom server)
          (println (str "[nREPL] Server started on " bind ":" port))
-(println "[nREPL] Connect with: lein repl :connect" port)
+         (println "[nREPL] Connect with: lein repl :connect" port)
 (println "[nREPL] Or use Calva: 'Connect to a running REPL' -> localhost:" port)
          server)
        (catch Exception e

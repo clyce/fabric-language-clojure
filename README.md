@@ -13,9 +13,51 @@ fabric-language-clojure 是一个 Fabric 语言支持模组，允许你使用 Cl
 - **语言适配器**：在 `fabric.mod.json` 中使用 `"adapter": "clojure"` 声明 Clojure 入口点
 - **Clojure 运行时捆绑**：无需单独安装 Clojure，所有依赖都包含在 mod 中
 - **nREPL 支持**：内置 nREPL 服务器，支持运行时代码热替换
-- **注册表 DSL**：提供简洁的 Clojure DSL 用于注册游戏内容
+- **核心 API 库**：`com.fabriclj` 提供最基础的 Minecraft API 封装
+- **高级工具库**：`Swiss Knife` 提供丰富的游戏功能封装和 DSL
 - **Mixin 桥接**：提供 `ClojureBridge` 工具类，方便从 Mixin 调用 Clojure 代码
 - **跨平台工具**：基于 Architectury API 的平台检测工具
+
+## 架构概览
+
+```
+┌─────────────────────────────────────┐
+│  你的 Mod                            │
+│  - 业务逻辑                          │
+│  - 游戏内容                          │
+└─────────────────────────────────────┘
+                ↓ 可选使用
+┌─────────────────────────────────────┐
+│  Swiss Knife (高级工具库)            │ ← 丰富的功能封装
+│  - 80+ 游戏事件                      │
+│  - 物品/方块/实体/玩家工具           │
+│  - 物理系统、网络通信                │
+│  - 配置系统、客户端渲染              │
+└─────────────────────────────────────┘
+                ↓ 依赖
+┌─────────────────────────────────────┐
+│  fabriclj (核心 API)                 │ ← 最小 API 层
+│  - 语言适配器                        │
+│  - 平台检测                          │
+│  - 基础注册 DSL                      │
+│  - nREPL 支持                        │
+└─────────────────────────────────────┘
+                ↓ 基于
+┌─────────────────────────────────────┐
+│  Minecraft + Architectury API        │
+└─────────────────────────────────────┘
+```
+
+### 两层架构说明
+
+| 层级 | 位置 | 功能 | 适用场景 |
+|------|------|------|---------|
+| **核心 API** | `com.fabriclj.*` | 语言支持、平台抽象、基础注册、nREPL | 所有 mod |
+| **高级工具库** | `com.fabriclj.swiss-knife.*` | 事件系统、游戏功能封装、客户端工具 | 需要丰富功能的 mod |
+
+详细文档：
+- [fabriclj 核心 API](common/src/main/clojure/com/fabriclj/README.md)
+- [Swiss Knife 工具库](common/src/main/clojure/com/fabriclj/swiss-knife/README.md)
 
 ## 使用方法
 
@@ -89,7 +131,7 @@ public class MyMod implements ModInitializer {
 
 ### 3. 编写 Clojure 代码
 
-创建入口点函数：
+#### 选项 A：使用最小 API（只用 fabriclj）
 
 ```clojure
 ;; src/main/clojure/com/mymod/core.clj
@@ -110,6 +152,45 @@ public class MyMod implements ModInitializer {
 
   ;; 开发模式下启动 nREPL
   (when (lib/dev-mode?)
+    (nrepl/start-server!))
+
+  (println "[MyMod] Done!"))
+```
+
+#### 选项 B：使用高级工具库（推荐）
+
+```clojure
+;; src/main/clojure/com/mymod/core.clj
+(ns com.mymod.core
+  (:require [com.fabriclj.nrepl :as nrepl]
+            [com.fabriclj.swiss-knife :as mb]
+            [com.fabriclj.swiss-knife.common.lifecycle :as lifecycle]
+            [com.fabriclj.swiss-knife.common.registry.core :as reg]))
+
+(def items (reg/create-registry "mymod" :item))
+
+;; 使用增强的注册宏
+(reg/defitem items magic-gem
+  (reg/simple-item :stack-size 64 :rarity :rare))
+
+(defn init []
+  (println "[MyMod] Initializing on" (mb/platform-name))
+
+  ;; 统一初始化（自动处理网络、配置等系统）
+  (lifecycle/init-common! "mymod"
+    {:enable-generic-packets? true
+     :enable-config-sync? true})
+
+  ;; 注册所有内容
+  (reg/register-all! items)
+
+  ;; 注册事件
+  (mb/on-player-join
+    (fn [player]
+      (mb/log-info "Player joined:" (.getName player))))
+
+  ;; 开发模式下启动 nREPL
+  (when (mb/development?)
     (nrepl/start-server!))
 
   (println "[MyMod] Done!"))
@@ -186,14 +267,20 @@ fabric-language-clojure/
 
 ## 开发指南
 
-详细的开发指南请参阅 [docs/](docs/) 目录：
+### 核心文档
 
-- [快速开始](docs/quick-start.md) - 环境设置、基本使用
+- [快速开始](docs/quick-start.md) - 环境设置、创建你的第一个 mod
 - [开发者指南](docs/dev-guide.md) - 深入开发、最佳实践
 - [调试指南](docs/debug-guide.md) - REPL 连接、调试技巧
 - [测试指南](docs/testing.md) - 编写和运行测试
-- [部署指南](docs/deploy-guide.md) - 构建发布版本、发布到 Maven/模组平台
+- [部署指南](docs/deploy-guide.md) - 构建发布版本、发布到平台
 - [故障排查](docs/troubleshooting.md) - 常见问题解决方案
+
+### API 文档
+
+- [fabriclj 核心 API](common/src/main/clojure/com/fabriclj/README.md) - 最小 API 层
+- [Swiss Knife 工具库](common/src/main/clojure/com/fabriclj/swiss-knife/README.md) - 高级功能封装
+- [架构分析总结](ANALYSIS_SUMMARY.md) - 架构设计和优化计划
 
 ## 与 fabric-language-kotlin 的对比
 

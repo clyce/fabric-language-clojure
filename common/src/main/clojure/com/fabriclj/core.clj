@@ -1,6 +1,5 @@
 (ns com.fabriclj.core
   "fabric-language-clojure 核心命名空间
-
    此命名空间是语言支持库的核心，提供：
    - 模组元数据访问
    - 平台检测工具
@@ -52,9 +51,8 @@
   []
   (Platform/isForge))
 
-(defn neoforge?
+#_(defn neoforge?
   "检查当前是否运行在 NeoForge 加载器上
-
    注意：NeoForge 支持取决于 Architectury API 版本
    当前实现总是返回 false"
   []
@@ -75,7 +73,6 @@
 
 (defn get-mod-version
   "获取指定 mod 的版本
-
    参数:
    - mod-id: mod 的 ID
 
@@ -87,7 +84,6 @@
 
 (defn mod-loaded?
   "检查指定 mod 是否已加载
-
    参数:
    - mod-id: mod 的 ID"
   [^String mod-id]
@@ -99,7 +95,6 @@
 
 (defn init
   "语言库初始化函数
-
    此函数由语言库的 Fabric 入口点自动调用，
    通常不需要用户手动调用。"
   []
