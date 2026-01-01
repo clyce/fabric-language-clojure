@@ -393,6 +393,60 @@
   [^Entity entity ^Entity vehicle]
   (and (.isPassenger entity) (.hasPassenger vehicle entity)))
 
+;; ============================================================================
+;; 实体注册辅助（Minecraft 1.21+）
+;; ============================================================================
+
+(defn register-entity-attributes!
+  "注册实体属性（Minecraft 1.21 必需）
+   
+   所有自定义生物实体必须注册属性，否则会抛出 NullPointerException。
+   
+   参数:
+   - entity-type: EntityType 或 RegistrySupplier
+   - attributes: AttributeSupplier$Builder 或 AttributeSupplier
+   
+   示例:
+   ```clojure
+   ;; 使用原版实体的属性
+   (register-entity-attributes! my-zombie-type (Zombie/createAttributes))
+   
+   ;; 使用 RegistrySupplier
+   (register-entity-attributes! @my-entity-supplier (Monster/createMonsterAttributes))
+   
+   ;; 自定义属性
+   (register-entity-attributes! my-entity-type
+     (-> (Monster/createMonsterAttributes)
+         (.add Attributes/MAX_HEALTH 100.0)
+         (.add Attributes/MOVEMENT_SPEED 0.3)
+         (.build)))
+   ```
+   
+   注意:
+   - 仅支持 Fabric 平台
+   - 必须在实体类型注册后、首次使用前调用
+   - 通常在 mod 初始化时调用"
+  [entity-type attributes]
+  (try
+    (let [^net.minecraft.world.entity.EntityType et (if (instance? net.minecraft.world.entity.EntityType entity-type)
+                                                       entity-type
+                                                       (.get entity-type))
+          ^net.minecraft.world.entity.ai.attributes.AttributeSupplier attr-supplier
+          (if (instance? net.minecraft.world.entity.ai.attributes.AttributeSupplier attributes)
+            attributes
+            (.build attributes))
+          fabric-registry (Class/forName "net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry")]
+      (-> fabric-registry
+          (.getMethod "register" (into-array Class [net.minecraft.world.entity.EntityType
+                                                    net.minecraft.world.entity.ai.attributes.AttributeSupplier]))
+          (.invoke nil (into-array Object [et attr-supplier])))
+      (core/log-info (str "Registered attributes for entity: " et)))
+    (catch ClassNotFoundException e
+      (core/log-warn "Fabric API not found, cannot register entity attributes (Forge platform?)"))
+    (catch Exception e
+      (core/log-error (str "Failed to register entity attributes: " (.getMessage e)))
+      (.printStackTrace e))))
+
 (comment
   ;; 使用示例
 
@@ -418,4 +472,7 @@
   (push! zombie 0 1.0 0)  ; 向上推
 
   ;; 设置自定义名称
-  (set-custom-name! zombie "§c精英僵尸" true))
+  (set-custom-name! zombie "§c精英僵尸" true)
+  
+  ;; 注册实体属性
+  (register-entity-attributes! my-entity-type (Zombie/createAttributes)))

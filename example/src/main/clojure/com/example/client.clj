@@ -12,7 +12,9 @@
             [com.fabriclj.swiss-knife.client.rendering.hud :as hud]
             [com.fabriclj.swiss-knife.client.rendering.particles :as particles]
             [com.fabriclj.swiss-knife.common.game-objects.players :as players]
-            [com.fabriclj.swiss-knife.common.game-objects.items :as items]))
+            [com.fabriclj.swiss-knife.common.game-objects.items :as items])
+  (:import (net.minecraft.client.renderer.entity ZombieRenderer)
+           (net.fabricmc.fabric.api.client.rendering.v1 EntityRendererRegistry)))
 
 ;; ============================================================================
 ;; 按键绑定 - R 键触发特殊能力( 传送)
@@ -103,11 +105,34 @@
       ;; 生成向前的粒子流
       (dotimes [i 5]
         (let [offset (* i 0.3)]
-          (particles/spawn-particle! level :enchant
-            (+ x (* offset 0.2)) (+ y 1.6 (* offset 0.1)) (+ z (* offset 0.2))
+          (particles/spawn-particle! :enchant
+            [(+ x (* offset 0.2)) (+ y 1.6 (* offset 0.1)) (+ z (* offset 0.2))]
             0.0 0.0 0.0)))
 
       (println "[ExampleMod/Client] 生成魔法弹发射粒子效果"))))
+
+;; ============================================================================
+;; 实体渲染器注册
+;; ============================================================================
+
+(defn setup-entity-renderers!
+  "注册实体渲染器（客户端必需）
+   
+   森林守卫使用僵尸的渲染器"
+  []
+  (try
+    (let [forest-guardian-type (requiring-resolve 'com.example.core/forest-guardian)]
+      (when forest-guardian-type
+        ;; 使用 Fabric API 注册实体渲染器
+        (EntityRendererRegistry/register 
+          (.get @forest-guardian-type)
+          (reify net.minecraft.client.renderer.entity.EntityRendererProvider
+            (create [_ context]
+              (ZombieRenderer. context))))
+        (println "[ExampleMod/Client] 已注册森林守卫渲染器")))
+    (catch Exception e
+      (println "[ExampleMod/Client] 注册实体渲染器时出错:" (.getMessage e))
+      (.printStackTrace e))))
 
 ;; ============================================================================
 ;; 主初始化函数
@@ -132,6 +157,10 @@
   ;; 3. 设置 HUD 渲染
   (println "[ExampleMod/Client] 注册 HUD 渲染器...")
   (setup-hud!)
+
+  ;; 4. 注册实体渲染器
+  (println "[ExampleMod/Client] 注册实体渲染器...")
+  (setup-entity-renderers!)
 
   (println "[ExampleMod/Client] 客户端初始化完成！")
   (println "[ExampleMod/Client] ============================================"))

@@ -427,6 +427,12 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' -M -m nrepl.cmdline --
 
 ### 热重载工作流
 
+Clojure 代码支持在游戏运行时热重载，无需重启游戏！提供两种热重载方式：
+
+#### 方式 1: 手动 REPL 重载（推荐用于调试）
+
+#### 基本热重载
+
 ```clojure
 ;; 在 REPL 中修改函数
 (in-ns 'com.mymod.hooks)
@@ -437,6 +443,159 @@ clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "1.3.0"}}}' -M -m nrepl.cmdline --
 
 ;; 清除缓存（如果使用 ClojureBridge）
 (com.fabriclj.ClojureBridge/clearCache "com.mymod.hooks")
+```
+
+#### 热重载的工作原理
+
+| 场景 | 是否支持热重载 | 说明 |
+|------|--------------|------|
+| 普通函数定义 | ✅ 完全支持 | `defn` 定义的函数可以立即重新定义 |
+| 事件处理器 | ✅ 支持 | 通过 REPL 重新定义即可生效 |
+| 注册表内容 | ❌ 不支持 | 物品、方块等需要重启游戏 |
+| Java Proxy 类 | ⚠️ 部分支持 | 需要重新创建实例 |
+| Mixin 钩子 | ⚠️ 需要清除缓存 | 使用 `ClojureBridge/clearCache` |
+
+#### 热重载最佳实践
+
+```clojure
+;; 1. 使用 defonce 保护状态
+(defonce player-data (atom {}))  ;; 重新加载时不会重置
+
+;; 2. 将逻辑提取到纯函数
+(defn calculate-damage [attacker target]
+  ;; 这个函数可以随时热重载
+  (* (get-strength attacker) (get-weakness target)))
+
+(defn on-attack [attacker target ci]
+  ;; 调用可热重载的函数
+  (let [damage (calculate-damage attacker target)]
+    (.setDamage ci damage)))
+
+;; 3. 在 REPL 中测试
+(comment
+  ;; 测试计算逻辑
+  (calculate-damage mock-player mock-zombie)
+  
+  ;; 重新加载命名空间
+  (require 'com.mymod.hooks :reload)
+  
+  ;; 清除 ClojureBridge 缓存
+  (com.fabriclj.ClojureBridge/clearCache "com.mymod.hooks")
+  )
+```
+
+#### 实时调试工作流示例
+
+```clojure
+;; 1. 启动游戏并连接 REPL
+(require '[com.fabriclj.nrepl :as nrepl])
+(nrepl/start-server!)
+
+;; 2. 在 Calva/CIDER 中连接 localhost:7888
+
+;; 3. 在 REPL 中修改代码
+(in-ns 'com.example.core)
+
+;; 修改魔法宝石的伤害计算
+(defn calculate-magic-damage [player]
+  ;; 改变这里的逻辑，立即生效！
+  (* (count (.getInventory player)) 2.0))
+
+;; 4. 在游戏中测试，效果立即生效
+
+;; 5. 满意后将更改写回源文件
+```
+
+#### 方式 2: 自动文件监控（推荐用于快速迭代）⚡
+
+监控 `.clj` 文件变化，保存后自动重载！
+
+**启动自动监控**:
+
+```clojure
+;; 在 mod 初始化时（仅开发模式）
+(ns com.example.core
+  (:require [com.fabriclj.dev.hot-reload :as reload]
+            [com.fabriclj.core :as core]))
+
+(defn init []
+  ;; 仅在开发模式下启用自动重载
+  (when (core/dev-mode?)
+    (reload/start! 
+      {:watch-paths ["example/src/main/clojure"]
+       :on-reload (fn [ns] 
+                    (println "🔄 自动重载:" ns))})))
+```
+
+**工作流程**:
+
+```
+1. 启动游戏（自动监控已启动）
+2. 在编辑器中修改 .clj 文件
+3. 保存文件 (Ctrl+S)
+4. ✅ 代码自动重载！（< 1 秒）
+5. 在游戏中立即测试新功能
+```
+
+**监控多个目录**:
+
+```clojure
+(reload/start! 
+  {:watch-paths ["example/src/main/clojure"
+                 "common/src/main/clojure"]
+   :recursive? true  ;; 监控子目录（默认 true）
+   :on-reload (fn [ns]
+                ;; 自定义重载后的操作
+                (println "重载完成:" ns)
+                (when (= ns 'com.example.core)
+                  (println "核心模块已更新！")))})
+```
+
+**REPL 中控制监控**:
+
+```clojure
+(require '[com.fabriclj.dev.hot-reload :as reload])
+
+;; 查看状态
+(reload/status)
+;; => {:running? true
+;;     :watched-dirs 5
+;;     :watched-paths [...]}
+
+;; 停止监控
+(reload/stop!)
+
+;; 重启监控
+(reload/restart! {:watch-paths ["example/src/main/clojure"]})
+```
+
+#### 两种方式对比
+
+| 特性 | 手动 REPL | 自动监控 |
+|------|----------|---------|
+| 速度 | 极快（立即） | 快（保存后 < 1 秒） |
+| 便利性 | 需要 REPL 连接 | 无需额外操作 |
+| 适用场景 | 调试、实验 | 快速迭代开发 |
+| 精确控制 | ✅ 完全控制 | ⚠️ 自动触发 |
+| 测试代码片段 | ✅ 可以 | ❌ 不适合 |
+| 多文件修改 | ⚠️ 需要逐个重载 | ✅ 自动处理 |
+
+**推荐工作流**: 同时使用两种方式
+
+```clojure
+;; 1. 启动游戏时开启自动监控（日常开发）
+(when (core/dev-mode?)
+  (reload/start! {:watch-paths ["example/src/main/clojure"]}))
+
+;; 2. 需要调试时连接 REPL（精确控制）
+(require '[com.fabriclj.nrepl :as nrepl])
+(nrepl/start-server!)
+
+;; 3. 在 REPL 中测试想法
+(in-ns 'com.example.core)
+(defn test-function [] ...)
+
+;; 4. 满意后写入文件，自动监控会重载
 ```
 
 ---

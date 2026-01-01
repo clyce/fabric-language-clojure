@@ -280,10 +280,9 @@
    - (event-interrupt) - 阻止死亡( 保留1点生命值) "
   [handler]
   (.register (EntityEvent/LIVING_DEATH)
-             (reify java.util.function.Consumer
-               (accept [_ death-context]
-                 (handler (.entity death-context)
-                          (.source death-context))))))
+             (reify dev.architectury.event.events.common.EntityEvent$LivingDeath
+               (die [_ entity source]
+                 (handler entity source)))))
 
 (defn on-entity-hurt
   "实体受伤时触发
@@ -310,7 +309,7 @@
   "方块破坏时触发
 
    参数:
-   - handler: 函数 (fn [^Level level ^BlockPos pos ^BlockState state ^Player player] ...) -> EventResult
+   - handler: 函数 (fn [^Level level ^BlockPos pos ^BlockState state ^ServerPlayer player xp] ...) -> EventResult
 
    返回:
    - (event-pass) - 允许破坏
@@ -319,19 +318,22 @@
    示例:
    ```clojure
    (on-block-break
-     (fn [level pos state player]
+     (fn [level pos state player xp]
        (if (= state (core/get-block :minecraft:bedrock))
          (event-interrupt)  ; 禁止破坏基岩
          (event-pass))))
    ```"
   [handler]
-  (.register (BlockEvent/BREAK)
-             (reify java.util.function.Consumer
-               (accept [_ break-context]
-                 (handler (.level break-context)
-                          (.pos break-context)
-                          (.state break-context)
-                          (.player break-context))))))
+  (EventBridge/registerBlockBreakWithHandler
+   (reify java.util.function.Function
+     (apply [_ args]
+       (let [^"[Ljava.lang.Object;" arr args
+             level (aget arr 0)
+             pos (aget arr 1)
+             state (aget arr 2)
+             player (aget arr 3)
+             xp (aget arr 4)]
+         (handler level pos state player xp))))))
 
 (defn on-block-place
   "方块放置时触发
@@ -343,13 +345,15 @@
    - (event-pass) - 允许放置
    - (event-interrupt) - 阻止放置"
   [handler]
-  (.register (BlockEvent/PLACE)
-             (reify java.util.function.Consumer
-               (accept [_ place-context]
-                 (handler (.level place-context)
-                          (.pos place-context)
-                          (.state place-context)
-                          (.placer place-context))))))
+  (EventBridge/registerBlockPlaceWithHandler
+   (reify java.util.function.Function
+     (apply [_ args]
+       (let [^"[Ljava.lang.Object;" arr args
+             level (aget arr 0)
+             pos (aget arr 1)
+             state (aget arr 2)
+             placer (aget arr 3)]
+         (handler level pos state placer))))))
 
 ;; ============================================================================
 ;; 交互事件

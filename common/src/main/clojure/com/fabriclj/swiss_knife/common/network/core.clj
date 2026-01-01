@@ -5,7 +5,7 @@
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core])
   (:import (dev.architectury.networking NetworkManager NetworkManager$Side)
            (net.minecraft.resources ResourceLocation)
-           (net.minecraft.network FriendlyByteBuf)
+           (net.minecraft.network FriendlyByteBuf RegistryFriendlyByteBuf)
            (net.minecraft.server.level ServerPlayer)
            (net.minecraft.world.entity.player Player)))
 
@@ -284,9 +284,11 @@
    ```"
   [^ServerPlayer player ^ResourceLocation packet-type data]
   (let [{:keys [encoder]} (get @registered-packets packet-type)
-        buf (io.netty.buffer.Unpooled/buffer)]
-    (encoder (FriendlyByteBuf. buf) data)
-    (NetworkManager/sendToPlayer player packet-type (FriendlyByteBuf. buf))))
+        buf (io.netty.buffer.Unpooled/buffer)
+        registry-access (.registryAccess (.server player))
+        friendly-buf (RegistryFriendlyByteBuf. buf registry-access)]
+    (encoder friendly-buf data)
+    (NetworkManager/sendToPlayer player packet-type friendly-buf)))
 
 (defn send-to-all!
   "从服务端广播数据包到所有玩家

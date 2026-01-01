@@ -9,7 +9,7 @@
            (net.minecraft.world.entity.player Player)
            (net.minecraft.world.level Level)
            (net.minecraft.resources ResourceLocation)
-           (net.minecraft.core BlockPos)
+           (net.minecraft.core BlockPos Holder)
            (net.minecraft.core.registries BuiltInRegistries)))
 
 ;; 启用反射警告
@@ -132,18 +132,29 @@
               pitch 1.0
               seed 0}} opts
         [x y z] (cond
-                  (vector? pos) pos
-                  (map? pos) [(:x pos) (:y pos) (:z pos)]
                   (instance? BlockPos pos) [(.getX ^BlockPos pos)
                                             (.getY ^BlockPos pos)
                                             (.getZ ^BlockPos pos)]
+                  (vector? pos) pos
+                  (map? pos) [(:x pos) (:y pos) (:z pos)]
+                  (instance? net.minecraft.world.phys.Vec3 pos)
+                  [(.x ^net.minecraft.world.phys.Vec3 pos)
+                   (.y ^net.minecraft.world.phys.Vec3 pos)
+                   (.z ^net.minecraft.world.phys.Vec3 pos)]
                   :else pos)
         ^SoundEvent sound-event (if (keyword? sound)
                                   (.get BuiltInRegistries/SOUND_EVENT
                                         (core/->resource-location sound))
                                   sound)
-        ^SoundSource source-type (get-sound-source source)]
-    (.playSound level nil x y z sound-event source-type volume pitch seed)))
+        ^SoundSource source-type (get-sound-source source)
+        ;; 创建 Holder（Minecraft 1.21 需要）
+        sound-holder (Holder/direct sound-event)]
+    (if (zero? seed)
+      ;; 使用 Holder 版本 (player, x, y, z, Holder<SoundEvent>, source, volume, pitch)
+      (.playSound level nil (double x) (double y) (double z)
+                  sound-holder source-type (float volume) (float pitch))
+      (.playSeededSound level nil (double x) (double y) (double z)
+                       sound-holder source-type (float volume) (float pitch) (long seed)))))
 
 (defn play-sound-to-player!
   "向玩家播放音效( 仅该玩家听到)
@@ -169,7 +180,11 @@
                   (map? pos) [(:x pos) (:y pos) (:z pos)]
                   (instance? BlockPos pos) [(.getX ^BlockPos pos)
                                             (.getY ^BlockPos pos)
-                                            (.getZ ^BlockPos pos)])
+                                            (.getZ ^BlockPos pos)]
+                  (instance? net.minecraft.world.phys.Vec3 pos)
+                  [(.x ^net.minecraft.world.phys.Vec3 pos)
+                   (.y ^net.minecraft.world.phys.Vec3 pos)
+                   (.z ^net.minecraft.world.phys.Vec3 pos)])
         ^SoundEvent sound-event (if (keyword? sound)
                                   (.get BuiltInRegistries/SOUND_EVENT
                                         (core/->resource-location sound))

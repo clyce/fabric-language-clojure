@@ -9,6 +9,9 @@ import dev.architectury.event.events.client.ClientRawInputEvent;
 import dev.architectury.event.events.common.TickEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
+import dev.architectury.event.events.common.BlockEvent;
+import dev.architectury.event.events.common.EntityEvent;
+import dev.architectury.event.events.common.InteractionEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
@@ -16,6 +19,11 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.InteractionHand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -372,6 +380,90 @@ public final class EventBridge {
                 handler.accept(server);
             } catch (Exception e) {
                 LOGGER.error("[EventBridge] Error in server stopped consumer", e);
+            }
+        });
+    }
+
+    // ========================================================================
+    // 方块事件 - 解决类加载器问题
+    // ========================================================================
+
+    /**
+     * 使用函数式接口注册方块破坏事件
+     *
+     * @param handler 处理器 - 接收: Level, BlockPos, BlockState, ServerPlayer, IntValue
+     */
+    public static void registerBlockBreakWithHandler(java.util.function.Function<Object[], EventResult> handler) {
+        BlockEvent.BREAK.register((level, pos, state, player, xp) -> {
+            try {
+                return handler.apply(new Object[]{level, pos, state, player, xp});
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in block break handler", e);
+                return EventResult.pass();
+            }
+        });
+    }
+
+    /**
+     * 使用函数式接口注册方块放置事件
+     *
+     * @param handler 处理器 - 接收: Level, BlockPos, BlockState, Entity
+     */
+    public static void registerBlockPlaceWithHandler(java.util.function.Function<Object[], EventResult> handler) {
+        BlockEvent.PLACE.register((level, pos, state, entity) -> {
+            try {
+                return handler.apply(new Object[]{level, pos, state, entity});
+            } catch (Exception e) {
+                LOGGER.error("[EventBridge] Error in block place handler", e);
+                return EventResult.pass();
+            }
+        });
+    }
+
+    // ========================================================================
+    // 实体事件 - 解决类加载器问题
+    // ========================================================================
+
+    /**
+     * 使用函数式接口注册实体生成事件
+     *
+     * @param handler 处理器 - 接收: Entity, Level
+     */
+    public static void registerEntitySpawnWithHandler(java.util.function.Function<Object[], EventResult> handler) {
+        EntityEvent.ADD.register(new EntityEvent.Add() {
+            @Override
+            public EventResult add(Entity entity, Level level) {
+                try {
+                    return handler.apply(new Object[]{entity, level});
+                } catch (Exception e) {
+                    LOGGER.error("[EventBridge] Error in entity spawn handler", e);
+                    return EventResult.pass();
+                }
+            }
+        });
+    }
+
+    // ========================================================================
+    // 交互事件 - 解决类加载器问题
+    // ========================================================================
+
+    /**
+     * 使用函数式接口注册右键方块事件
+     *
+     * @param handler 处理器 - 接收: Player, InteractionHand, BlockPos, Direction
+     */
+    public static void registerRightClickBlockWithHandler(
+            java.util.function.Function<Object[], EventResult> handler) {
+        InteractionEvent.RIGHT_CLICK_BLOCK.register(new InteractionEvent.RightClickBlock() {
+            @Override
+            public EventResult click(Player player, InteractionHand hand, BlockPos pos,
+                    net.minecraft.core.Direction direction) {
+                try {
+                    return handler.apply(new Object[]{player, hand, pos, direction});
+                } catch (Exception e) {
+                    LOGGER.error("[EventBridge] Error in right click block handler", e);
+                    return EventResult.pass();
+                }
             }
         });
     }

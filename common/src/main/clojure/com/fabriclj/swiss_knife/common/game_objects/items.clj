@@ -12,7 +12,8 @@
            (net.minecraft.nbt CompoundTag)
            (net.minecraft.world.level Level)
            (net.minecraft.world.entity.item ItemEntity)
-           (net.minecraft.network.chat Component)))
+           (net.minecraft.network.chat Component)
+           (net.minecraft.server.level ServerLevel ServerPlayer)))
 
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
@@ -165,7 +166,7 @@
    参数:
    - stack: 物品栈
    - amount: 损伤量
-   - entity: 使用物品的实体( 可选)
+   - entity: 使用物品的实体( 可选，必须是 ServerPlayer 或 LivingEntity)
    - on-break: 物品破碎时的回调函数( 可选)
 
    返回: boolean( 是否完全破碎)
@@ -189,12 +190,24 @@
    (hurt-and-break! stack amount entity nil))
   ([^ItemStack stack amount entity on-break]
    (if entity
+     ;; Minecraft 1.21+: hurtAndBreak(amount, level, player, onBroken)
      (let [callback (if on-break
                       (reify java.util.function.Consumer
                         (accept [_ e] (on-break e)))
                       (reify java.util.function.Consumer
-                        (accept [_ _] nil)))]
-       (.hurtAndBreak stack (int amount) entity callback))
+                        (accept [_ _] nil)))
+           level (.level entity)]
+       ;; 检查实体类型和 level 类型
+       (if (and (instance? net.minecraft.server.level.ServerPlayer entity)
+                (instance? net.minecraft.server.level.ServerLevel level))
+         (.hurtAndBreak stack (int amount) level entity callback)
+         ;; 如果不是 ServerPlayer 或不在服务端，手动处理
+         (do
+           (set-damage! stack (+ (get-damage stack) amount))
+           (when (and on-break (>= (get-damage stack) (get-max-damage stack)))
+             (on-break nil))
+           (>= (get-damage stack) (get-max-damage stack)))))
+     ;; 无实体时手动处理
      (do
        (set-damage! stack (+ (get-damage stack) amount))
        (when (and on-break (>= (get-damage stack) (get-max-damage stack)))

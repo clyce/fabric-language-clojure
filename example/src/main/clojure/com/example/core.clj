@@ -16,6 +16,7 @@
             [com.fabriclj.swiss-knife.common.events.core :as events]
             [com.fabriclj.swiss-knife.common.game-objects.players :as players]
             [com.fabriclj.swiss-knife.common.game-objects.items :as items]
+            [com.fabriclj.swiss-knife.common.game-objects.entities :as entities]
             [com.fabriclj.swiss-knife.common.config.core :as config]
             [com.fabriclj.swiss-knife.common.config.validators :as v]
             [com.fabriclj.swiss-knife.common.gameplay.sounds :as sounds]
@@ -26,7 +27,7 @@
            (net.minecraft.world.level.block.state BlockBehaviour$Properties)
            (net.minecraft.world.level.material MapColor)
            (net.minecraft.world InteractionResultHolder)
-           (net.minecraft.world.entity.monster Monster)
+           (net.minecraft.world.entity.monster Monster Zombie)
            (net.minecraft.world.entity EntityType$Builder EntityType$EntityFactory MobCategory)
            (net.minecraft.world.entity.projectile Snowball)
            (net.minecraft.world.phys HitResult$Type BlockHitResult)))
@@ -94,7 +95,7 @@
   (proxy [Block] [(-> (BlockBehaviour$Properties/of)
                       (.mapColor MapColor/COLOR_PURPLE)
                       (.requiresCorrectToolForDrops)
-                      (.strength 3.0 3.0)
+                      (.strength 1.5 3.0)  ; 硬度 1.5（类似石头），抗性 3.0（保持原值）
                       (.sound SoundType/AMETHYST)
                       (.lightLevel (reify java.util.function.ToIntFunction
                                      (applyAsInt [_ state] 7))))]  ; 发光等级 7
@@ -143,18 +144,19 @@
             (.addFreshEntity level snowball)
 
             ;; 在数据包中标记这是魔法弹( 用于客户端粒子效果)
-            (net/send-to-player! player :gem-shoot
-                                 {:pos [(.-x (.position player))
-                                        (.-y (.position player))
-                                        (.-z (.position player))]}))
+            (net/send-generic! "example" :gem-shoot
+                               {:pos [(.-x (.position player))
+                                      (.-y (.position player))
+                                      (.-z (.position player))]}
+                               player))
 
           ;; 播放音效
           (sounds/play-sound! level (.position player) :minecraft:entity.ender_dragon.shoot
                               {:source :player :volume 0.8 :pitch 1.5})
 
-          ;; 损坏物品
+          ;; 损坏物品( Minecraft 1.21+: hurtAndBreak(amount, level, player, onBroken))
           (let [item-stack (.getItemInHand player hand)]
-            (.hurtAndBreak item-stack 1 player
+            (.hurtAndBreak item-stack 1 level player
                            (reify java.util.function.Consumer
                              (accept [_ _] nil))))
 
@@ -206,6 +208,15 @@
 
 (reg/defentity entities-registry forest-guardian (create-forest-guardian-type))
 
+;; 注册森林守卫的属性（Minecraft 1.21 必需）
+(defn register-forest-guardian-attributes!
+  "注册森林守卫的实体属性
+
+   使用 Swiss Knife 的辅助方法简化注册。"
+  []
+  (when-let [entity-type (.get forest-guardian)]
+    (entities/register-entity-attributes! entity-type (Zombie/createAttributes))))
+
 ;; ============================================================================
 ;; 事件系统 - 玩家加入、击杀怪物等
 ;; ============================================================================
@@ -213,16 +224,25 @@
 (defn spawn-forest-guardian!
   "在指定位置生成森林守卫"
   [level pos]
+  (println "[ExampleMod/Hooks] 尝试生成森林守卫于:" pos)
   (when-let [guardian-type (.get forest-guardian)]
-    (let [guardian (.create guardian-type level)]
-      (.moveTo guardian (.-x pos) (.-y pos) (.-z pos) 0.0 0.0)
-      (.addFreshEntity level guardian)
+    (try
+      ;; 检查 level 类型
+      (if (instance? net.minecraft.server.level.ServerLevel level)
+        (let [guardian (.create guardian-type level)]
+          (println "[ExampleMod/Hooks] 实体已创建，类型:" (class guardian))
+          (.moveTo guardian (.-x pos) (.-y pos) (.-z pos) 0.0 0.0)
+          (.addFreshEntity level guardian)
 
-      ;; 播放生成音效
-      (sounds/play-sound! level pos :minecraft:entity.zombie.ambient
-                          {:source :hostile :volume 1.0 :pitch 0.8})
+          ;; 播放生成音效
+          (sounds/play-sound! level pos :minecraft:entity.zombie.ambient
+                              {:source :hostile :volume 1.0 :pitch 0.8})
 
-      (sk/log-info "森林守卫已生成"))))
+          (sk/log-info "森林守卫已生成"))
+        (println "[ExampleMod/Hooks] 错误: Level 不是 ServerLevel，类型:" (class level)))
+      (catch Exception e
+        (println "[ExampleMod/Hooks] 生成森林守卫时出错:" (.getMessage e))
+        (.printStackTrace e)))))
 
 (defn setup-events!
   "设置游戏事件监听器"
@@ -254,7 +274,11 @@
   (events/on-living-death
    (fn [entity damage-source]
      (let [level (.level entity)
-           pos (.position entity)]
+           pos (.position entity)
+           ;; Minecraft 1.21: 使用 getEntity 获取伤害来源
+           damage-entity (.getEntity damage-source)
+           player (when (instance? net.minecraft.world.entity.player.Player damage-entity)
+                    damage-entity)]
        ;; 检查是否是森林守卫( 通过实体类型判断)
        (if (= (.getType entity) (.get forest-guardian))
          ;; 森林守卫 - 100% 掉落药水和附魔书
@@ -263,7 +287,7 @@
                                      (items/item-stack (.get forest-soul-potion) 1))
            (items/spawn-item-entity! level (.-x pos) (.-y pos) (.-z pos)
                                      (items/item-stack (.get nature-affinity-book) 1))
-           (when-let [player (.getPlayer damage-source)]
+           (when player
              (players/send-message! player
                                     (text/colored-text "森林守卫掉落了珍贵物品！" :gold))
              (sounds/play-sound! level pos :minecraft:entity.player.levelup
@@ -271,7 +295,7 @@
 
          ;; 普通怪物 - 20% 概率掉落 1-3 个魔法碎片
          (when (instance? Monster entity)
-           (when-let [player (.getPlayer damage-source)]
+           (when player
              (let [drop-count (when (< (rand) 0.2)
                                 (+ 1 (rand-int 3)))]
                (when drop-count
@@ -285,7 +309,7 @@
 
   ;; 方块破坏事件 - 魔法水晶矿掉落魔法宝石
   (events/on-block-break
-   (fn [level pos state player]
+   (fn [level pos state player xp]
      (when (= (.getBlock state) (.get magic-crystal-ore))
        ;; 掉落 1 个魔法宝石
        (let [center-pos (.getCenter pos)]
@@ -359,46 +383,89 @@
   "Mod 初始化函数 - 由 Java 入口点调用"
   []
   (println "[ExampleMod] ============================================")
-(println "[ExampleMod] 魔法宝石 Mod 正在初始化...")
-(println (str "[ExampleMod] 运行平台: " (lib/platform-name)))
-(println (str "[ExampleMod] fabric-language-clojure 版本: " (lib/version)))
+  (println "[ExampleMod] 魔法宝石 Mod 正在初始化...")
+  (println (str "[ExampleMod] 运行平台: " (lib/platform-name)))
+  (println (str "[ExampleMod] fabric-language-clojure 版本: " (lib/version)))
 
-;; 1. 加载配置
-(println "[ExampleMod] 加载配置文件...")
-(load-config!)
-(println "[ExampleMod] 配置加载完成，宝石威力:" (get-gem-power))
+  ;; 1. 加载配置
+  (println "[ExampleMod] 加载配置文件...")
+  (load-config!)
+  (println "[ExampleMod] 配置加载完成，宝石威力:" (get-gem-power))
 
-;; 2. 统一初始化 Swiss Knife 系统
-(println "[ExampleMod] 初始化 Swiss Knife 系统...")
-(lifecycle/init-common! "example"
-                        {:enable-generic-packets? true
-                         :enable-config-sync? false})  ; 单人游戏 mod，不需要配置同步
+  ;; 2. 统一初始化 Swiss Knife 系统
+  (println "[ExampleMod] 初始化 Swiss Knife 系统...")
+  (lifecycle/init-common! "example"
+                          {:enable-generic-packets? true
+                           :enable-config-sync? false})  ; 单人游戏 mod，不需要配置同步
 
-;; 3. 注册游戏内容
-(println "[ExampleMod] 注册方块...")
-(reg/register-all! blocks-registry)
-(println "[ExampleMod] 方块注册完成")
+  ;; 3. 注册游戏内容
+  (println "[ExampleMod] 注册方块...")
+  (reg/register-all! blocks-registry)
+  (println "[ExampleMod] 方块注册完成")
 
-(println "[ExampleMod] 注册物品...")
-(reg/register-all! items-registry)
-(println "[ExampleMod] 物品注册完成")
+  (println "[ExampleMod] 注册物品...")
+  (reg/register-all! items-registry)
+  (println "[ExampleMod] 物品注册完成")
 
-(println "[ExampleMod] 注册实体...")
-(reg/register-all! entities-registry)
-(println "[ExampleMod] 实体注册完成")
+  (println "[ExampleMod] 注册实体...")
+  (reg/register-all! entities-registry)
+  (println "[ExampleMod] 实体注册完成")
 
-;; 4. 设置网络通信
-(println "[ExampleMod] 设置网络通信...")
-(setup-network!)
+  ;; 3.5 注册实体属性（Minecraft 1.21 必需）
+  (println "[ExampleMod] 注册实体属性...")
+  (register-forest-guardian-attributes!)
 
-;; 5. 设置事件监听器
-(println "[ExampleMod] 注册事件监听器...")
-(setup-events!)
+  ;; 4. 设置网络通信
+  (println "[ExampleMod] 设置网络通信...")
+  (setup-network!)
 
-  ;; 6. 开发模式下启动 nREPL
+  ;; 5. 设置事件监听器
+  (println "[ExampleMod] 注册事件监听器...")
+  (setup-events!)
+
+  ;; 6. 🚀 开发模式增强: nREPL + 自动热重载
   (when (lib/dev-mode?)
-    (println "[ExampleMod] 检测到开发模式，启动 nREPL 服务器...")
-    (nrepl/start-server!))
+    (println "[ExampleMod] 🛠️  检测到开发模式")
+
+    ;; 启动 nREPL 服务器（用于 REPL 连接）
+    (println "[ExampleMod] 启动 nREPL 服务器...")
+    (nrepl/start-server!)
+    (println "[ExampleMod] 📡 nREPL 已就绪 - 连接方式: Calva -> localhost:7888")
+
+    ;; 启动自动文件监控和热重载
+    (try
+      (require '[com.fabriclj.dev.hot-reload :as reload]
+               '[com.fabriclj.swiss-knife.common.platform.core :as platform]
+               '[com.fabriclj.swiss-knife.common.game-objects.players :as players]
+               '[com.fabriclj.swiss-knife.common.utils.text :as text]
+               '[com.fabriclj.swiss-knife.common.gameplay.sounds :as sounds])
+      ((resolve 'reload/start!)
+       {:watch-paths ["example/src/main/clojure"]
+        :on-reload (fn [ns]
+                     ;; 控制台日志
+                     (println (str "[ExampleMod/HotReload] 🔄 已重载: " ns))
+
+                     ;; 游戏内通知（如果服务器可用）
+                     (when-let [server ((resolve 'platform/get-server))]
+                       ;; 发送彩色消息
+                       (let [message ((resolve 'text/literal)
+                                     (str "🔄 代码已热重载: " ns)
+                                     :color :green)]
+                         ((resolve 'players/broadcast-message!) server message))
+
+                       ;; 播放提示音效（给所有玩家）
+                       (doseq [player ((resolve 'players/get-all-players) server)]
+                         (let [pos (.position player)
+                               level (.level player)]
+                           ((resolve 'sounds/play-sound!)
+                            level
+                            [(.x pos) (.y pos) (.z pos)]
+                            :minecraft:entity.experience_orb.pickup
+                            {:source :player :volume 0.5 :pitch 1.5})))))})
+      (println "[ExampleMod] 🔥 文件监控已启动 - 保存 .clj 文件即可自动重载！")
+      (println "[ExampleMod]    💡 修改代码后保存，将在游戏中看到通知并听到提示音")
+      (catch Exception e
+        (println "[ExampleMod] ⚠️  热重载模块未找到（可能未编译），跳过"))))
 
   (println "[ExampleMod] 初始化完成！")
  (println "[ExampleMod] ============================================"))

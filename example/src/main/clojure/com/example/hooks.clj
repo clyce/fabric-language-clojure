@@ -29,38 +29,48 @@
    - 播放魔法音效"
   [^Player player ^CallbackInfo ci]
   (try
+   (println "[ExampleMod/Hooks] on-player-jump called for player:" (.getName (.getGameProfile player)))
+   
    ;; 获取玩家主手物品( 使用 swiss-knife)
    (let [main-hand (players/get-main-hand-item player)
-         item (.getItem main-hand)]
+         item (.getItem main-hand)
+         item-id (.getDescriptionId item)]
+     
+     (println "[ExampleMod/Hooks] Main hand item:" item-id)
 
      ;; 检查是否持有魔法宝石
-     (when (= (.getDescriptionId item) "item.example.magic_gem")
+     (when (= item-id "item.example.magic_gem")
+       (println "[ExampleMod/Hooks] Magic gem detected! Activating jump boost...")
+       
        ;; 给予跳跃提升效果( 3 秒，等级 II)
        (let [jump-boost (MobEffectInstance. MobEffects/JUMP
                                             60   ; 持续时间( ticks) = 3 秒
                                             1    ; 等级 - 1 = II 级
                                             false ; 不是环境效果
                                             false)] ; 不显示粒子
-         (.addEffect player jump-boost))
+         (.addEffect player jump-boost)
+         (println "[ExampleMod/Hooks] Jump boost effect added"))
 
        ;; 发送提示消息
        (players/send-message! player
                               ((requiring-resolve 'com.fabriclj.swiss-knife.common.utils.text/colored-text)
-                               "✨ 魔法跳跃！" :light-purple))
+                               "Magic Jump Activated!" :light-purple))
+       (println "[ExampleMod/Hooks] Message sent")
 
        ;; 播放音效
        (let [level (.level player)
              pos (.position player)]
          ((requiring-resolve 'com.fabriclj.swiss-knife.common.gameplay.sounds/play-sound!)
           level pos :minecraft:entity.ender_dragon.flap
-          {:source :player :volume 0.3 :pitch 2.0}))
+          {:source :player :volume 0.3 :pitch 2.0})
+         (println "[ExampleMod/Hooks] Sound played"))
 
-       (println "[ExampleMod/Hooks] 魔法跳跃激活: "
+       (println "[ExampleMod/Hooks] Magic jump activated for:"
                 (.getName (.getGameProfile player)))))
 
    (catch Exception e
      ;; 错误处理: 避免 Mixin 崩溃
-     (println "[ExampleMod/Hooks] 错误: " (.getMessage e))
+     (println "[ExampleMod/Hooks] Error in on-player-jump:" (.getMessage e))
      (.printStackTrace e))))
 
 (defn on-projectile-hit
@@ -103,11 +113,12 @@
                       (= block Blocks/CHERRY_LEAVES))
               ;; 在命中位置上方生成森林守卫
               (let [spawn-pos (.above pos)
-                    guardian-type (requiring-resolve 'com.example.core/forest-guardian)
                     spawn-fn (requiring-resolve 'com.example.core/spawn-forest-guardian!)]
-                (when (and guardian-type spawn-fn)
-                  (let [guardian-type-val @guardian-type
-                        spawn-center (.getCenter spawn-pos)]
+                (println "[ExampleMod/Hooks] 雪球命中树叶于:" pos)
+                (println "[ExampleMod/Hooks] 生成位置为:" spawn-pos)
+                (when spawn-fn
+                  (let [spawn-center (.getCenter spawn-pos)]
+                    (println "[ExampleMod/Hooks] 调用生成函数，中心点:" spawn-center)
                     (spawn-fn level spawn-center)))))))))
     (catch Exception e
       ;; 错误处理: 避免 Mixin 崩溃

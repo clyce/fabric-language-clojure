@@ -18,7 +18,7 @@
 | **物理系统** ✅ | 弹道计算、射线追踪 | `core.clj` L114-119 |
 | **客户端渲染** ✅ | 按键绑定、HUD 渲染、粒子效果 | `client.clj` |
 | **生命周期管理** ✅ | 统一初始化、资源管理 | `core.clj` L362-364 |
-| **DataGen** ✨ | 自动生成模型、方块状态、语言文件 | `datagen.clj` |
+| **DataGen** ✨ | 自动生成模型、方块状态、语言文件、占位纹理 | `datagen.clj` |
 | **配置验证器** ✨ | 30+ 验证器、组合验证 | `core.clj` L49-58 |
 
 ### 最佳实践演示
@@ -38,6 +38,65 @@
 这是一个轻量级的魔法主题 mod，为玩家带来魔法宝石系统。玩家可以使用魔法宝石施放魔法、传送、并从怪物身上获取魔法碎片。
 
 **同时也是学习 Clojure Minecraft Mod 开发的最佳模板。**
+
+## ⚠️ 重要注意事项（Minecraft 1.21+）
+
+在基于本示例开发时，请注意以下 Minecraft 1.21 API 变更：
+
+### 1. 实体属性注册（必需）
+所有自定义生物实体必须注册属性（AttributeSupplier），否则会抛出 `NullPointerException`：
+
+```clojure
+;; 使用 Fabric API 注册实体属性
+(defn register-entity-attributes! []
+  (let [fabric-registry (Class/forName "net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry")
+        register-method (.getMethod fabric-registry "register" ...)
+        attributes (.invoke (.getMethod YourEntityClass "createAttributes" ...) ...)]
+    (.invoke register-method nil (into-array Object [entity-type attributes]))))
+
+;; 在 init 函数中调用
+(register-entity-attributes!)
+```
+
+参考：`core.clj` L209-233
+
+### 2. ItemStack.hurtAndBreak 方法签名
+需要额外的 `ServerLevel` 参数：
+
+```clojure
+;; 错误（旧版）
+(.hurtAndBreak item-stack amount player callback)
+
+;; 正确（1.21+）
+(.hurtAndBreak item-stack amount level player callback)
+```
+
+参考：`core.clj` L158、`items.clj` L197
+
+### 3. Level.playSound 需要 Holder<SoundEvent>
+不能直接传递 `SoundEvent`，需要包装：
+
+```clojure
+(let [sound-holder (net.minecraft.core.Holder/direct sound-event)]
+  (.playSound level nil x y z sound-holder source volume pitch))
+```
+
+参考：`sounds.clj` L150-156
+
+### 4. 事件接口类型
+Architectury 事件需要使用正确的接口类型，不能用 `Consumer`：
+
+```clojure
+;; 错误
+(reify java.util.function.Consumer
+  (accept [_ context] ...))
+
+;; 正确
+(reify dev.architectury.event.events.common.EntityEvent$LivingDeath
+  (die [_ entity source] ...))
+```
+
+参考：`events/core.clj` L272-286
 
 ### 🎮 游戏内容
 
@@ -147,7 +206,8 @@
 | **DataGen - 模型** | `datagen.clj` L19-50 | 自动生成物品/方块模型 JSON |
 | **DataGen - 方块状态** | `datagen.clj` L54-62 | 自动生成 blockstates JSON |
 | **DataGen - 语言文件** | `datagen.clj` L66-96 | 多语言支持、自动翻译 |
-| **nREPL 集成** | `core.clj` L388-390 | 运行时热重载、REPL 调试 |
+| **nREPL 集成** | `core.clj` L399-419 | 运行时热重载、REPL 调试 |
+| **🔥 自动文件监控** | `core.clj` L408-419 | 保存文件即自动重载，游戏内通知 |
 
 ## 🚀 使用方式
 
@@ -224,10 +284,31 @@
    │       └── magic_crystal_ore.json ✨ 自动生成
    ├── blockstates/
    │   └── magic_crystal_ore.json     ✨ 自动生成
-   └── lang/
-       ├── en_us.json                 ✨ 自动生成
-       └── zh_cn.json                 ✨ 自动生成
+   ├── lang/
+   │   ├── en_us.json                 ✨ 自动生成
+   │   └── zh_cn.json                 ✨ 自动生成
+   └── textures/
+       ├── item/
+       │   ├── magic_gem.png          ✨ 占位纹理（自动生成）
+       │   ├── magic_shard.png        ✨ 占位纹理（自动生成）
+       │   └── ...
+       └── block/
+           └── magic_crystal_ore.png  ✨ 占位纹理（自动生成）
    ```
+
+#### 占位纹理生成 ✨
+
+`generate-all-assets!` 会自动生成简单的单色占位纹理（16x16 像素 PNG 文件）。这些纹理使用以下颜色：
+
+| 物品/方块 | 颜色 | RGB 值 |
+|----------|------|--------|
+| 魔法宝石 | 品红色 | [255, 100, 255] |
+| 魔法碎片 | 紫色 | [150, 50, 255] |
+| 森林之魂药水 | 绿色 | [50, 200, 50] |
+| 自然亲和书 | 浅绿色 | [100, 150, 100] |
+| 魔法水晶矿 | 紫罗兰色 | [200, 100, 255] |
+
+**重要提示**：这些占位纹理仅用于开发测试。在生产环境中，你应该替换为自己的纹理文件。
 
 #### 单独生成某类资源
 
@@ -243,7 +324,241 @@
 
 ;; 只生成语言文件
 (datagen/generate-lang-files!)
+
+;; 只生成占位纹理
+(datagen/generate-placeholder-textures!)
 ```
+
+### 在正式项目中使用自定义模型和纹理
+
+#### 资源文件结构
+
+在 Minecraft Fabric 中，模型和纹理通过资源包（Resource Pack）系统管理。资源文件需要放置在以下目录结构：
+
+```
+src/main/resources/assets/<mod-id>/
+├── models/
+│   ├── item/              # 物品模型
+│   │   └── <item_name>.json
+│   └── block/             # 方块模型
+│       └── <block_name>.json
+├── blockstates/           # 方块状态（仅方块需要）
+│   └── <block_name>.json
+└── textures/
+    ├── item/              # 物品纹理（PNG 文件）
+    │   └── <item_name>.png
+    └── block/             # 方块纹理（PNG 文件）
+        └── <block_name>.png
+```
+
+#### 1. 为物品指定自定义纹理和模型
+
+**步骤 1：创建纹理文件**
+
+将你的纹理 PNG 文件（推荐 16x16 像素）放置到：
+```
+src/main/resources/assets/<mod-id>/textures/item/<item_name>.png
+```
+
+**步骤 2：创建或生成模型文件**
+
+使用 DataGen 工具生成模型，或手动创建 JSON 文件：
+```
+src/main/resources/assets/<mod-id>/models/item/<item_name>.json
+```
+
+**示例：为魔法宝石添加自定义纹理**
+
+```clojure
+;; 在 datagen.clj 中
+(require '[com.fabriclj.swiss-knife.common.datagen.models :as models])
+
+;; 生成物品模型（指定纹理路径）
+(models/save-item-model! "./src/main/resources" "example" "magic_gem"
+  {:parent "minecraft:item/generated"
+   :textures {:layer0 "example:item/magic_gem"}})
+```
+
+然后手动将你的纹理文件复制到：
+```
+src/main/resources/assets/example/textures/item/magic_gem.png
+```
+
+**常用物品模型类型：**
+
+- **`minecraft:item/generated`** - 标准物品（材料、食物等）
+  ```json
+  {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "example:item/magic_gem"
+    }
+  }
+  ```
+
+- **`minecraft:item/handheld`** - 手持物品（工具、武器）
+  ```json
+  {
+    "parent": "minecraft:item/handheld",
+    "textures": {
+      "layer0": "example:item/magic_sword"
+    }
+  }
+  ```
+
+- **多层纹理**（如药水）
+  ```json
+  {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "example:item/potion_bottle",
+      "layer1": "example:item/potion_overlay"
+    }
+  }
+  ```
+
+#### 2. 为方块指定自定义纹理和模型
+
+**步骤 1：创建纹理文件**
+
+将你的纹理 PNG 文件放置到：
+```
+src/main/resources/assets/<mod-id>/textures/block/<block_name>.png
+```
+
+**步骤 2：生成方块模型**
+
+```clojure
+;; 在 datagen.clj 中
+(models/save-block-model! "./src/main/resources" "example" "magic_crystal_ore"
+  {:parent "minecraft:block/cube_all"
+   :textures {:all "example:block/magic_crystal_ore"}})
+```
+
+**步骤 3：生成方块状态文件（如果方块有多个状态）**
+
+```clojure
+;; 在 datagen.clj 中
+(require '[com.fabriclj.swiss-knife.common.datagen.blockstates :as bs])
+(bs/save-simple-blockstate! "./src/main/resources" "example" "magic_crystal_ore")
+```
+
+**常用方块模型类型：**
+
+- **`minecraft:block/cube_all`** - 六面同纹理
+  ```json
+  {
+    "parent": "minecraft:block/cube_all",
+    "textures": {
+      "all": "example:block/magic_ore"
+    }
+  }
+  ```
+
+- **`minecraft:block/cube`** - 六面不同纹理
+  ```json
+  {
+    "parent": "minecraft:block/cube",
+    "textures": {
+      "down": "example:block/ore_bottom",
+      "up": "example:block/ore_top",
+      "north": "example:block/ore_side",
+      "south": "example:block/ore_side",
+      "west": "example:block/ore_side",
+      "east": "example:block/ore_side",
+      "particle": "example:block/ore_side"
+    }
+  }
+  ```
+
+- **`minecraft:block/cube_column`** - 柱状（如原木）
+  ```json
+  {
+    "parent": "minecraft:block/cube_column",
+    "textures": {
+      "end": "example:block/log_top",
+      "side": "example:block/log_side"
+    }
+  }
+  ```
+
+#### 3. 为实体指定自定义模型和纹理
+
+实体的模型和纹理需要使用客户端渲染器（Entity Renderer）。基本流程如下：
+
+**步骤 1：创建实体模型文件**
+```
+src/main/resources/assets/<mod-id>/models/entity/<entity_name>.json
+```
+
+**步骤 2：创建实体纹理文件**
+```
+src/main/resources/assets/<mod-id>/textures/entity/<entity_name>.png
+```
+
+**步骤 3：在客户端代码中注册渲染器**
+
+```clojure
+;; 在 client.clj 中
+(require '[com.fabriclj.swiss-knife.client.rendering.entities :as entity-render])
+
+;; 注册实体渲染器（需要根据实际 API 调整）
+(entity-render/register-renderer! entity-type
+  {:model "example:entity/forest_guardian"
+   :texture "example:textures/entity/forest_guardian.png"
+   :shadow-size 0.5})
+```
+
+**注意**：本示例 mod 中的 `forest_guardian` 使用了默认的僵尸模型。要实现自定义实体模型，需要：
+
+1. 使用建模工具（如 Blockbench）创建实体模型
+2. 导出为 JSON 格式
+3. 在客户端注册自定义渲染器
+
+#### 4. 使用 DataGen 工具生成模型文件
+
+Swiss Knife 提供了便捷的 DataGen 工具来自动生成模型文件：
+
+```clojure
+(require '[com.fabriclj.swiss-knife.common.datagen.models :as models])
+
+;; 生成简单物品模型
+(models/save-item-model! "./src/main/resources" "mymod" "my_item"
+  (models/generated-item-model "mymod:item/my_item"))
+
+;; 生成手持物品模型
+(models/save-item-model! "./src/main/resources" "mymod" "my_sword"
+  (models/handheld-item-model "mymod:item/my_sword"))
+
+;; 生成方块模型
+(models/save-block-model! "./src/main/resources" "mymod" "my_block"
+  (models/cube-all-block-model "mymod:block/my_block"))
+```
+
+#### 5. 纹理文件要求
+
+- **格式**：PNG
+- **尺寸**：推荐 16x16 像素（物品和方块），可按需使用 32x32、64x64 等
+- **透明度**：支持 Alpha 通道
+- **命名**：使用小写字母、数字和下划线（snake_case）
+
+#### 6. 资源文件命名规则
+
+Minecraft 使用资源位置（ResourceLocation）来引用资源：
+
+- **格式**：`<namespace>:<path>`
+- **示例**：`example:item/magic_gem` 对应文件 `assets/example/textures/item/magic_gem.png`
+- **Namespace**：通常是你的 mod ID
+- **路径**：相对于 `assets/<namespace>/` 目录
+
+#### 7. 热重载资源文件
+
+在开发模式下，可以使用资源包重新加载功能：
+
+1. 在游戏中按 `F3 + T` 重新加载资源包
+2. 或使用命令 `/reload` 重新加载资源
+
+**提示**：修改纹理文件后，重新加载资源包即可看到效果，无需重启游戏。
 
 ### 配置验证器使用 ✨
 
@@ -429,6 +744,45 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 
 ### 热重载开发流程（推荐）
 
+本示例提供两种热重载方式，可以同时使用：
+
+#### 方式 A: 自动文件监控 🔥（最便捷）
+
+**启动游戏后自动启用！** 修改代码保存即可，无需任何额外操作。
+
+**工作流程**:
+```
+1. 启动游戏（自动监控已启动）
+2. 在编辑器中修改 .clj 文件
+3. 保存文件 (Ctrl+S)
+4. ✅ 代码自动重载（< 1 秒）
+5. 🎮 游戏中收到通知："🔄 代码已热重载: com.example.core"
+6. 🔔 听到提示音效（经验球拾取音）
+7. 立即测试新功能
+```
+
+**特性**:
+- ✅ 完全自动化，无需手动操作
+- ✅ 游戏内通知（彩色消息 + 音效）
+- ✅ 支持监控多个目录
+- ✅ 自动清除 ClojureBridge 缓存
+- ✅ 防抖机制（避免频繁重载）
+
+**监控的目录**:
+- `example/src/main/clojure` - 示例 mod 代码
+
+**查看状态**（在 nREPL 中）:
+```clojure
+(require '[com.fabriclj.dev.hot-reload :as reload])
+(reload/status)  ; 查看监控状态
+(reload/stop!)   ; 停止监控
+(reload/restart! {:watch-paths ["example/src/main/clojure"]})  ; 重启监控
+```
+
+#### 方式 B: 手动 REPL 重载（精确控制）
+
+**适合调试和实验代码片段**
+
 典型工作流程:
 
 ```
@@ -436,10 +790,22 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 ```
 
 **优势**:
-- ⚡ 快速迭代（秒级反馈）
-- 🔄 无需重启游戏
-- 🧪 可以在 REPL 中实验代码
+- ⚡ 极快（立即生效）
+- 🎯 精确控制重载时机
+- 🧪 可以在 REPL 中实验代码片段
 - 🐛 实时调试和修复
+
+**使用示例**:
+```clojure
+;; 在 REPL 中
+(in-ns 'com.example.core)
+
+;; 修改函数
+(defn get-gem-power [] 20.0)  ; 立即生效
+
+;; 重新加载整个命名空间
+(require 'com.example.core :reload)
+```
 
 **注意**:
 - 如果函数被 `ClojureBridge` 调用（如 Mixin 钩子），需要清除缓存:
@@ -447,6 +813,8 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
   (com.fabriclj.ClojureBridge/clearCache "com.example.hooks")
   ```
 - 如果修改了 Java 代码或资源文件，需要重新编译或重启游戏
+
+**推荐**：日常开发使用方式 A（自动监控），需要精确调试时使用方式 B（REPL）。
 
 ### 常见开发任务
 
