@@ -32,8 +32,10 @@
       (when-let [player (client/get-player)]
         ;; 检查玩家是否持有魔法宝石( 使用 swiss-knife)
         (let [main-hand (players/get-main-hand-item player)
-              item (.getItem main-hand)]
-          (if (= (.getDescriptionId item) "item.example.magic_gem")
+              item (.getItem main-hand)
+              magic-gem-item (requiring-resolve 'com.example.core/magic-gem)]
+          ;; 使用物品实例比较
+          (if (and magic-gem-item (= item (.get @magic-gem-item)))
             (do
               ;; 发送数据包到服务端请求传送
               (net/send-generic! "example" :special-ability {})
@@ -50,8 +52,11 @@
   (when-let [player (client/get-player)]
     ;; 检查玩家主手是否持有魔法宝石( 使用 swiss-knife)
     (let [main-hand (players/get-main-hand-item player)
-          item (.getItem main-hand)]
-      (when (= (.getDescriptionId item) "item.example.magic_gem")
+          item (.getItem main-hand)
+          ;; 获取魔法宝石物品实例
+          magic-gem-item (requiring-resolve 'com.example.core/magic-gem)]
+      ;; 使用物品实例比较而不是字符串
+      (when (and magic-gem-item (= item (.get @magic-gem-item)))
         (let [;; 获取耐久度信息( 使用 swiss-knife)
               current-durability (items/get-durability main-hand)
               max-damage (items/get-max-damage main-hand)
@@ -103,7 +108,7 @@
       (particles/circle-particles! :portal eye-pos 0.5 15)
 
       ;; 生成向前的粒子流
-      (dotimes [i 5]
+      (dotimes [i 100]
         (let [offset (* i 0.3)]
           (particles/spawn-particle! :enchant
             [(+ x (* offset 0.2)) (+ y 1.6 (* offset 0.1)) (+ z (* offset 0.2))]
@@ -117,14 +122,14 @@
 
 (defn setup-entity-renderers!
   "注册实体渲染器（客户端必需）
-   
+
    森林守卫使用僵尸的渲染器"
   []
   (try
     (let [forest-guardian-type (requiring-resolve 'com.example.core/forest-guardian)]
       (when forest-guardian-type
         ;; 使用 Fabric API 注册实体渲染器
-        (EntityRendererRegistry/register 
+        (EntityRendererRegistry/register
           (.get @forest-guardian-type)
           (reify net.minecraft.client.renderer.entity.EntityRendererProvider
             (create [_ context]

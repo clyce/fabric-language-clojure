@@ -17,11 +17,17 @@
             [com.fabriclj.swiss-knife.common.game-objects.players :as players]
             [com.fabriclj.swiss-knife.common.game-objects.items :as items]
             [com.fabriclj.swiss-knife.common.game-objects.entities :as entities]
+            [com.fabriclj.swiss-knife.common.gameplay.ai :as ai]
+            [com.fabriclj.swiss-knife.common.gameplay.enchantments :as enchants]
             [com.fabriclj.swiss-knife.common.config.core :as config]
             [com.fabriclj.swiss-knife.common.config.validators :as v]
             [com.fabriclj.swiss-knife.common.gameplay.sounds :as sounds]
+            [com.fabriclj.swiss-knife.common.gameplay.potions :as potions]
             [com.fabriclj.swiss-knife.common.network.core :as net]
-            [com.fabriclj.swiss-knife.common.utils.text :as text])
+            [com.fabriclj.swiss-knife.common.utils.text :as text]
+            [com.fabriclj.swiss-knife.common.ui.creative-tabs :as tabs]
+            [com.fabriclj.swiss-knife.common.physics.env-interaction :as env]
+            [com.fabriclj.swiss-knife.client.rendering.particles :as particles])
   (:import (net.minecraft.world.item Item Item$Properties Rarity BlockItem)
            (net.minecraft.world.level.block Block Blocks SoundType)
            (net.minecraft.world.level.block.state BlockBehaviour$Properties)
@@ -51,8 +57,7 @@
                                         :cooldown-ticks 20}
                             :messages {:welcome "欢迎来到魔法世界！"
                                        :gem-activated "魔法宝石已激活！"}}
-                           ;; ✨ 新功能: 使用配置验证器
-                           :validator (v/all-of
+                            :validator (v/all-of
                                        ;; 验证必需的键
                                        (v/has-keys? :magic-gem :messages)
                                        ;; 验证 magic-gem 配置
@@ -85,6 +90,8 @@
 (def blocks-registry (reg/create-registry "example" :block))
 (def items-registry (reg/create-registry "example" :item))
 (def entities-registry (reg/create-registry "example" :entity))
+(def effects-registry (reg/create-registry "example" :mob-effect))
+(def creative-tabs-registry (reg/create-registry "example" :creative-tab))
 
 ;; ============================================================================
 ;; 方块注册 - 魔法水晶矿
@@ -114,11 +121,81 @@
 ;; 物品注册 - 魔法宝石和魔法碎片
 ;; ============================================================================
 
+;; ============================================================================
+;; 自定义效果 - 森林祝福
+;; ============================================================================
+
+(def forest-blessing-effect
+  "森林祝福效果 - 持续治疗 + 自然亲和
+
+   特性:
+   - 每 2 秒恢复 0.5 生命值
+   - 绿色粒子效果
+   - 可与其他治疗效果叠加
+
+   来源: 森林之魂药水"
+  (potions/create-custom-effect :forest_blessing
+    :beneficial 0x00FF88  ; 绿色
+    :on-tick (fn [entity amplifier]
+               ;; 每 2 秒治疗一次
+               (when (instance? net.minecraft.world.entity.LivingEntity entity)
+                 (let [^net.minecraft.world.entity.LivingEntity living entity
+                       current-health (.getHealth living)
+                       max-health (.getMaxHealth living)]
+                   ;; 仅在未满血时治疗
+                   (when (< current-health max-health)
+                     (let [heal-amount (* (inc amplifier) 0.5)]
+                       (.heal living (float heal-amount))
+
+                       ;; 在服务端播放治疗粒子效果
+                       (when-not (.isClientSide (.level living))
+                         (let [level (.level living)
+                               pos (.position living)]
+                           ;; 播放心形粒子
+                           (particles/spawn-particles!
+                            level :heart
+                            (.x pos) (+ (.y pos) 1.0) (.z pos)
+                            5 {:velocity [0.0 0.1 0.0]
+                               :spread [0.3 0.2 0.3]})))))))
+               ;; 必须返回 true，表示效果已成功应用
+               true)
+    :tick-rate 40  ; 每 2 秒 (40 tick) 触发一次
+    :on-added (fn [entity _amplifier]
+                (when (instance? net.minecraft.world.entity.player.Player entity)
+                  (players/send-message! entity
+                    (text/colored-text "森林的力量在你体内涌动..." :green))))
+    :on-removed (fn [entity _amplifier]
+                  (when (instance? net.minecraft.world.entity.player.Player entity)
+                    (players/send-message! entity
+                      (text/colored-text "森林祝福已消退" :gray))))))
+
+;; 注册自定义效果到注册表
+(def forest-blessing
+  (reg/register effects-registry "forest_blessing"
+    (constantly forest-blessing-effect)))
+
+;; ============================================================================
+;; 创造模式标签页（必须在物品定义之前）
+;; ============================================================================
+
+;; 前向声明：物品将在后面定义
+(declare magic-gem)
+
+;; 创建标签页（注意：物品需要在创建时使用 with-tab 指定标签页）
+(tabs/defcreative-tab creative-tabs-registry magic-items-tab "example" "magic_items"
+  :title "魔法宝石"
+  :icon magic-gem)
+
+;; ============================================================================
+;; 物品注册（实际注册）
+;; ============================================================================
+
 ;; 魔法碎片 - 从怪物掉落的材料
 (reg/defitem items-registry magic-shard
   (Item. (-> (Item$Properties.)
              (.stacksTo 64)
-             (.rarity Rarity/UNCOMMON))))
+             (.rarity Rarity/UNCOMMON)
+             (tabs/with-tab magic-items-tab))))
 
 ;; 魔法宝石 - 主要物品，可以发射魔法弹
 (defn create-magic-gem
@@ -127,7 +204,8 @@
   (proxy [Item] [(-> (Item$Properties.)
                      (.stacksTo 1)
                      (.durability (config/get-config-value "example" [:magic-gem :durability]))
-                     (.rarity Rarity/RARE))]
+                     (.rarity Rarity/RARE)
+                     (tabs/with-tab magic-items-tab))]
     (use [level player hand]
       (if (.isClientSide level)
         (InteractionResultHolder/success (.getItemInHand player hand))
@@ -165,6 +243,7 @@
 (reg/defitem items-registry magic-gem (create-magic-gem))
 
 ;; 森林之魂药水 - 由森林守卫掉落
+;; 使用字符串 ID 引用自定义效果（延迟解析，避免注册顺序问题）
 (reg/defitem items-registry forest-soul-potion
   (Item. (-> (Item$Properties.)
              (.stacksTo 16)
@@ -181,30 +260,114 @@
                                {:effect :jump-boost
                                 :duration 400
                                 :amplifier 1
-                                :probability 1.0}])))))
+                                :probability 1.0}
+                               ;; 使用字符串 ID 引用自定义效果
+                               ;; 运行时从注册表解析，避免注册顺序问题
+                               {:effect "example:forest_blessing"
+                                :duration 400  ; 20秒
+                                :amplifier 0
+                                :probability 1.0}]))
+             (tabs/with-tab magic-items-tab))))
 
-;; 自然亲和附魔书 - 由森林守卫掉落
+;; 自然亲和附魔书 - 由森林守卫掉落（包含爆裂打击附魔）
+;; 使用 Swiss Knife 封装简化实现
+(defn create-nature-affinity-book
+  "创建带有爆裂打击附魔的附魔书
+
+   使用 Swiss Knife enchantments 模块简化实现"
+  []
+  (enchants/create-enchanted-book
+   [["example" "explosive_strike" 3]]))  ; [mod-id enchantment-id level]
+
 (reg/defitem items-registry nature-affinity-book
   (Item. (-> (Item$Properties.)
              (.stacksTo 1)
-             (.rarity Rarity/EPIC))))
+             (.rarity Rarity/EPIC)
+             (tabs/with-tab magic-items-tab))))
 
 ;; ============================================================================
 ;; 实体注册 - 森林守卫
 ;; ============================================================================
 
-;; 简化的森林守卫 - 基于僵尸的敌对 mob
+;; 森林守卫 - 使用 Swiss Knife 实体构建器
 (defn create-forest-guardian-type
-  "创建森林守卫实体类型"
+  "创建森林守卫实体类型
+
+   特点:
+   - 基于僵尸模型
+   - 远程攻击（发射雪球）
+   - 智能后退（距离过近时）
+
+   使用 Swiss Knife 实体构建器简化实现"
   []
-  (-> (EntityType$Builder/of
-       (reify EntityType$EntityFactory
-         (create [_ entity-type level]
-           (net.minecraft.world.entity.monster.Zombie. entity-type level)))
-       MobCategory/MONSTER)
-      (.sized 0.6 1.95)  ; 尺寸与僵尸相同
-      (.clientTrackingRange 8)
-      (.build "forest_guardian")))
+  (entities/build-entity-type
+   ;; 使用工厂函数创建自定义实体
+   (fn [entity-type level]
+     (proxy [net.minecraft.world.entity.monster.Zombie
+             net.minecraft.world.entity.monster.RangedAttackMob]
+       [entity-type level]
+
+       ;; 实现远程攻击接口
+       (performRangedAttack [target distance-factor]
+         (let [^net.minecraft.world.entity.monster.Zombie this this
+               snowball (net.minecraft.world.entity.projectile.Snowball.
+                        (.level this) this)]
+           (.setPos snowball (.getX this) (+ (.getY this) 1.5) (.getZ this))
+           (let [dx (- (.getX target) (.getX this))
+                 dy (- (+ (.getY target) (.getEyeHeight target) 0.5) (.getY snowball))
+                 dz (- (.getZ target) (.getZ this))]
+             (.shoot snowball dx dy dz 1.0 5.0))
+           (.addFreshEntity (.level this) snowball)
+           ;; 播放攻击音效
+           (.playSound this net.minecraft.sounds.SoundEvents/SNOW_GOLEM_SHOOT 1.0 1.0)))
+
+       ;; 重写 AI 注册 - 使用 Swiss Knife AI 封装
+       (registerGoals []
+         (let [^net.minecraft.world.entity.monster.Zombie this this]
+           ;; 清除默认近战攻击
+           (ai/clear-goals! this)
+
+           ;; 添加自定义 AI（使用 Swiss Knife 封装）
+           ;; 1. 后退 AI - 距离玩家过近时后退
+           (ai/add-goal! this 1
+             (ai/create-goal 1
+               :flags [:move]
+               :can-use? (fn [entity]
+                          (when-let [target (.getTarget entity)]
+                            (< (entities/distance-to entity target) 5.0)))
+               :tick! (fn [entity]
+                       (when-let [target (.getTarget entity)]
+                         (let [dx (- (.getX entity) (.getX target))
+                               dz (- (.getZ entity) (.getZ target))
+                               dist (Math/sqrt (+ (* dx dx) (* dz dz)))]
+                           (when (pos? dist)
+                             ;; 使用 Swiss Knife 设置速度
+                             (entities/set-velocity! entity
+                               (* dx 0.15)
+                               (.getY (.getDeltaMovement entity))
+                               (* dz 0.15))))))))
+
+           ;; 2. 远程攻击 AI - 使用 Swiss Knife 封装
+           (ai/add-goal! this 2
+             (ai/ranged-attack-goal this 1.0 60 16.0))
+
+           ;; 3. 寻找目标 AI - 使用 Swiss Knife 封装
+           (ai/add-target-goal! this 1
+             (ai/nearest-attackable-target-goal this net.minecraft.world.entity.player.Player))
+
+           ;; 4. 随机游荡 - 使用 Swiss Knife 封装
+           (ai/add-goal! this 5
+             (ai/wander-goal this 0.6))
+
+           ;; 5. 看向玩家 - 使用 Swiss Knife 封装
+           (ai/add-goal! this 6
+             (ai/look-at-player-goal this 8.0))))))
+
+   ;; 实体类别和配置
+   :monster
+   {:size [0.6 1.95]  ; 僵尸尺寸
+    :name "forest_guardian"
+    :tracking-range 8}))
 
 (reg/defentity entities-registry forest-guardian (create-forest-guardian-type))
 
@@ -218,28 +381,64 @@
     (entities/register-entity-attributes! entity-type (Zombie/createAttributes))))
 
 ;; ============================================================================
+;; 自定义附魔效果处理
+;; ============================================================================
+
+;; 存储被标记爆炸的实体
+(def ^:private explosive-entities (atom {}))
+
+(defn schedule-explosion!
+  "标记实体在3秒后爆炸"
+  [entity level amplifier]
+  (let [explosion-time (+ (System/currentTimeMillis) 3000)
+        entity-id (.getUUID entity)
+        power (+ 1.0 (* amplifier 0.5))] ; 等级越高威力越大
+    (swap! explosive-entities assoc entity-id
+           {:time explosion-time
+            :level level
+            :pos (.position entity)
+            :power power})
+    (println "[ExampleMod] 实体" entity-id "将在3秒后爆炸，威力:" power)))
+
+(defn check-explosions!
+  "检查并触发已到时的爆炸"
+  []
+  (let [current-time (System/currentTimeMillis)
+        ready-explosions (filter #(< (:time (val %)) current-time) @explosive-entities)]
+    (doseq [[entity-id {:keys [level pos power]}] ready-explosions]
+      (try
+        ;; 使用 Swiss Knife 的 env-interaction 创建爆炸
+        (when (instance? net.minecraft.server.level.ServerLevel level)
+          (env/create-explosion-at! level pos power {:interaction :mob})
+          (println "[ExampleMod] 爆炸已触发于:" pos "威力:" power))
+        (catch Exception e
+          (println "[ExampleMod] 触发爆炸时出错:" (.getMessage e))))
+      ;; 移除已处理的爆炸
+      (swap! explosive-entities dissoc entity-id))))
+
+;; ============================================================================
 ;; 事件系统 - 玩家加入、击杀怪物等
 ;; ============================================================================
 
 (defn spawn-forest-guardian!
-  "在指定位置生成森林守卫"
-  [level pos]
+  "在指定位置生成森林守卫
+
+   使用 Swiss Knife entities/spawn-entity! 简化实体生成"
+  [^net.minecraft.server.level.ServerLevel level pos]
   (println "[ExampleMod/Hooks] 尝试生成森林守卫于:" pos)
   (when-let [guardian-type (.get forest-guardian)]
     (try
-      ;; 检查 level 类型
-      (if (instance? net.minecraft.server.level.ServerLevel level)
-        (let [guardian (.create guardian-type level)]
-          (println "[ExampleMod/Hooks] 实体已创建，类型:" (class guardian))
-          (.moveTo guardian (.-x pos) (.-y pos) (.-z pos) 0.0 0.0)
-          (.addFreshEntity level guardian)
+      ;; 使用 Swiss Knife 的 spawn-entity! 简化生成逻辑
+      (when-let [guardian (entities/spawn-entity! level guardian-type
+                                                  (.-x pos) (.-y pos) (.-z pos))]
+        (println "[ExampleMod/Hooks] 实体已创建，类型:" (class guardian))
 
-          ;; 播放生成音效
-          (sounds/play-sound! level pos :minecraft:entity.zombie.ambient
-                              {:source :hostile :volume 1.0 :pitch 0.8})
+        ;; 播放生成音效
+        (sounds/play-sound! level pos :minecraft:entity.zombie.ambient
+                            {:source :hostile :volume 1.0 :pitch 0.8})
 
-          (sk/log-info "森林守卫已生成"))
-        (println "[ExampleMod/Hooks] 错误: Level 不是 ServerLevel，类型:" (class level)))
+        (sk/log-info "森林守卫已生成")
+        guardian)
       (catch Exception e
         (println "[ExampleMod/Hooks] 生成森林守卫时出错:" (.getMessage e))
         (.printStackTrace e)))))
@@ -250,6 +449,35 @@
   ;; 注意: 弹道命中检测已通过 Mixin 实现 (ProjectileMixin)
   ;; 处理函数在 com.example.hooks/on-projectile-hit
   ;; 这种方式比事件系统更精确，因为直接 hook 了 Projectile.onHit() 方法
+
+  ;; Server Tick - 检查爆炸附魔
+  (events/on-server-tick
+   (fn [server]
+     (check-explosions!)))
+
+  ;; 实体攻击事件 - 爆炸附魔效果
+  (events/on-entity-hurt
+   (fn [entity damage-source amount]
+     (do
+       (let [attacker-entity (.getEntity damage-source)]
+         (when (instance? net.minecraft.world.entity.LivingEntity attacker-entity)
+           ;; 检查攻击者是否持有爆炸附魔的武器
+           (let [main-hand (players/get-main-hand-item attacker-entity)]
+             (when-not (items/empty-stack? main-hand)
+               ;; 检查是否有爆炸附魔
+               (let [enchants (.get main-hand net.minecraft.core.component.DataComponents/ENCHANTMENTS)]
+                 (when enchants
+                   ;; 遍历附魔查找爆炸附魔
+                   (doseq [enchant-entry (.entrySet (.enchantments enchants))]
+                     (let [enchant-holder (.getKey enchant-entry)
+                           level (.getValue enchant-entry)
+                           enchant-key (str (.location (.getKey enchant-holder)))]
+                       (when (= enchant-key "example:explosive_strike")
+                         ;; 标记实体在3秒后爆炸
+                         (schedule-explosion! entity (.level entity) level)
+                         ;; 给被攻击者添加发光效果
+                         (entities/add-effect! entity :minecraft:glowing 60 0 true)))))))))
+       (events/event-pass)))))
 
   ;; 玩家加入时发送欢迎消息和赠送物品
   (events/on-player-join
@@ -286,7 +514,7 @@
            (items/spawn-item-entity! level (.-x pos) (.-y pos) (.-z pos)
                                      (items/item-stack (.get forest-soul-potion) 1))
            (items/spawn-item-entity! level (.-x pos) (.-y pos) (.-z pos)
-                                     (items/item-stack (.get nature-affinity-book) 1))
+                                     (create-nature-affinity-book))
            (when player
              (players/send-message! player
                                     (text/colored-text "森林守卫掉落了珍贵物品！" :gold))
@@ -345,6 +573,9 @@
   (net/init-generic-packet-system! "example")
 
   ;; 注册客户端处理器 - 接收服务端的粒子生成请求
+  ;; 注意: 使用 requiring-resolve 避免服务端加载客户端代码
+  ;; 原因: core.clj 是服务端和客户端共享的，而 client.clj 仅客户端
+  ;; 如果直接 require，服务端加载时会尝试加载客户端命名空间，可能导致类加载错误
   (net/register-generic-handler! "example" :gem-shoot :client
                                  (fn [data player]
                                    ;; 在客户端生成魔法弹发射粒子效果
@@ -403,6 +634,15 @@
   (reg/register-all! blocks-registry)
   (println "[ExampleMod] 方块注册完成")
 
+  (println "[ExampleMod] 注册药水效果...")
+  (reg/register-all! effects-registry)
+  (println "[ExampleMod] 药水效果注册完成")
+
+  ;; 3.5 注册创造模式标签页（必须在物品之前注册，因为物品需要引用标签页）
+  (println "[ExampleMod] 注册创造模式标签页...")
+  (reg/register-all! creative-tabs-registry)
+  (println "[ExampleMod] 创造模式标签页注册完成")
+
   (println "[ExampleMod] 注册物品...")
   (reg/register-all! items-registry)
   (println "[ExampleMod] 物品注册完成")
@@ -411,7 +651,7 @@
   (reg/register-all! entities-registry)
   (println "[ExampleMod] 实体注册完成")
 
-  ;; 3.5 注册实体属性（Minecraft 1.21 必需）
+  ;; 3.6 注册实体属性（Minecraft 1.21 必需）
   (println "[ExampleMod] 注册实体属性...")
   (register-forest-guardian-attributes!)
 
@@ -448,7 +688,7 @@
                      ;; 游戏内通知（如果服务器可用）
                      (when-let [server ((resolve 'platform/get-server))]
                        ;; 发送彩色消息
-                       (let [message ((resolve 'text/literal)
+                       (let [message ((resolve 'text/colored-text)
                                      (str "🔄 代码已热重载: " ns)
                                      :color :green)]
                          ((resolve 'players/broadcast-message!) server message))

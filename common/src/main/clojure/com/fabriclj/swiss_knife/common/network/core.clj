@@ -260,15 +260,32 @@
    - packet-type: 数据包类型
    - data: 要发送的数据
 
+   注意: Minecraft 1.21+ 需要使用 RegistryFriendlyByteBuf
+
    示例:
    ```clojure
    (send-to-server! my-packet {:action :jump})
    ```"
   [^ResourceLocation packet-type data]
   (let [{:keys [encoder]} (get @registered-packets packet-type)
-        buf (io.netty.buffer.Unpooled/buffer)]
-    (encoder (FriendlyByteBuf. buf) data)
-    (NetworkManager/sendToServer packet-type (FriendlyByteBuf. buf))))
+        buf (io.netty.buffer.Unpooled/buffer)
+        ;; 获取客户端的 RegistryAccess（Minecraft 1.21 必需）
+        ;; 优先从 level 获取，因为 connection.registryAccess() 可能为 null
+        minecraft (net.minecraft.client.Minecraft/getInstance)
+        registry-access (or
+                         ;; 方法1: 从客户端世界获取（最可靠）
+                         (when-let [level (.level minecraft)]
+                           (.registryAccess level))
+                         ;; 方法2: 从连接获取（备用）
+                         (when-let [conn (.getConnection minecraft)]
+                           (.registryAccess conn)))
+        ;; Minecraft 1.21+ 必须使用 RegistryFriendlyByteBuf
+        _ (when-not registry-access
+            (throw (RuntimeException.
+                    "Cannot send packet: RegistryAccess not available. Make sure you are in a world.")))
+        friendly-buf (RegistryFriendlyByteBuf. buf registry-access)]
+    (encoder friendly-buf data)
+    (NetworkManager/sendToServer packet-type friendly-buf)))
 
 (defn send-to-player!
   "从服务端发送数据包到指定玩家
@@ -311,13 +328,10 @@
    - packet-type: 数据包类型
    - data: 数据"
   [^net.minecraft.server.level.ServerLevel level x y z radius ^ResourceLocation packet-type data]
-  (let [{:keys [encoder]} (get @registered-packets packet-type)
-        buf (io.netty.buffer.Unpooled/buffer)]
-    (encoder (FriendlyByteBuf. buf) data)
-    (doseq [^ServerPlayer player (.players level)]
-      (let [pos (.position player)]
-        (when (< (.distanceToSqr pos x y z) (* radius radius))
-          (send-to-player! player packet-type data))))))
+  (doseq [^ServerPlayer player (.players level)]
+    (let [pos (.position player)]
+      (when (< (.distanceToSqr pos x y z) (* radius radius))
+        (send-to-player! player packet-type data)))))
 
 ;; ============================================================================
 ;; 便捷宏

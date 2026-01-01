@@ -34,12 +34,12 @@
    ;; 获取玩家主手物品( 使用 swiss-knife)
    (let [main-hand (players/get-main-hand-item player)
          item (.getItem main-hand)
-         item-id (.getDescriptionId item)]
+         magic-gem-item (requiring-resolve 'com.example.core/magic-gem)]
      
-     (println "[ExampleMod/Hooks] Main hand item:" item-id)
+     (println "[ExampleMod/Hooks] Main hand item:" (.getDescriptionId item))
 
-     ;; 检查是否持有魔法宝石
-     (when (= item-id "item.example.magic_gem")
+     ;; 使用物品实例比较
+     (when (and magic-gem-item (= item (.get @magic-gem-item)))
        (println "[ExampleMod/Hooks] Magic gem detected! Activating jump boost...")
        
        ;; 给予跳跃提升效果( 3 秒，等级 II)

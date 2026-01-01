@@ -265,28 +265,43 @@
 ;; 实用工具
 ;; ============================================================================
 
+(defn get-registry-access
+  "获取 RegistryAccess（从内置注册表）
+
+   返回: RegistryAccess
+
+   示例:
+   ```clojure
+   (def registry-access (get-registry-access))
+   ```"
+  []
+  (net.minecraft.core.RegistryAccess/fromRegistryOfRegistries
+   net.minecraft.core.registries.BuiltInRegistries/REGISTRY))
+
 (defn get-enchantment-holder
   "从注册表获取附魔的 Holder
 
    参数:
-   - registry-access: RegistryAccess
-   - enchantment-key: ResourceKey<Enchantment>
+   - mod-id: 模组 ID (字符串，如 \"minecraft\" 或 \"example\")
+   - enchantment-id: 附魔 ID (字符串，如 \"sharpness\")
 
    返回: Holder<Enchantment> 或 nil
 
    示例:
    ```clojure
-   (def registry-access (.registryAccess server))
-   (def sharpness-key (ResourceKey/create Registries/ENCHANTMENT
-                                           (ResourceLocation. \"minecraft\" \"sharpness\")))
-   (def sharpness-holder (get-enchantment-holder registry-access sharpness-key))
+   ;; 使用 mod-id 和 enchantment-id
+   (def sharpness-holder (get-enchantment-holder \"minecraft\" \"sharpness\"))
+   (def custom-holder (get-enchantment-holder \"mymod\" \"explosive_strike\"))
    ```"
-  [registry-access enchantment-key]
+  [mod-id enchantment-id]
   (try
-    (let [registry (.registryOrThrow registry-access Registries/ENCHANTMENT)]
-      (.getHolder registry enchantment-key))
+    (let [registry-access (get-registry-access)
+          registry (.registryOrThrow registry-access Registries/ENCHANTMENT)
+          res-loc (net.minecraft.resources.ResourceLocation/fromNamespaceAndPath
+                   mod-id enchantment-id)]
+      (.get registry res-loc))
     (catch Exception e
-      (core/log-error "Failed to get enchantment holder:" (.getMessage e))
+      (core/log-error (str "Failed to get enchantment holder for " mod-id ":" enchantment-id ": " (.getMessage e)))
       nil)))
 
 (defn list-all-enchantments
@@ -308,6 +323,98 @@
       (for [entry (.entrySet enchantments)]
         {:holder (.getKey entry)
          :level (.getValue entry)}))))
+
+;; ============================================================================
+;; 附魔书专用功能
+;; ============================================================================
+
+(defn create-enchanted-book
+  "创建带有附魔的附魔书
+
+   参数:
+   - enchantments: 附魔列表，每项为 {:holder Holder<Enchantment> :level int}
+                  或 {mod-id enchantment-id level} 格式
+
+   返回: ItemStack (附魔书)
+
+   示例:
+   ```clojure
+   ;; 使用 Holder
+   (create-enchanted-book [{:holder sharpness-holder :level 5}
+                          {:holder fire-aspect-holder :level 2}])
+
+   ;; 使用字符串 ID（推荐，更简洁）
+   (create-enchanted-book [[\"minecraft\" \"sharpness\" 5]
+                          [\"minecraft\" \"fire_aspect\" 2]])
+
+   ;; 单个附魔
+   (create-enchanted-book [[\"mymod\" \"explosive_strike\" 3]])
+   ```"
+  [enchantments]
+  (let [book (net.minecraft.world.item.ItemStack. net.minecraft.world.item.Items/ENCHANTED_BOOK 1)
+        mutable (net.minecraft.world.item.enchantment.ItemEnchantments$Mutable.
+                 net.minecraft.world.item.enchantment.ItemEnchantments/EMPTY)]
+    (doseq [ench enchantments]
+      (try
+        (let [[holder level] (cond
+                               ;; 格式 1: {:holder ... :level ...}
+                               (map? ench)
+                               [(:holder ench) (:level ench)]
+
+                               ;; 格式 2: [mod-id enchantment-id level]
+                               (and (vector? ench) (= 3 (count ench)))
+                               (let [[mod-id ench-id lvl] ench
+                                     holder (get-enchantment-holder mod-id ench-id)]
+                                 [holder lvl])
+
+                               :else
+                               (throw (IllegalArgumentException. (str "Invalid enchantment format: " ench))))]
+          (when holder
+            (.set mutable holder (int level))))
+        (catch Exception e
+          (core/log-error (str "Failed to add enchantment: " (.getMessage e))))))
+
+    ;; 设置 STORED_ENCHANTMENTS 组件（附魔书专用）
+    (.set book DataComponents/STORED_ENCHANTMENTS (.toImmutable mutable))
+    book))
+
+(defn add-stored-enchantment!
+  "向附魔书添加附魔（使用 STORED_ENCHANTMENTS）
+
+   参数:
+   - book: ItemStack (附魔书)
+   - holder: Holder<Enchantment>
+   - level: 等级
+
+   注意: 仅适用于附魔书，普通物品请使用 enchant!
+
+   示例:
+   ```clojure
+   (add-stored-enchantment! book sharpness-holder 5)
+   ```"
+  [^ItemStack book ^Holder holder level]
+  (let [current (or (.get book DataComponents/STORED_ENCHANTMENTS)
+                    net.minecraft.world.item.enchantment.ItemEnchantments/EMPTY)
+        mutable (net.minecraft.world.item.enchantment.ItemEnchantments$Mutable. current)]
+    (.set mutable holder (int level))
+    (.set book DataComponents/STORED_ENCHANTMENTS (.toImmutable mutable))))
+
+(defn get-stored-enchantments
+  "获取附魔书中存储的附魔
+
+   参数:
+   - book: ItemStack (附魔书)
+
+   返回: ItemEnchantments 或 nil
+
+   示例:
+   ```clojure
+   (when-let [stored (get-stored-enchantments book)]
+     (doseq [entry (.entrySet stored)]
+       (println \"Stored:\" (.getKey entry) \"Level:\" (.getValue entry))))
+   ```"
+  [^ItemStack book]
+  (.get book DataComponents/STORED_ENCHANTMENTS))
 
 ;; ============================================================================
 ;; 自定义附魔系统 (Minecraft 1.21 - 数据驱动)
@@ -366,45 +473,51 @@
 (comment
   ;; ========== Minecraft 1.21 使用示例 ==========
 
-  ;; 1. 获取注册表访问
-  (def server (core/get-server))
-  (def registry-access (.registryAccess server))
-  (def enchantments-registry (.registryOrThrow registry-access Registries/ENCHANTMENT))
+  ;; 1. 快速获取附魔 Holder（推荐方式）
+  (def sharpness-holder (get-enchantment-holder "minecraft" "sharpness"))
+  (def custom-holder (get-enchantment-holder "mymod" "explosive_strike"))
 
-  ;; 2. 获取附魔 Holder
-  (def sharpness-key (net.minecraft.core.ResourceKey/create
-                       Registries/ENCHANTMENT
-                       (net.minecraft.resources.ResourceLocation. "minecraft" "sharpness")))
-  (def sharpness-holder (.getHolder enchantments-registry sharpness-key))
+  ;; 2. 创建附魔书（最简单方式）
+  (def enchanted-book
+    (create-enchanted-book [["minecraft" "sharpness" 5]
+                           ["minecraft" "fire_aspect" 2]]))
 
-  ;; 3. 查询附魔
+  ;; 3. 单个附魔书
+  (def explosive-book
+    (create-enchanted-book [["mymod" "explosive_strike" 3]]))
+
+  ;; 4. 查询附魔
   (def level (get-enchantment-level sharpness-holder sword))
   (has-enchantment? sharpness-holder sword)
 
-  ;; 4. 添加附魔
+  ;; 5. 添加附魔到普通物品
   (enchant! sword sharpness-holder 5)
 
-  ;; 5. 批量添加附魔（MC 1.21 使用 updateEnchantments）
+  ;; 6. 批量添加附魔（MC 1.21 使用 updateEnchantments）
   (apply-enchantments! sword
     (fn [mutable]
       (.set mutable sharpness-holder 5)
       (.set mutable fire-aspect-holder 2)))
 
-  ;; 6. 列出所有附魔
+  ;; 7. 列出所有附魔
   (doseq [{:keys [holder level]} (list-all-enchantments sword)]
     (println "Enchantment:" (.value holder) "Level:" level))
 
-  ;; 7. 修改伤害（需要完整上下文）
+  ;; 8. 附魔书专用操作
+  (add-stored-enchantment! book sharpness-holder 5)
+  (get-stored-enchantments book)
+
+  ;; 9. 修改伤害（需要完整上下文）
   (def modified-damage
     (modify-damage-dealt server-level sword zombie damage-source 10.0))
 
-  ;; 8. 触发附魔效果
+  ;; 10. 触发附魔效果
   (on-target-damaged server-level zombie damage-source)
 
-  ;; 9. 修改击退（需要 DamageSource）
+  ;; 11. 修改击退（需要 DamageSource）
   (def knockback (modify-knockback server-level sword zombie damage-source 0.4))
 
-  ;; 10. 获取装备总附魔等级
+  ;; 12. 获取装备总附魔等级
   (def total-protection (get-equipment-level protection-holder player)))
 
   ;; ========== 注意事项 ==========
@@ -412,4 +525,5 @@
   ;; - 使用 Holder<Enchantment> 而不是直接的 Enchantment 对象
   ;; - 自定义附魔应该通过数据包（datapack）定义
   ;; - 附魔效果通过 JSON 配置，而不是代码
-  ;; - 复杂的附魔效果需要自定义 EnchantmentEffect 类)
+  ;; - 复杂的附魔效果需要自定义 EnchantmentEffect 类
+  ;; - 推荐使用 create-enchanted-book 简化附魔书创建)

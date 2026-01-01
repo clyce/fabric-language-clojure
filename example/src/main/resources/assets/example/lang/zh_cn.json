@@ -1,0 +1,6 @@
+{
+  "enchantment.example.explosive_strike": "爆裂打击",
+  "enchantment.example.explosive_strike.desc": "被攻击的实体将在3秒后爆炸",
+  "effect.example.forest_blessing": "森林祝福",
+  "itemGroup.example.magic_items": "魔法宝石"
+}

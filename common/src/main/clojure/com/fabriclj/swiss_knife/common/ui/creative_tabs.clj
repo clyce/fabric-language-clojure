@@ -1,11 +1,15 @@
 (ns com.fabriclj.swiss-knife.common.ui.creative-tabs
   "瑞士军刀 - 创造模式标签模块
 
-   封装创造模式物品栏标签页的创建和管理。"
+   封装创造模式物品栏标签页的创建和管理。
+
+   完全使用 Architectury API，提供跨平台支持（Fabric/Forge）。
+   Minecraft 1.21+ 中，Creative Tabs 已作为标准注册表项。
+   使用 arch$tab 方法在物品创建时指定标签页，这是 Architectury 推荐的方式。"
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.registry :as reg])
-  (:import (net.minecraft.world.item CreativeModeTab Item ItemStack)
-           (net.fabricmc.fabric.api.itemgroup.v1 FabricItemGroup)
+  (:import (net.minecraft.world.item CreativeModeTab Item ItemStack Item$Properties)
+           (dev.architectury.registry CreativeTabRegistry)
            (net.minecraft.network.chat Component)
            (net.minecraft.resources ResourceLocation)
            (net.minecraft.core.registries Registries)))
@@ -13,135 +17,167 @@
 ;; 启用反射警告
 (set! *warn-on-reflection* true)
 
-;; 前向声明
-(declare tab-display-items!)
-
 ;; ============================================================================
-;; 标签页创建
+;; 标签页创建（使用 Architectury API）
 ;; ============================================================================
 
-(defn creative-tab-builder
-  "创建创造模式标签页构建器（使用 Fabric API）
+(defn create-tab-icon-supplier
+  "创建图标 Supplier，处理 RegistrySupplier
 
    参数:
-   - title: 标题( 字符串或 Component)
-   - icon: 图标物品或物品栈
+   - icon: Item、ItemStack 或 RegistrySupplier
 
-   返回: FabricItemGroup$Builder
+   返回: Supplier<ItemStack>"
+  [icon]
+  (reify java.util.function.Supplier
+    (get [_]
+      (let [;; 处理 RegistrySupplier：调用 .get() 获取实际对象
+            actual-icon (if (instance? dev.architectury.registry.registries.RegistrySupplier icon)
+                         (.get ^dev.architectury.registry.registries.RegistrySupplier icon)
+                         icon)]
+        (if (instance? ItemStack actual-icon)
+          actual-icon
+          (ItemStack. ^Item actual-icon))))))
+
+(defn create-tab
+  "使用 Architectury API 创建创造模式标签页
+
+   参数:
+   - title: 标题（字符串或 Component）
+   - icon: 图标（Item、ItemStack 或 RegistrySupplier）
+
+   返回: CreativeModeTab
 
    示例:
    ```clojure
-   (-> (creative-tab-builder \"My Items\" my-item)
-       (tab-display-items! [item1 item2 item3])
-       (build-tab))
+   (create-tab \"My Items\" my-icon-item)
    ```"
   [title icon]
-  (let [builder (FabricItemGroup/builder)
-        title-component (if (string? title)
+  (let [title-component (if (string? title)
                           (Component/literal title)
                           title)
-        icon-stack (if (instance? ItemStack icon)
-                     icon
-                     (ItemStack. ^Item icon))]
-    (-> builder
-        (.displayName title-component)
-        (.icon (reify java.util.function.Supplier
-                 (get [_] icon-stack))))))
-
-(defn tab-display-items!
-  "设置标签页显示的物品
-
-   参数:
-   - builder: FabricItemGroup$Builder
-   - items: 物品列表( Item 或 ItemStack)
-
-   返回: builder( 用于链式调用) "
-  [builder items]
-  (.entries builder
-            (reify java.util.function.BiConsumer
-              (accept [_ context output]
-                (doseq [item items]
-                  (if (instance? ItemStack item)
-                    (.add output item)
-                    (.add output (ItemStack. ^Item item))))))))
-
-(defn build-tab
-  "构建创造模式标签页
-
-   返回: CreativeModeTab"
-  ^CreativeModeTab [builder]
-  (.build builder))
+        icon-supplier (create-tab-icon-supplier icon)]
+    (CreativeTabRegistry/create title-component icon-supplier)))
 
 ;; ============================================================================
 ;; 便捷注册
 ;; ============================================================================
 
 (defn register-creative-tab!
-  "注册创造模式标签页
+  "注册创造模式标签页（完全使用 Architectury API，跨平台支持）
 
    参数:
    - registry: 创造标签注册表
-   - id: 标签 ID( 字符串)
+   - mod-id: 模组 ID（字符串，如 \"example\"）
+   - id: 标签 ID（字符串，如 \"main_tab\"）
    - title: 标题
-   - icon: 图标
-   - items: 物品列表
+   - icon: 图标（Item、ItemStack 或 RegistrySupplier）
 
-   返回: RegistrySupplier
+   返回: RegistrySupplier<CreativeModeTab>
+
+   注意: 物品需要在创建时使用 arch$tab 方法指定此标签页。
+   示例见 with-tab 函数。
 
    示例:
    ```clojure
    (def tabs (reg/create-registry \"mymod\" :creative-tab))
 
-   (register-creative-tab! tabs \"main_tab\"
-     \"My Mod Items\"
-     my-icon-item
-     [item1 item2 item3])
+   (def my-tab
+     (register-creative-tab! tabs \"mymod\" \"main_tab\"
+       \"My Mod Items\"
+       my-icon-item))
 
-   (reg/register-all! tabs)
+   ;; 在创建物品时指定标签页
+   (def my-item
+     (reg/register items \"my_item\"
+       (fn []
+         (Item. (with-tab (Item$Properties.) my-tab)))))
+
+   (reg/register-all! tabs items)
    ```"
-  [registry id title icon items]
+  [registry mod-id id title icon]
   (reg/register registry id
                 (fn []
-                  (-> (creative-tab-builder title icon)
-                      (tab-display-items! items)
-                      (build-tab)))))
+                  (create-tab title icon))))
+
+;; ============================================================================
+;; 物品属性辅助函数
+;; ============================================================================
+
+(defn with-tab
+  "为 Item.Properties 指定创造模式标签页（使用 Architectury 的 arch$tab 方法）
+
+   参数:
+   - props: Item$Properties
+   - tab: CreativeModeTab 或 RegistrySupplier<CreativeModeTab>
+
+   返回: Item$Properties（已设置标签页）
+
+   注意: 如果 tab 是 RegistrySupplier，会延迟解析直到 Item 实际创建时。
+   这允许在标签页注册之前定义物品。
+
+   示例:
+   ```clojure
+   (def my-item
+     (reg/register items \"my_item\"
+       (fn []
+         (Item. (with-tab (Item$Properties.) my-tab)))))
+   ```"
+  [^Item$Properties props tab]
+  (let [actual-tab (if (instance? dev.architectury.registry.registries.RegistrySupplier tab)
+                     (try
+                       (.get ^dev.architectury.registry.registries.RegistrySupplier tab)
+                       (catch Exception e
+                         (throw (ex-info (str "无法解析创造模式标签页 RegistrySupplier。"
+                                             "请确保在注册物品之前先调用 (reg/register-all! creative-tabs-registry)。"
+                                             "原始错误: " (.getMessage e))
+                                        {:tab tab
+                                         :registry-id (when (instance? dev.architectury.registry.registries.RegistrySupplier tab)
+                                                        (str (.getId ^dev.architectury.registry.registries.RegistrySupplier tab)))
+                                         :cause e}))))
+                     tab)]
+    ;; 使用 Architectury 的 arch$tab 方法
+    (.arch$tab props actual-tab)))
 
 ;; ============================================================================
 ;; 便捷宏
 ;; ============================================================================
 
 (defmacro defcreative-tab
-  "定义创造模式标签页( 语法糖)
+  "定义创造模式标签页（语法糖）
 
    示例:
    ```clojure
-   (defcreative-tab tabs my-tab \"mymod:main\"
+   (defcreative-tab tabs my-tab \"mymod\" \"main_tab\"
      :title \"My Items\"
-     :icon my-item
-     :items [item1 item2 item3])
+     :icon my-item)
    ```"
-  [registry name id & {:keys [title icon items]}]
+  [registry name mod-id id & {:keys [title icon]}]
   `(def ~name
-     (register-creative-tab! ~registry ~id ~title ~icon ~items)))
+     (register-creative-tab! ~registry ~mod-id ~id ~title ~icon)))
 
 (comment
   ;; 使用示例
 
   ;; 创建注册表
   (def tabs (reg/create-registry "mymod" :creative-tab))
+  (def items (reg/create-registry "mymod" :item))
 
-  ;; 方式 1: 使用函数
-  (def my-tab
-    (register-creative-tab! tabs "main_tab"
-                            "My Mod Items"
-                            my-icon-item
-                            [sword gem armor]))
-
-  ;; 方式 2: 使用宏
-  (defcreative-tab tabs weapons-tab "weapons"
+  ;; 创建标签页
+  (defcreative-tab tabs weapons-tab "mymod" "weapons"
     :title "Weapons"
-    :icon magic-sword
-    :items [sword1 sword2 axe1])
+    :icon magic-sword)
 
-  ;; 注册所有标签
-  (reg/register-all! tabs))
+  ;; 创建物品并指定标签页
+  (def sword
+    (reg/register items "sword"
+      (fn []
+        (Item. (with-tab (Item$Properties.) weapons-tab)))))
+
+  (def axe
+    (reg/register items "axe"
+      (fn []
+        (Item. (with-tab (Item$Properties.) weapons-tab)))))
+
+  ;; 注册所有内容
+  (reg/register-all! tabs items))

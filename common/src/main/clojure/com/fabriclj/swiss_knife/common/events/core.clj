@@ -295,11 +295,9 @@
    - (event-interrupt new-amount) - 修改伤害值"
   [handler]
   (.register (EntityEvent/LIVING_HURT)
-             (reify java.util.function.Consumer
-               (accept [_ hurt-context]
-                 (handler (.entity hurt-context)
-                          (.source hurt-context)
-                          (.amount hurt-context))))))
+             (reify dev.architectury.event.events.common.EntityEvent$LivingHurt
+               (hurt [_ entity source amount]
+                 (handler entity source amount)))))
 
 ;; ============================================================================
 ;; 方块事件

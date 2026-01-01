@@ -1,0 +1,6 @@
+{
+  "enchantment.example.explosive_strike": "Explosive Strike",
+  "enchantment.example.explosive_strike.desc": "Attacked entities will explode after 3 seconds",
+  "effect.example.forest_blessing": "Forest Blessing",
+  "itemGroup.example.magic_items": "Magic Gem"
+}

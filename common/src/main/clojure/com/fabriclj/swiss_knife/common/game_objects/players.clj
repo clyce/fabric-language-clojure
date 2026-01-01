@@ -486,7 +486,7 @@
    示例:
    ```clojure
    (broadcast-message! server \"服务器重启中...\")
-   (broadcast-message! server (text/literal \"欢迎所有玩家！\" :color :green))
+   (broadcast-message! server (text/colored-text \"欢迎所有玩家！\" :green))
    ```"
   [^MinecraftServer server message]
   (let [component (if (instance? Component message)
@@ -522,6 +522,6 @@
 
   ;; 5. 消息发送
   (send-message! player "Hello!")
-  (send-message! player (text/literal "Hello!" :color :gold))
+  (send-message! player (text/colored-text "Hello!" :gold))
   (broadcast-message! server "服务器公告：欢迎所有玩家！")
-  (broadcast-message! server (text/literal "重要通知" :color :red)))
+  (broadcast-message! server (text/colored-text "重要通知" :red)))

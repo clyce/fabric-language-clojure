@@ -104,10 +104,26 @@ Architectury 事件需要使用正确的接口类型，不能用 `Consumer`：
 
 | 物品 | ID | 稀有度 | 获取方式 | 用途 |
 |------|----|----|---------|------|
-| **魔法宝石** | `example:magic_gem` | 稀有 | 挖掘魔法水晶矿获得 | 右键发射魔法弹，按 R 键传送 |
+| **魔法宝石** | `example:magic_gem` | 稀有 | 挖掘魔法水晶矿获得 | 右键发射魔法弹，按 R 键传送，手持跳跃获得跳跃提升 II |
 | **魔法碎片** | `example:magic_shard` | 罕见 | 击杀怪物掉落（20% 概率） | 未来版本用于合成 |
-| **森林之魂药水** | `example:forest_soul_potion` | 史诗 | 击杀森林守卫 100% 掉落 | 饮用获得速度和跳跃提升 |
-| **自然亲和附魔书** | `example:nature_affinity_book` | 史诗 | 击杀森林守卫 100% 掉落 | 强大的附魔书 |
+| **森林之魂药水** | `example:forest_soul_potion` | 史诗 | 击杀森林守卫 100% 掉落 | 饮用获得速度、跳跃提升和**森林祝福**（持续治疗）效果 |
+| **自然亲和附魔书** | `example:nature_affinity_book` | 史诗 | 击杀森林守卫 100% 掉落 | 包含**爆裂打击 III** 附魔 |
+
+#### 创造模式标签页
+
+- **魔法宝石** 标签页 - 包含所有 mod 物品，方便创造模式获取
+
+#### 自定义效果
+
+| 效果 | ID | 类型 | 效果 |
+|------|----|----|------|
+| **森林祝福** | `example:forest_blessing` | 有益 | 每2秒治疗 0.5 点生命值（等级越高治疗越多） |
+
+#### 自定义附魔
+
+| 附魔 | ID | 适用物品 | 最大等级 | 效果 |
+|------|----|----|---------|------|
+| **爆裂打击** | `example:explosive_strike` | 剑、斧 | III | 被攻击的实体将在 3 秒后爆炸（等级越高威力越大），同时被标记发光 |
 
 #### 方块
 
@@ -117,9 +133,9 @@ Architectury 事件需要使用正确的接口类型，不能用 `Consumer`：
 
 #### 实体
 
-| 实体 | ID | 类型 | 生成方式 | 掉落物 |
-|------|----|----|---------|------|
-| **森林守卫** | `example:forest_guardian` | 敌对生物 | 魔法弹命中树叶时召唤 | 森林之魂药水 + 自然亲和附魔书（100%）|
+| 实体 | ID | 类型 | 生成方式 | 特性 | 掉落物 |
+|------|----|----|---------|------|------|
+| **森林守卫** | `example:forest_guardian` | 敌对生物 | 魔法弹命中树叶时召唤 | 僵尸模型，**远程攻击**（发射雪球），距离过近时**自动后退** | 森林之魂药水 + 自然亲和附魔书（100%）|
 
 #### 功能特性
 
@@ -132,18 +148,33 @@ Architectury 事件需要使用正确的接口类型，不能用 `Consumer`：
    - 耐久度 100，每次使用消耗 1 点耐久
    - 右键使用: 发射魔法弹（雪球弹道）
    - 按 R 键: 向前传送 10 格（需手持魔法宝石）
+   - 手持跳跃: 获得跳跃提升 II 效果（3秒）
    - 魔法弹命中树叶: 召唤森林守卫
+   - **HUD 显示**: 左下角显示能量条，颜色随耐久度变化
 
 3. **森林守卫战斗**
-   - 敌对生物，攻击玩家
-   - 100% 掉落珍贵物品: 森林之魂药水 + 自然亲和附魔书
+   - 敌对生物，基于僵尸模型
+   - **远程攻击**: 每 3 秒发射一次雪球
+   - **智能 AI**: 距离玩家小于 5 格时自动后退，保持远程攻击距离
+   - 100% 掉落珍贵物品: 森林之魂药水 + 自然亲和附魔书（爆裂打击 III）
    - 击败时播放升级音效
 
-4. **HUD 显示**
+4. **自定义附魔 - 爆裂打击**
+   - 适用于剑和斧
+   - 最大等级: III
+   - 效果: 被攻击的实体将在 3 秒后爆炸，等级越高威力越大
+   - 附加效果: 被攻击者获得发光效果（便于追踪）
+
+5. **自定义效果 - 森林祝福**
+   - 类型: 有益效果
+   - 效果: 每 2 秒治疗 0.5 点生命值（等级越高治疗越多）
+   - 获取方式: 饮用森林之魂药水
+
+6. **HUD 显示**
    - 手持魔法宝石时，左下角显示能量条
    - 能量条颜色根据耐久度变化: 绿色（高）→ 黄色（中）→ 红色（低）
 
-5. **怪物掉落**
+7. **怪物掉落**
    - 击杀普通怪物有 20% 概率掉落 1-3 个魔法碎片
    - 击杀森林守卫 100% 掉落森林之魂药水和附魔书
 
@@ -154,6 +185,9 @@ Architectury 事件需要使用正确的接口类型，不能用 `Consumer`：
 7. **欢迎系统**
    - 新玩家加入时自动赠送 3 个魔法水晶矿
    - 显示欢迎消息和游戏提示
+
+8. **创造模式支持**
+   - 所有物品在创造模式的"魔法宝石"标签页中可获取
 
 ## 📂 代码结构
 
@@ -1083,6 +1117,146 @@ example/build/libs/example-clojure-mod-fabric-1.0.0.jar
 #### 第四步: 扩展功能（根据兴趣）
 
 尝试添加以下功能来练习:
+
+---
+
+## 📌 重要技术注意事项
+
+### Minecraft 1.21 API 变化
+
+本项目已针对 Minecraft 1.21 进行适配。以下是主要的 API 变化：
+
+#### 1. 附魔系统（数据驱动）
+- **变化**: MC 1.21 附魔完全改为数据驱动，无法通过代码注册
+- **解决方案**: 
+  - 在 `data/example/enchantment/` 目录创建 JSON 定义
+  - 在代码中通过事件监听附魔效果（`on-living-hurt`）
+  - 使用 `DataComponents/ENCHANTMENTS` 检查物品附魔
+- **示例**: `explosive_strike.json` + `core.clj` 中的爆炸逻辑
+
+#### 2. 音效播放（需要 Holder）
+- **变化**: `Level.playSound()` 现在要求 `Holder<SoundEvent>` 而不是 `SoundEvent`
+- **解决方案**: 使用 `Holder/direct(soundEvent)` 包装
+- **位置**: `common/gameplay/sounds.clj` L153-157
+
+#### 3. 物品耐久度（需要 ServerLevel）
+- **变化**: `ItemStack.hurtAndBreak()` 新增 `ServerLevel` 参数
+- **解决方案**: `hurtAndBreak(amount, level, player, onBroken)`
+- **位置**: `common/game_objects/items.clj` L197
+
+#### 4. 实体属性注册（必需）
+- **变化**: MC 1.21 自定义实体必须显式注册属性
+- **解决方案**: 使用 `FabricDefaultAttributeRegistry.register()`
+- **封装**: `common/game_objects/entities.clj` 中的 `register-entity-attributes!`
+- **位置**: `core.clj` 中的 `register-forest-guardian-attributes!`
+
+#### 5. DamageSource API 变化
+- **变化**: 移除了 `getPlayer()` 方法
+- **解决方案**: 使用 `getEntity()` 然后检查是否为 `Player`
+- **位置**: `core.clj` 中的 `on-living-death` 事件
+
+#### 6. 实体渲染器注册（Fabric API）
+- **变化**: 使用 Fabric API 而不是原版 `EntityRenderers`
+- **解决方案**: `EntityRendererRegistry.register(entityType, rendererProvider)`
+- **位置**: `client.clj` 中的 `setup-entity-renderers!`
+
+### Swiss Knife 封装优先原则
+
+本项目推荐优先使用 `com.fabriclj.swiss-knife` 中的封装，而不是直接调用 Minecraft 原生 API：
+
+**物品操作**:
+- ✅ **使用**: `(items/item-stack :diamond 64)` 
+- ❌ **避免**: `(ItemStack. Items/DIAMOND 64)`
+
+**玩家消息**:
+- ✅ **使用**: `(players/send-message! player (text/colored-text "Hello" :green))`
+- ❌ **避免**: 手动构建 `Component`
+
+**音效播放**:
+- ✅ **使用**: `(sounds/play-sound! level pos :minecraft:block.note_block.bell)`
+- ❌ **避免**: 直接调用 `Level.playSound()`
+
+**附魔操作**:
+- ✅ **使用**: `(enchants/create-enchanted-book [["mymod" "explosive_strike" 3]])`
+- ❌ **避免**: 手动操作 `ItemEnchantments$Mutable` 和 `STORED_ENCHANTMENTS`
+
+**AI 系统**:
+- ✅ **使用**: `(ai/add-goal! entity 1 (ai/ranged-attack-goal entity 1.0 60 16.0))`
+- ❌ **避免**: 手动创建 `RangedAttackGoal` 和 `proxy Goal`
+
+**实体操作**:
+- ✅ **使用**: `(entities/set-velocity! entity dx dy dz)` 和 `(entities/distance-to e1 e2)`
+- ❌ **避免**: `.setDeltaMovement` 和 `.distanceTo`
+
+**原因**:
+1. Swiss Knife 封装已处理 MC 1.21 API 变化
+2. 代码更简洁易读
+3. 类型转换和空检查已内置
+4. 跨平台兼容（Fabric/Forge）
+
+**附魔书创建示例**:
+```clojure
+;; 使用 Swiss Knife 封装（仅 1 行！）
+(def book (enchants/create-enchanted-book
+           [["example" "explosive_strike" 3]
+            ["minecraft" "sharpness" 5]]))
+
+;; ❌ 避免手动实现（20+ 行原生代码）
+(let [book (ItemStack. Items/ENCHANTED_BOOK)
+      registry (.lookupOrThrow ...)
+      holder (.get registry ...)
+      mutable (ItemEnchantments$Mutable. ...)]
+  ;; ... 复杂的注册表查找和组件操作
+  )
+```
+
+**森林守卫 AI 实现示例**:
+```clojure
+;; 使用 Swiss Knife AI 封装
+(ai/add-goal! guardian 1
+  (ai/create-goal 1
+    :flags [:move]
+    :can-use? (fn [entity]
+                (when-let [target (.getTarget entity)]
+                  (< (entities/distance-to entity target) 5.0)))
+    :tick! (fn [entity]
+             (when-let [target (.getTarget entity)]
+               (let [dx (- (.getX entity) (.getX target))
+                     dz (- (.getZ entity) (.getZ target))]
+                 (entities/set-velocity! entity
+                   (* dx 0.15)
+                   (.getY (.getDeltaMovement entity))
+                   (* dz 0.15)))))))
+
+;; 远程攻击 AI
+(ai/add-goal! guardian 2
+  (ai/ranged-attack-goal guardian 1.0 60 16.0))
+
+;; 寻找目标
+(ai/add-target-goal! guardian 1
+  (ai/nearest-attackable-target-goal guardian Player))
+```
+
+### 物品实例比较方法
+
+由于物品通过 `DeferredRegister` 注册，比较物品时应使用实例而非字符串：
+
+```clojure
+;; ✅ 正确方式
+(let [magic-gem-item (requiring-resolve 'com.example.core/magic-gem)]
+  (when (= item (.get @magic-gem-item))
+    ...))
+
+;; ❌ 错误方式（不可靠）
+(when (= (.getDescriptionId item) "item.example.magic_gem")
+  ...)
+```
+
+**适用位置**: HUD 渲染、按键绑定、Mixin 钩子
+
+---
+
+#### 尝试添加以下功能来练习:
 
 1. **合成配方** ✨
    - 使用魔法碎片合成魔法宝石

@@ -41,7 +41,8 @@
    :recipe Registries/RECIPE_TYPE
    :sound  Registries/SOUND_EVENT
    :particle Registries/PARTICLE_TYPE
-   :creative-tab Registries/CREATIVE_MODE_TAB})
+   :creative-tab Registries/CREATIVE_MODE_TAB
+   :mob-effect Registries/MOB_EFFECT})
 
 ;; ============================================================================
 ;; 注册表创建

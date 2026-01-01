@@ -1,7 +1,12 @@
 (ns com.fabriclj.swiss-knife.common.data.reload-listeners
   "瑞士军刀 - 资源重载监听器模块
 
-   封装资源和数据包重载监听，用于响应 /reload 命令。"
+   封装资源和数据包重载监听，用于响应 /reload 命令。
+   
+   TODO: support forge or use standard mojang API
+   Currently using vanilla PreparableReloadListener interface.
+   Reason: Architectury's ReloadListenerRegistry exists but Fabric's ResourceManagerHelper
+           provides more stable API with better lifecycle control."
   (:require [com.fabriclj.swiss-knife.common.platform.core :as core]
             [com.fabriclj.swiss-knife.common.utils.json :as json])
   (:import (dev.architectury.event.events.common LifecycleEvent)

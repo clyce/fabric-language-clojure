@@ -150,6 +150,42 @@
   ([^Entity entity x y z]
    (.setPos entity x y z)))
 
+(defn distance-to
+  "计算两个实体之间的距离
+
+   参数:
+   - entity1: Entity
+   - entity2: Entity 或 Vec3 或 [x y z]
+
+   返回: 距离（double）
+
+   示例:
+   ```clojure
+   ;; 计算两个实体之间的距离
+   (distance-to player zombie)
+
+   ;; 计算实体到位置的距离
+   (distance-to player [100 64 200])
+   (distance-to player (vec3 100 64 200))
+   ```"
+  [^Entity entity1 target]
+  (let [^Vec3 pos1 (.position entity1)
+        ^Vec3 pos2 (cond
+                    (instance? Entity target)
+                    (.position ^Entity target)
+
+                    (instance? Vec3 target)
+                    target
+
+                    (vector? target)
+                    (let [[x y z] target]
+                      (net.minecraft.world.phys.Vec3. x y z))
+
+                    :else
+                    (throw (IllegalArgumentException.
+                            (str "target must be Entity, Vec3, or [x y z], got: " (type target)))))]
+    (.distanceTo pos1 pos2)))
+
 (defn teleport!
   "传送实体
 
@@ -394,26 +430,320 @@
   (and (.isPassenger entity) (.hasPassenger vehicle entity)))
 
 ;; ============================================================================
+;; 实体视觉效果
+;; ============================================================================
+
+(defn set-glowing!
+  "设置实体发光效果
+
+   参数:
+   - entity: Entity
+   - glowing?: 是否发光
+   - duration: 持续时间（tick，可选，仅在 glowing? 为 true 时有效）
+
+   注意: 如果指定 duration，会通过添加发光药水效果实现，
+        否则直接设置实体的发光状态（永久）
+
+   示例:
+   ```clojure
+   ;; 永久发光
+   (set-glowing! entity true)
+
+   ;; 发光 5 秒
+   (set-glowing! entity true 100)
+
+   ;; 取消发光
+   (set-glowing! entity false)
+   ```"
+  ([^Entity entity glowing?]
+   (.setGlowingTag entity glowing?))
+  ([^Entity entity glowing? duration]
+   (if glowing?
+     (add-effect! entity :minecraft:glowing duration 0 false)
+     (.setGlowingTag entity false))))
+
+(defn is-glowing?
+  "检查实体是否发光"
+  [^Entity entity]
+  (.isCurrentlyGlowing entity))
+
+(defn set-on-fire!
+  "设置实体着火
+
+   参数:
+   - entity: Entity
+   - seconds: 着火秒数（0 为熄灭）
+
+   示例:
+   ```clojure
+   (set-on-fire! entity 5)  ; 着火 5 秒
+   (set-on-fire! entity 0)  ; 熄灭
+   ```"
+  [^Entity entity seconds]
+  (if (pos? seconds)
+    (.setRemainingFireTicks entity (* seconds 20))
+    (.clearFire entity)))
+
+(defn is-on-fire?
+  "检查实体是否着火"
+  [^Entity entity]
+  (.isOnFire entity))
+
+(defn set-invisible!
+  "设置实体隐身
+
+   参数:
+   - entity: Entity
+   - invisible?: 是否隐身
+   - duration: 持续时间（tick，可选）
+
+   示例:
+   ```clojure
+   (set-invisible! entity true)
+   (set-invisible! entity true 200)  ; 隐身 10 秒
+   (set-invisible! entity false)
+   ```"
+  ([^Entity entity invisible?]
+   (.setInvisible entity invisible?))
+  ([^Entity entity invisible? duration]
+   (if invisible?
+     (add-effect! entity :minecraft:invisibility duration 0 false)
+     (.setInvisible entity false))))
+
+(defn is-invisible?
+  "检查实体是否隐身"
+  [^Entity entity]
+  (.isInvisible entity))
+
+(defn set-invulnerable!
+  "设置实体无敌
+
+   参数:
+   - entity: Entity
+   - invulnerable?: 是否无敌
+
+   注意: 仅服务端有效
+
+   示例:
+   ```clojure
+   (set-invulnerable! entity true)
+   (set-invulnerable! entity false)
+   ```"
+  [^Entity entity invulnerable?]
+  (.setInvulnerable entity invulnerable?))
+
+(defn is-invulnerable?
+  "检查实体是否无敌"
+  [^Entity entity]
+  (.isInvulnerable entity))
+
+(defn set-silent!
+  "设置实体静音（不发出声音）
+
+   参数:
+   - entity: Entity
+   - silent?: 是否静音
+
+   示例:
+   ```clojure
+   (set-silent! entity true)
+   ```"
+  [^Entity entity silent?]
+  (.setSilent entity silent?))
+
+(defn is-silent?
+  "检查实体是否静音"
+  [^Entity entity]
+  (.isSilent entity))
+
+(defn set-no-gravity!
+  "设置实体无重力
+
+   参数:
+   - entity: Entity
+   - no-gravity?: 是否无重力
+
+   示例:
+   ```clojure
+   (set-no-gravity! entity true)
+   ```"
+  [^Entity entity no-gravity?]
+  (.setNoGravity entity no-gravity?))
+
+(defn has-no-gravity?
+  "检查实体是否无重力"
+  [^Entity entity]
+  (.isNoGravity entity))
+
+;; ============================================================================
+;; 自定义实体构建器
+;; ============================================================================
+
+(defn create-entity-factory
+  "创建实体工厂函数
+
+   参数:
+   - builder-fn: 构建函数 (fn [entity-type level] -> Entity)
+
+   返回: EntityType$EntityFactory
+
+   示例:
+   ```clojure
+   (create-entity-factory
+     (fn [entity-type level]
+       (proxy [Zombie RangedAttackMob] [entity-type level]
+         (performRangedAttack [target distance]
+           ;; 自定义攻击逻辑
+           ))))
+   ```"
+  [builder-fn]
+  (reify net.minecraft.world.entity.EntityType$EntityFactory
+    (create [_ entity-type level]
+      (builder-fn entity-type level))))
+
+(defn build-entity-type
+  "构建实体类型
+
+   参数:
+   - factory: EntityFactory 或构建函数
+   - category: MobCategory 关键字或对象
+   - options: 配置选项
+     - :size [width height] - 实体尺寸（必需）
+     - :name - 内部名称（必需）
+     - :tracking-range - 客户端跟踪范围（默认 8）
+     - :update-interval - 更新间隔（默认 3）
+     - :fire-immune - 是否免疫火焰
+     - :can-spawn-far-from-player - 是否可以远离玩家生成
+     - :can-summon - 是否可以被召唤
+
+   返回: EntityType
+
+   示例:
+   ```clojure
+   (build-entity-type
+     my-factory
+     :monster
+     {:size [0.6 1.95]
+      :name \"custom_zombie\"
+      :tracking-range 10
+      :fire-immune true})
+   ```"
+  [factory category options]
+  (let [{:keys [size name tracking-range update-interval fire-immune
+                can-spawn-far-from-player can-summon]
+         :or {tracking-range 8 update-interval 3}} options
+        [width height] size
+        category-enum (case category
+                       :monster net.minecraft.world.entity.MobCategory/MONSTER
+                       :creature net.minecraft.world.entity.MobCategory/CREATURE
+                       :ambient net.minecraft.world.entity.MobCategory/AMBIENT
+                       :water-creature net.minecraft.world.entity.MobCategory/WATER_CREATURE
+                       :water-ambient net.minecraft.world.entity.MobCategory/WATER_AMBIENT
+                       :misc net.minecraft.world.entity.MobCategory/MISC
+                       category)
+        actual-factory (if (fn? factory)
+                        (create-entity-factory factory)
+                        factory)
+        builder (net.minecraft.world.entity.EntityType$Builder/of actual-factory category-enum)]
+
+    ;; 设置尺寸
+    (.sized builder (float width) (float height))
+
+    ;; 设置跟踪范围
+    (.clientTrackingRange builder tracking-range)
+
+    ;; 设置更新间隔
+    (.updateInterval builder update-interval)
+
+    ;; 设置其他属性
+    (when fire-immune
+      (.fireImmune builder))
+
+    (when can-spawn-far-from-player
+      (.canSpawnFarFromPlayer builder))
+
+    (when can-summon
+      (.canSummon builder))
+
+    ;; 构建
+    (.build builder name)))
+
+;; ============================================================================
+;; 便捷实体工厂
+;; ============================================================================
+
+(defmacro defentity-factory
+  "定义实体工厂（宏）
+
+   简化 proxy 定义，自动处理类型提示和接口实现
+
+   参数:
+   - name: 工厂名称（符号）
+   - base-class: 基础类（Zombie, Skeleton 等）
+   - interfaces: 额外接口列表（可选）
+   - methods: 方法实现映射
+
+   示例:
+   ```clojure
+   (defentity-factory snowball-zombie-factory
+     Zombie
+     [RangedAttackMob]
+     {:perform-ranged-attack
+      (fn [this target distance]
+        (let [snowball (Snowball. (.level this) this)]
+          (.setPos snowball (.getX this) (+ (.getY this) 1.5) (.getZ this))
+          (let [dx (- (.getX target) (.getX this))
+                dy (- (+ (.getY target) (.getEyeHeight target)) (.getY snowball))
+                dz (- (.getZ target) (.getZ this))]
+            (.shoot snowball dx dy dz 1.0 5.0))
+          (.addFreshEntity (.level this) snowball)))
+
+      :register-goals
+      (fn [this]
+        (ai/clear-goals! this)
+        (ai/add-goal! this 1 (ai/ranged-attack-goal this 1.0 60 16.0)))})
+   ```"
+  [factory-name base-class interfaces methods]
+  (let [method-map (into {} (map (fn [[k v]] [(name k) v]) methods))
+        perform-ranged-attack (get method-map "perform-ranged-attack")
+        register-goals (get method-map "register-goals")]
+    `(def ~factory-name
+       (create-entity-factory
+        (fn [entity-type# level#]
+          (proxy [~base-class ~@interfaces] [entity-type# level#]
+            ~@(when perform-ranged-attack
+                [`(~'performRangedAttack [~'target ~'distance-factor]
+                   (~perform-ranged-attack ~'this ~'target ~'distance-factor))])
+            ~@(when register-goals
+                [`(~'registerGoals []
+                   (~register-goals ~'this))])))))))
+
+;; ============================================================================
 ;; 实体注册辅助（Minecraft 1.21+）
 ;; ============================================================================
 
 (defn register-entity-attributes!
   "注册实体属性（Minecraft 1.21 必需）
-   
+
    所有自定义生物实体必须注册属性，否则会抛出 NullPointerException。
-   
+
+   TODO: support forge or use standard mojang API
+   Currently using Fabric API's FabricDefaultAttributeRegistry via reflection.
+   Reason: Architectury's EntityAttributeRegistry requires platform-specific code,
+           and Fabric API provides stable attribute registration across versions.
+
    参数:
    - entity-type: EntityType 或 RegistrySupplier
    - attributes: AttributeSupplier$Builder 或 AttributeSupplier
-   
+
    示例:
    ```clojure
    ;; 使用原版实体的属性
    (register-entity-attributes! my-zombie-type (Zombie/createAttributes))
-   
+
    ;; 使用 RegistrySupplier
    (register-entity-attributes! @my-entity-supplier (Monster/createMonsterAttributes))
-   
+
    ;; 自定义属性
    (register-entity-attributes! my-entity-type
      (-> (Monster/createMonsterAttributes)
@@ -421,9 +751,9 @@
          (.add Attributes/MOVEMENT_SPEED 0.3)
          (.build)))
    ```
-   
+
    注意:
-   - 仅支持 Fabric 平台
+   - 仅支持 Fabric 平台（Forge 需要不同的实现）
    - 必须在实体类型注册后、首次使用前调用
    - 通常在 mod 初始化时调用"
   [entity-type attributes]
@@ -442,7 +772,7 @@
           (.invoke nil (into-array Object [et attr-supplier])))
       (core/log-info (str "Registered attributes for entity: " et)))
     (catch ClassNotFoundException e
-      (core/log-warn "Fabric API not found, cannot register entity attributes (Forge platform?)"))
+      (core/log-warn "Fabric API not found, cannot register entity attributes (Forge platform requires different implementation)"))
     (catch Exception e
       (core/log-error (str "Failed to register entity attributes: " (.getMessage e)))
       (.printStackTrace e))))
@@ -473,6 +803,6 @@
 
   ;; 设置自定义名称
   (set-custom-name! zombie "§c精英僵尸" true)
-  
+
   ;; 注册实体属性
   (register-entity-attributes! my-entity-type (Zombie/createAttributes)))

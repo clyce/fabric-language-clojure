@@ -429,6 +429,11 @@
    - :effects - 效果列表，每个效果为 map:
      {:effect :effect-id :duration ticks :amplifier level :probability 0.0-1.0}
 
+     效果类型支持：
+     - 关键字 :speed, :jump-boost 等 - 原版效果
+     - 字符串 \"modid:effect_id\" - 自定义效果（延迟解析，避免注册顺序问题）
+     - Holder<MobEffect> - 直接传入 Holder
+
    返回: FoodProperties
 
    示例:
@@ -436,7 +441,7 @@
    ;; 简单食物
    (food-properties :nutrition 4 :saturation 0.5)
 
-   ;; 带效果的食物
+   ;; 带原版效果的食物
    (food-properties
      :nutrition 2
      :saturation 0.3
@@ -449,6 +454,14 @@
                 :duration 100
                 :amplifier 1
                 :probability 0.5}])
+
+   ;; 带自定义效果的食物（使用字符串 ID）
+   (food-properties
+     :nutrition 0
+     :saturation 0.0
+     :always-eat? true
+     :effects [{:effect :speed :duration 400 :amplifier 1}
+               {:effect \"mymod:custom_effect\" :duration 400 :amplifier 0}])
 
    ;; 肉类食物
    (food-properties
@@ -479,45 +492,75 @@
             duration (:duration effect-data 100)
             amplifier (:amplifier effect-data 0)
             probability (:probability effect-data 1.0)
-            mob-effect (if (keyword? effect-id)
-                         (case effect-id
-                           :speed net.minecraft.world.effect.MobEffects/MOVEMENT_SPEED
-                           :slowness net.minecraft.world.effect.MobEffects/MOVEMENT_SLOWDOWN
-                           :haste net.minecraft.world.effect.MobEffects/DIG_SPEED
-                           :mining-fatigue net.minecraft.world.effect.MobEffects/DIG_SLOWDOWN
-                           :strength net.minecraft.world.effect.MobEffects/DAMAGE_BOOST
-                           :instant-health net.minecraft.world.effect.MobEffects/HEAL
-                           :instant-damage net.minecraft.world.effect.MobEffects/HARM
-                           :jump-boost net.minecraft.world.effect.MobEffects/JUMP
-                           :nausea net.minecraft.world.effect.MobEffects/CONFUSION
-                           :regeneration net.minecraft.world.effect.MobEffects/REGENERATION
-                           :resistance net.minecraft.world.effect.MobEffects/DAMAGE_RESISTANCE
-                           :fire-resistance net.minecraft.world.effect.MobEffects/FIRE_RESISTANCE
-                           :water-breathing net.minecraft.world.effect.MobEffects/WATER_BREATHING
-                           :invisibility net.minecraft.world.effect.MobEffects/INVISIBILITY
-                           :blindness net.minecraft.world.effect.MobEffects/BLINDNESS
-                           :night-vision net.minecraft.world.effect.MobEffects/NIGHT_VISION
-                           :hunger net.minecraft.world.effect.MobEffects/HUNGER
-                           :weakness net.minecraft.world.effect.MobEffects/WEAKNESS
-                           :poison net.minecraft.world.effect.MobEffects/POISON
-                           :wither net.minecraft.world.effect.MobEffects/WITHER
-                           :health-boost net.minecraft.world.effect.MobEffects/HEALTH_BOOST
-                           :absorption net.minecraft.world.effect.MobEffects/ABSORPTION
-                           :saturation net.minecraft.world.effect.MobEffects/SATURATION
-                           :glowing net.minecraft.world.effect.MobEffects/GLOWING
-                           :levitation net.minecraft.world.effect.MobEffects/LEVITATION
-                           :luck net.minecraft.world.effect.MobEffects/LUCK
-                           :unluck net.minecraft.world.effect.MobEffects/UNLUCK
-                           :slow-falling net.minecraft.world.effect.MobEffects/SLOW_FALLING
-                           :conduit-power net.minecraft.world.effect.MobEffects/CONDUIT_POWER
-                           :dolphins-grace net.minecraft.world.effect.MobEffects/DOLPHINS_GRACE
-                           :bad-omen net.minecraft.world.effect.MobEffects/BAD_OMEN
-                           :hero-of-the-village net.minecraft.world.effect.MobEffects/HERO_OF_THE_VILLAGE
-                           :darkness net.minecraft.world.effect.MobEffects/DARKNESS
-                           effect-id)
-                         effect-id)
-            effect-instance (net.minecraft.world.effect.MobEffectInstance.
-                             mob-effect (int duration) (int amplifier))]
+            ;; 支持多种效果格式：
+            ;; 1. 关键字 :speed -> 原版效果
+            ;; 2. 字符串 "example:forest_blessing" -> 自定义效果（延迟解析）
+            ;; 3. Holder -> 直接使用
+            mob-effect-holder (cond
+                               ;; 关键字：原版效果
+                               (keyword? effect-id)
+                               (case effect-id
+                                 :speed net.minecraft.world.effect.MobEffects/MOVEMENT_SPEED
+                                 :slowness net.minecraft.world.effect.MobEffects/MOVEMENT_SLOWDOWN
+                                 :haste net.minecraft.world.effect.MobEffects/DIG_SPEED
+                                 :mining-fatigue net.minecraft.world.effect.MobEffects/DIG_SLOWDOWN
+                                 :strength net.minecraft.world.effect.MobEffects/DAMAGE_BOOST
+                                 :instant-health net.minecraft.world.effect.MobEffects/HEAL
+                                 :instant-damage net.minecraft.world.effect.MobEffects/HARM
+                                 :jump-boost net.minecraft.world.effect.MobEffects/JUMP
+                                 :nausea net.minecraft.world.effect.MobEffects/CONFUSION
+                                 :regeneration net.minecraft.world.effect.MobEffects/REGENERATION
+                                 :resistance net.minecraft.world.effect.MobEffects/DAMAGE_RESISTANCE
+                                 :fire-resistance net.minecraft.world.effect.MobEffects/FIRE_RESISTANCE
+                                 :water-breathing net.minecraft.world.effect.MobEffects/WATER_BREATHING
+                                 :invisibility net.minecraft.world.effect.MobEffects/INVISIBILITY
+                                 :blindness net.minecraft.world.effect.MobEffects/BLINDNESS
+                                 :night-vision net.minecraft.world.effect.MobEffects/NIGHT_VISION
+                                 :hunger net.minecraft.world.effect.MobEffects/HUNGER
+                                 :weakness net.minecraft.world.effect.MobEffects/WEAKNESS
+                                 :poison net.minecraft.world.effect.MobEffects/POISON
+                                 :wither net.minecraft.world.effect.MobEffects/WITHER
+                                 :health-boost net.minecraft.world.effect.MobEffects/HEALTH_BOOST
+                                 :absorption net.minecraft.world.effect.MobEffects/ABSORPTION
+                                 :saturation net.minecraft.world.effect.MobEffects/SATURATION
+                                 :glowing net.minecraft.world.effect.MobEffects/GLOWING
+                                 :levitation net.minecraft.world.effect.MobEffects/LEVITATION
+                                 :luck net.minecraft.world.effect.MobEffects/LUCK
+                                 :unluck net.minecraft.world.effect.MobEffects/UNLUCK
+                                 :slow-falling net.minecraft.world.effect.MobEffects/SLOW_FALLING
+                                 :conduit-power net.minecraft.world.effect.MobEffects/CONDUIT_POWER
+                                 :dolphins-grace net.minecraft.world.effect.MobEffects/DOLPHINS_GRACE
+                                 :bad-omen net.minecraft.world.effect.MobEffects/BAD_OMEN
+                                 :hero-of-the-village net.minecraft.world.effect.MobEffects/HERO_OF_THE_VILLAGE
+                                 :darkness net.minecraft.world.effect.MobEffects/DARKNESS
+                                 effect-id)
+
+                               ;; 字符串：自定义效果，从注册表查找（延迟解析，使用时才查找）
+                               (string? effect-id)
+                               (reify java.util.function.Supplier
+                                 (get [_]
+                                   (let [res-loc (net.minecraft.resources.ResourceLocation/parse effect-id)
+                                         registry-access (net.minecraft.core.RegistryAccess/fromRegistryOfRegistries
+                                                         net.minecraft.core.registries.BuiltInRegistries/REGISTRY)
+                                         effect-registry (.registryOrThrow registry-access net.minecraft.core.registries.Registries/MOB_EFFECT)
+                                         holder-opt (.getHolder effect-registry res-loc)]
+                                     (if (.isPresent holder-opt)
+                                       (.get holder-opt)
+                                       (throw (IllegalArgumentException.
+                                               (str "Effect not found in registry: " effect-id)))))))
+
+                               ;; 直接传入的 Holder 或 MobEffect
+                               :else
+                               effect-id)
+            ;; 创建效果实例
+            effect-instance (if (instance? java.util.function.Supplier mob-effect-holder)
+                             ;; 延迟解析的效果：创建时调用 supplier
+                             (net.minecraft.world.effect.MobEffectInstance.
+                              (.get ^java.util.function.Supplier mob-effect-holder)
+                              (int duration) (int amplifier))
+                             ;; 直接的效果
+                             (net.minecraft.world.effect.MobEffectInstance.
+                              mob-effect-holder (int duration) (int amplifier)))]
         (.effect builder effect-instance (float probability))))
     (.build builder)))
 
@@ -622,3 +665,118 @@
               :duration 200
               :amplifier 0
               :probability 1.0}]))
+
+;; ============================================================================
+;; 物品工厂
+;; ============================================================================
+
+(defn create-usable-item
+  "创建可右键使用的物品
+
+   参数:
+   - props: Item$Properties
+   - use-fn: 使用函数 (fn [item-stack level player hand] -> InteractionResultHolder)
+
+   use-fn 参数:
+   - item-stack: 当前物品栈
+   - level: Level
+   - player: Player
+   - hand: InteractionHand
+
+   返回值类型:
+   - InteractionResultHolder/success - 成功
+   - InteractionResultHolder/fail - 失败
+   - InteractionResultHolder/pass - 忽略
+   - InteractionResultHolder/consume - 消耗
+
+   示例:
+   ```clojure
+   (create-usable-item
+     (item-properties :stack-size 1 :durability 100)
+     (fn [stack level player hand]
+       (if (.isClientSide level)
+         (InteractionResultHolder/success stack)
+         (do
+           ;; 服务端逻辑
+           (send-message! player \"You used the item!\")
+           (InteractionResultHolder/success stack)))))
+   ```"
+  [^net.minecraft.world.item.Item$Properties props use-fn]
+  (proxy [net.minecraft.world.item.Item] [props]
+    (use [level player hand]
+      (let [item-stack (.getItemInHand player hand)]
+        (use-fn item-stack level player hand)))))
+
+(defn create-consumable-item
+  "创建可消耗的物品（食物、药水等）
+
+   参数:
+   - props: Item$Properties（应包含食物属性）
+   - finish-using-fn: 消耗完成函数（可选）
+       (fn [item-stack level entity] -> ItemStack)
+   - use-duration-fn: 使用持续时间函数（可选）
+       (fn [item-stack entity] -> int)，默认 32 tick
+
+   示例:
+   ```clojure
+   (create-consumable-item
+     (-> (item-properties :stack-size 16)
+         (.food (food-properties :nutrition 4 :saturation 0.5)))
+     (fn [stack level entity]
+       ;; 消耗完成后的额外效果
+       (when (instance? Player entity)
+         (send-message! entity \"Delicious!\"))
+       ;; 返回消耗后的物品（通常是减少数量后的原物品）
+       (shrink-stack! stack 1)
+       stack))
+   ```"
+  ([props]
+   (create-consumable-item props nil nil))
+  ([props finish-using-fn]
+   (create-consumable-item props finish-using-fn nil))
+  ([^net.minecraft.world.item.Item$Properties props finish-using-fn use-duration-fn]
+   (proxy [net.minecraft.world.item.Item] [props]
+     (finishUsingItem [item-stack level entity]
+       (if finish-using-fn
+         (finish-using-fn item-stack level entity)
+         (proxy-super finishUsingItem item-stack level entity)))
+     (getUseDuration [item-stack entity]
+       (if use-duration-fn
+         (use-duration-fn item-stack entity)
+         32)))))
+
+(defn create-tool-item
+  "创建工具物品（剑、镐、斧等）
+
+   参数:
+   - props: Item$Properties（应包含耐久度）
+   - on-left-click-fn: 左键点击实体函数（可选）
+       (fn [item-stack player target] -> boolean)
+   - on-destroy-fn: 破坏方块函数（可选）
+       (fn [item-stack level pos state player] -> boolean)
+
+   示例:
+   ```clojure
+   (create-tool-item
+     (item-properties :stack-size 1 :durability 250)
+     (fn [stack player target]
+       ;; 左键攻击实体时
+       (when (instance? Monster target)
+         ;; 额外效果
+         (add-effect! target :slowness 100 2))
+       true))  ; 返回 true 继续正常攻击
+   ```"
+  ([props]
+   (create-tool-item props nil nil))
+  ([props on-left-click-fn]
+   (create-tool-item props on-left-click-fn nil))
+  ([^net.minecraft.world.item.Item$Properties props on-left-click-fn on-destroy-fn]
+   (proxy [net.minecraft.world.item.Item] [props]
+     (hurtEnemy [item-stack target attacker]
+       (when on-left-click-fn
+         (on-left-click-fn item-stack attacker target))
+       (proxy-super hurtEnemy item-stack target attacker))
+     (mineBlock [item-stack level state pos entity]
+       (when on-destroy-fn
+         (on-destroy-fn item-stack level pos state entity))
+       (proxy-super mineBlock item-stack level state pos entity)))))

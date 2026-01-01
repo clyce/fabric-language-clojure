@@ -104,6 +104,8 @@
 ;; ============================================================================
 ;; 音效播放
 ;; ============================================================================
+;; 注意: 使用 BuiltInRegistries 查询音效是可接受的
+;; 原因: Architectury 没有提供音效查询的包装，直接使用原版注册表是标准做法
 
 (defn play-sound!
   "播放音效
@@ -143,6 +145,7 @@
                    (.z ^net.minecraft.world.phys.Vec3 pos)]
                   :else pos)
         ^SoundEvent sound-event (if (keyword? sound)
+                                  ;; 使用 BuiltInRegistries 查询音效（标准做法）
                                   (.get BuiltInRegistries/SOUND_EVENT
                                         (core/->resource-location sound))
                                   sound)

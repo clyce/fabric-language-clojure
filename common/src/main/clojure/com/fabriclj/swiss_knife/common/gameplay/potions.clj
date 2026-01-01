@@ -93,11 +93,17 @@
                           net.minecraft.world.effect.MobEffectCategory/NEUTRAL)
         effect (proxy [MobEffect] [effect-category (int color)]
                  (applyEffectTick [entity amplifier]
-                   (when on-tick
+                   (if on-tick
                      (try
                        (on-tick entity amplifier)
+                       ;; 如果 on-tick 返回 nil，则返回 true
+                       true
                        (catch Exception e
-                         (core/log-error (str "Error in custom effect tick: " (.getMessage e)))))))
+                         (core/log-error (str "Error in custom effect tick: " (.getMessage e)))
+                         ;; 即使发生异常也返回 false 而不是 nil
+                         false))
+                     ;; 没有 on-tick 回调时返回 true
+                     true))
 
                  (shouldApplyEffectTickThisTick [duration amplifier]
                    (and on-tick
@@ -105,11 +111,15 @@
                             (zero? (mod duration tick-rate)))))
 
                  (applyInstantenousEffect [source indirect-source entity amplifier health]
-                   (when (and instant? on-tick)
+                   (if (and instant? on-tick)
                      (try
                        (on-tick entity amplifier)
+                       ;; 确保返回 nil（瞬时效果的标准行为）
+                       nil
                        (catch Exception e
-                         (core/log-error (str "Error in instant effect: " (.getMessage e)))))))
+                         (core/log-error (str "Error in instant effect: " (.getMessage e)))
+                         nil))
+                     nil))
 
                  (isInstantenous []
                    instant?))]
